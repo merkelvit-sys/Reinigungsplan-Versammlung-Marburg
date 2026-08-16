@@ -557,6 +557,10 @@
               <i class="fa-solid fa-star"></i>
               <span>+ Kongress / Event</span>
             </button>
+            <button onclick="openGroupManagerModal()" class="px-3.5 py-2 min-h-[38px] bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-700 font-bold rounded-xl text-xs border border-indigo-200/80 transition flex items-center gap-1.5 shadow-xs">
+              <i class="fa-solid fa-users-gear"></i>
+              <span>Gruppen verwalten</span>
+            </button>
             <button onclick="addNewAdminRow()" class="px-3.5 py-2 min-h-[38px] bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-800 font-semibold rounded-xl text-xs transition flex items-center gap-1.5">
               <i class="fa-solid fa-plus"></i>
               <span>Zeile hinzufügen</span>
@@ -665,6 +669,125 @@
     </div>
   </div>
 
+  <!-- Group Manager Modal (Gruppen & Namen verwalten) -->
+  <div id="groupManagerModal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-xl w-full max-h-[92vh] shadow-2xl border border-slate-100 fade-in flex flex-col overflow-hidden">
+      
+      <!-- Header -->
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-100 text-indigo-700 flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-users-gear text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-800">Gruppen & Namen bearbeiten</h3>
+            <p class="text-xs text-slate-500">Namen ändern, neue Gruppen hinzufügen oder Reihenfolge anpassen</p>
+          </div>
+        </div>
+        <button onclick="closeGroupManagerModal()" class="text-slate-400 hover:text-slate-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Scope Tabs (RU, UK, DE) -->
+      <div class="flex items-center gap-1.5 py-3 border-b border-slate-100 shrink-0 overflow-x-auto touch-scroll">
+        <button id="groupTabRu" onclick="setGroupManagerTab('ru')" class="px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 text-white shadow-xs transition flex items-center gap-1.5 shrink-0">
+          <span>🇷🇺 Russisch (Di & So)</span>
+        </button>
+        <button id="groupTabUk" onclick="setGroupManagerTab('uk')" class="px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 shrink-0">
+          <span>🇺🇦 Ukrainisch (Mi & Do)</span>
+        </button>
+        <button id="groupTabDe" onclick="setGroupManagerTab('de')" class="px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 shrink-0">
+          <span>🇩🇪 Deutsch & WE</span>
+        </button>
+      </div>
+
+      <!-- List Container -->
+      <div class="flex-1 overflow-y-auto touch-scroll py-3 space-y-3 text-xs">
+        <div id="groupManagerList" class="space-y-2">
+          <!-- Dynamically populated group items -->
+        </div>
+
+        <!-- Add New Group Row with Dropdown & Manual Input -->
+        <div class="pt-3 border-t border-slate-100 space-y-2">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">
+              <i class="fa-solid fa-list text-indigo-500 mr-1"></i> Aus Vorlage / bekannten Gruppen auswählen:
+            </label>
+            <select 
+              id="quickGroupSelect" 
+              onchange="onQuickGroupSelect(this.value)" 
+              class="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800 text-xs min-h-[42px]"
+            >
+            </select>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-700 mb-1">Oder Namen manuell eintragen / anpassen:</label>
+            <div class="flex gap-2">
+              <input 
+                type="text" 
+                id="newGroupNameInput" 
+                list="groupManagerSuggestionsList"
+                placeholder="Z.B. Gruppe Marburg 4 (oder aus Liste oben)" 
+                class="flex-1 p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 font-medium text-slate-900 text-xs min-h-[42px]"
+                onkeydown="if(event.key==='Enter'){event.preventDefault();addNewGroupToActiveTab();}"
+                onclick="if(this.showPicker){try{this.showPicker();}catch(e){}}"
+              >
+              <button 
+                type="button" 
+                onclick="addNewGroupToActiveTab()" 
+                class="px-4 py-2 bg-indigo-50 hover:bg-indigo-100 active:bg-indigo-200 text-indigo-700 font-bold rounded-xl text-xs border border-indigo-200 transition shrink-0 flex items-center gap-1 min-h-[42px]"
+              >
+                <i class="fa-solid fa-plus"></i>
+                <span>Hinzufügen</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Auto-update existing schedule checkbox -->
+        <div class="bg-indigo-50/70 border border-indigo-100 rounded-xl p-3">
+          <label class="flex items-start gap-2.5 cursor-pointer select-none text-xs text-indigo-950">
+            <input type="checkbox" id="syncRenamedGroupsInSchedule" checked class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span><b>Geänderte Namen im aktuellen Plan anpassen:</b> Falls du eine Gruppe umbenennst, wird der Name automatisch in allen Wochen des Plans aktualisiert.</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 shrink-0">
+        <button 
+          type="button" 
+          onclick="resetActiveGroupPoolToDefault()" 
+          class="text-xs text-slate-400 hover:text-rose-600 font-semibold flex items-center gap-1 py-2 px-1 transition"
+        >
+          <i class="fa-solid fa-rotate-left"></i>
+          <span>Standard wiederherstellen</span>
+        </button>
+
+        <div class="flex gap-2">
+          <button 
+            type="button" 
+            onclick="closeGroupManagerModal()" 
+            class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition text-xs min-h-[40px]"
+          >
+            Abbrechen
+          </button>
+          <button 
+            type="button" 
+            onclick="saveGroupManagerChanges()" 
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-bold shadow-xs flex items-center gap-1.5 transition text-xs min-h-[40px]"
+          >
+            <i class="fa-solid fa-check"></i>
+            <span>Speichern & Übernehmen</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400 mt-auto hidden sm:block">
     <p>Reinigungsplan Versammlung Marburg &bull; iOS & Android Ready</p>
@@ -680,6 +803,75 @@
     const CACHE_TIMESTAMP_KEY = 'reinigungsplan_marburg_timestamp_v2';
     const MY_GROUP_KEY = 'reinigungsplan_my_group_v2';
     const CHECKLIST_KEY = 'reinigungsplan_checklist_state_v2';
+    const GROUP_POOLS_KEY = 'reinigungsplan_custom_group_pools_v2';
+
+    // Standard-Gruppenpools
+    const DEFAULT_GROUP_POOLS = {
+      ru: [
+        "Marburg 1 - Andrej Tarantasow",
+        "Marburg 2 und 3 - Schewchuk & Ashurov",
+        "Ukrainisch 1 - Petro Hyliuk",
+        "Ukrainisch 2 - Valerij Melnik",
+        "Bad Laasphe - Andrej Bauer",
+        "Elnhausen - Artur Akopjan",
+        "Daniel Engelbrecht - Andrej Bauer"
+      ],
+      uk: [
+        "Ukrainisch 1 - Petro Hyliuk",
+        "Ukrainisch 2 - Valerij Melnik",
+        "Ortsbedürfnisse",
+        "Keine"
+      ],
+      de: [
+        "1 Eucker, Reinhold",
+        "2 Krause Florian",
+        "3 Salzbauer Patrick",
+        "4 Faupel, Lothar",
+        "5 Scherwitzl Oliver",
+        "6 Beck Roland",
+        "7 Krause Benjamin"
+      ],
+      main: [
+        "1 Eucker, Reinhold",
+        "2 Krause Florian",
+        "3 Salzbauer Patrick",
+        "4 Faupel, Lothar",
+        "5 Scherwitzl Oliver",
+        "6 Beck Roland",
+        "7 Krause Benjamin"
+      ]
+    };
+
+    // Standard-Ereignisse, die immer als Optionen in Datalists verfügbar sind
+    const COMMON_EVENTS = {
+      ru: ["Regionalkongress", "Kreiskongress", "Kreisaufseherbesuch", "Keine Zusammenkunft"],
+      uk: ["Ortsbedürfnisse", "Keine", "Regionalkongress", "Kreiskongress", "Kreisaufseherbesuch"],
+      de: ["Regionalkongress", "Kreiskongress", "Kreisaufseherbesuch", "Keine Zusammenkunft"],
+      main: ["Regionalkongress", "Kreiskongress", "Kreisaufseherbesuch", "Keine Zusammenkunft"]
+    };
+
+    function loadGroupPools() {
+      try {
+        const saved = localStorage.getItem(GROUP_POOLS_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          return {
+            ru: Array.isArray(parsed.ru) ? parsed.ru : [...DEFAULT_GROUP_POOLS.ru],
+            uk: Array.isArray(parsed.uk) ? parsed.uk : [...DEFAULT_GROUP_POOLS.uk],
+            de: Array.isArray(parsed.de) ? parsed.de : [...DEFAULT_GROUP_POOLS.de],
+            main: Array.isArray(parsed.main) ? parsed.main : [...(parsed.de || DEFAULT_GROUP_POOLS.main)]
+          };
+        }
+      } catch (e) {}
+      return {
+        ru: [...DEFAULT_GROUP_POOLS.ru],
+        uk: [...DEFAULT_GROUP_POOLS.uk],
+        de: [...DEFAULT_GROUP_POOLS.de],
+        main: [...DEFAULT_GROUP_POOLS.main]
+      };
+    }
+
+    let activeGroupPools = loadGroupPools();
 
     let scheduleData = [];
     let currentCalculatedKW = getISOWeekNumber(new Date());
@@ -993,6 +1185,15 @@
       select.innerHTML = '<option value="">-- Name oder Gruppe wählen --</option>';
 
       const uniqueNames = new Set();
+      Object.values(activeGroupPools).forEach(pool => {
+        if (Array.isArray(pool)) {
+          pool.forEach(n => {
+            if (n && !n.toLowerCase().includes('kongress') && !n.toLowerCase().includes('kreisaufseher') && n !== 'Keine' && n !== 'Ortsbedürfnisse') {
+              uniqueNames.add(n.trim());
+            }
+          });
+        }
+      });
       scheduleData.forEach(item => {
         [item.tuesdaySundayRu, item.midweekUk, item.sundayDe, item.weekendMain].forEach(name => {
           if (name && !name.toLowerCase().includes('kongress') && !name.toLowerCase().includes('kreisaufseher') && name !== 'Keine' && name !== 'Ortsbedürfnisse') {
@@ -1397,7 +1598,345 @@
       document.getElementById('adminModal').classList.add('hidden');
     }
 
+    function updateAdminDatalists() {
+      const pools = {
+        adminListRu: new Set([...(activeGroupPools.ru || []), ...(COMMON_EVENTS.ru || [])]),
+        adminListUk: new Set([...(activeGroupPools.uk || []), ...(COMMON_EVENTS.uk || [])]),
+        adminListDe: new Set([...(activeGroupPools.de || []), ...(COMMON_EVENTS.de || [])]),
+        adminListMain: new Set([...(activeGroupPools.main || activeGroupPools.de || []), ...(COMMON_EVENTS.main || [])])
+      };
+
+      // Dynamisch auch bereits bestehende Einträge aus dem aktuellen Plan erfassen
+      scheduleData.forEach(item => {
+        if (item.tuesdaySundayRu && item.tuesdaySundayRu.trim()) pools.adminListRu.add(item.tuesdaySundayRu.trim());
+        if (item.midweekUk && item.midweekUk.trim()) pools.adminListUk.add(item.midweekUk.trim());
+        if (item.sundayDe && item.sundayDe.trim()) pools.adminListDe.add(item.sundayDe.trim());
+        if (item.weekendMain && item.weekendMain.trim()) pools.adminListMain.add(item.weekendMain.trim());
+      });
+
+      for (const [id, set] of Object.entries(pools)) {
+        let datalist = document.getElementById(id);
+        if (!datalist) {
+          datalist = document.createElement('datalist');
+          datalist.id = id;
+          document.body.appendChild(datalist);
+        }
+        datalist.innerHTML = '';
+        Array.from(set).forEach(val => {
+          const opt = document.createElement('option');
+          opt.value = val;
+          datalist.appendChild(opt);
+        });
+      }
+    }
+
+    // ---------------------- GRUPPEN-VERWALTUNG (Group Manager) ----------------------
+    let activeGroupTab = 'ru'; // 'ru' | 'uk' | 'de'
+
+    function openGroupManagerModal() {
+      if (userRole === 'ADMIN_DE') {
+        activeGroupTab = 'de';
+        document.getElementById('groupTabRu').classList.add('hidden');
+        document.getElementById('groupTabUk').classList.add('hidden');
+        document.getElementById('groupTabDe').classList.remove('hidden');
+      } else if (userRole === 'ADMIN_RU_UK') {
+        activeGroupTab = 'ru';
+        document.getElementById('groupTabRu').classList.remove('hidden');
+        document.getElementById('groupTabUk').classList.remove('hidden');
+        document.getElementById('groupTabDe').classList.add('hidden');
+      } else {
+        activeGroupTab = 'ru';
+        document.getElementById('groupTabRu').classList.remove('hidden');
+        document.getElementById('groupTabUk').classList.remove('hidden');
+        document.getElementById('groupTabDe').classList.remove('hidden');
+      }
+
+      setGroupManagerTab(activeGroupTab);
+      document.getElementById('groupManagerModal').classList.remove('hidden');
+    }
+
+    function closeGroupManagerModal() {
+      document.getElementById('groupManagerModal').classList.add('hidden');
+    }
+
+    function setGroupManagerTab(tab) {
+      syncCurrentTabInputsToMemory();
+      activeGroupTab = tab;
+
+      const tabs = ['ru', 'uk', 'de'];
+      tabs.forEach(t => {
+        const btn = document.getElementById(`groupTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (btn) {
+          if (t === tab) {
+            btn.className = 'px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 text-white shadow-xs transition flex items-center gap-1.5 shrink-0';
+          } else {
+            btn.className = 'px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 shrink-0';
+          }
+        }
+      });
+
+      renderGroupManagerList();
+    }
+
+    function syncCurrentTabInputsToMemory() {
+      const inputs = document.querySelectorAll('#groupManagerList .group-name-input');
+      if (inputs.length > 0) {
+        const updated = [];
+        inputs.forEach(input => {
+          const val = input.value.trim();
+          if (val) updated.push(val);
+        });
+        if (updated.length > 0) {
+          activeGroupPools[activeGroupTab] = updated;
+          if (activeGroupTab === 'de') {
+            activeGroupPools.main = [...updated];
+          }
+        }
+      }
+    }
+
+    function onQuickGroupSelect(val) {
+      if (!val) return;
+      const input = document.getElementById('newGroupNameInput');
+      input.value = val;
+      input.focus();
+    }
+
+    function updateGroupManagerSuggestions() {
+      let datalist = document.getElementById('groupManagerSuggestionsList');
+      if (!datalist) {
+        datalist = document.createElement('datalist');
+        datalist.id = 'groupManagerSuggestionsList';
+        document.body.appendChild(datalist);
+      }
+      datalist.innerHTML = '';
+
+      const candidates = new Set();
+      const defaultPool = DEFAULT_GROUP_POOLS[activeGroupTab] || [];
+      defaultPool.forEach(n => candidates.add(n));
+
+      // Vorschläge aus bestehendem Plan für diesen Bereich
+      scheduleData.forEach(item => {
+        if (activeGroupTab === 'ru' && item.tuesdaySundayRu) candidates.add(item.tuesdaySundayRu.trim());
+        if (activeGroupTab === 'uk' && item.midweekUk) candidates.add(item.midweekUk.trim());
+        if (activeGroupTab === 'de') {
+          if (item.sundayDe) candidates.add(item.sundayDe.trim());
+          if (item.weekendMain) candidates.add(item.weekendMain.trim());
+        }
+      });
+
+      // Vorschläge aus Ereignissen
+      const events = COMMON_EVENTS[activeGroupTab] || [];
+      events.forEach(n => candidates.add(n));
+
+      Array.from(candidates).forEach(val => {
+        if (val) {
+          const opt = document.createElement('option');
+          opt.value = val;
+          datalist.appendChild(opt);
+        }
+      });
+
+      // Auch das Schnell-Auswahl-Dropdown aktualisieren
+      const quickSelect = document.getElementById('quickGroupSelect');
+      if (quickSelect) {
+        quickSelect.innerHTML = '<option value="">-- Gruppe / Vorlage aus Dropdown wählen --</option>';
+
+        if (defaultPool.length > 0) {
+          const optGroupDef = document.createElement('optgroup');
+          optGroupDef.label = 'Standard-Gruppen';
+          defaultPool.forEach(n => {
+            const opt = document.createElement('option');
+            opt.value = n;
+            opt.textContent = n;
+            optGroupDef.appendChild(opt);
+          });
+          quickSelect.appendChild(optGroupDef);
+        }
+
+        if (events.length > 0) {
+          const optGroupEv = document.createElement('optgroup');
+          optGroupEv.label = 'Ereignisse & Kongresse';
+          events.forEach(n => {
+            const opt = document.createElement('option');
+            opt.value = n;
+            opt.textContent = n;
+            optGroupEv.appendChild(opt);
+          });
+          quickSelect.appendChild(optGroupEv);
+        }
+      }
+    }
+
+    function renderGroupManagerList() {
+      updateGroupManagerSuggestions();
+
+      const listContainer = document.getElementById('groupManagerList');
+      listContainer.innerHTML = '';
+
+      const list = activeGroupPools[activeGroupTab] || [];
+      if (list.length === 0) {
+        listContainer.innerHTML = '<p class="text-slate-400 italic text-center py-4">Keine Gruppen hinterlegt. Wähle oben eine Vorlage oder trage unten eine Gruppe ein.</p>';
+        return;
+      }
+
+      list.forEach((name, idx) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center gap-2 p-2 bg-slate-50 border border-slate-200 rounded-xl transition hover:border-slate-300';
+        row.innerHTML = `
+          <span class="w-6 h-6 rounded-lg bg-indigo-100 text-indigo-800 font-bold text-xs flex items-center justify-center shrink-0">
+            ${idx + 1}
+          </span>
+          <input 
+            type="text" 
+            list="groupManagerSuggestionsList"
+            value="${escapeHtml(name)}" 
+            class="group-name-input flex-1 px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-medium text-slate-900 bg-white focus:ring-2 focus:ring-indigo-500 focus:outline-none" 
+            data-orig="${escapeHtml(name)}" 
+            data-index="${idx}"
+            placeholder="Gruppenname (Klick für Dropdown-Vorschläge)"
+            onclick="if(this.showPicker){try{this.showPicker();}catch(e){}}"
+          >
+          <div class="flex items-center gap-0.5 shrink-0">
+            <button 
+              type="button" 
+              onclick="moveGroupItem(${idx}, -1)" 
+              ${idx === 0 ? 'disabled' : ''} 
+              class="p-1.5 text-slate-400 hover:text-indigo-600 disabled:opacity-20 disabled:pointer-events-none rounded-lg transition" 
+              title="Nach oben verschieben"
+            >
+              <i class="fa-solid fa-arrow-up text-xs"></i>
+            </button>
+            <button 
+              type="button" 
+              onclick="moveGroupItem(${idx}, 1)" 
+              ${idx === list.length - 1 ? 'disabled' : ''} 
+              class="p-1.5 text-slate-400 hover:text-indigo-600 disabled:opacity-20 disabled:pointer-events-none rounded-lg transition" 
+              title="Nach unten verschieben"
+            >
+              <i class="fa-solid fa-arrow-down text-xs"></i>
+            </button>
+            <button 
+              type="button" 
+              onclick="deleteGroupItem(${idx})" 
+              class="p-1.5 text-slate-400 hover:text-rose-600 rounded-lg transition" 
+              title="Gruppe entfernen"
+            >
+              <i class="fa-solid fa-trash-can text-xs"></i>
+            </button>
+          </div>
+        `;
+        listContainer.appendChild(row);
+      });
+    }
+
+    function moveGroupItem(index, direction) {
+      syncCurrentTabInputsToMemory();
+      const list = activeGroupPools[activeGroupTab] || [];
+      const targetIndex = index + direction;
+      if (targetIndex >= 0 && targetIndex < list.length) {
+        const item = list.splice(index, 1)[0];
+        list.splice(targetIndex, 0, item);
+        if (activeGroupTab === 'de') {
+          activeGroupPools.main = [...list];
+        }
+        renderGroupManagerList();
+      }
+    }
+
+    function deleteGroupItem(index) {
+      syncCurrentTabInputsToMemory();
+      const list = activeGroupPools[activeGroupTab] || [];
+      if (confirm(`Gruppe "${list[index]}" wirklich aus der Rotationsliste entfernen?`)) {
+        list.splice(index, 1);
+        if (activeGroupTab === 'de') {
+          activeGroupPools.main = [...list];
+        }
+        renderGroupManagerList();
+      }
+    }
+
+    function addNewGroupToActiveTab() {
+      const input = document.getElementById('newGroupNameInput');
+      const val = input.value.trim();
+      if (!val) return;
+
+      syncCurrentTabInputsToMemory();
+      if (!activeGroupPools[activeGroupTab]) {
+        activeGroupPools[activeGroupTab] = [];
+      }
+      activeGroupPools[activeGroupTab].push(val);
+      if (activeGroupTab === 'de') {
+        activeGroupPools.main = [...activeGroupPools.de];
+      }
+
+      input.value = '';
+      renderGroupManagerList();
+      showToast(`Gruppe "${val}" hinzugefügt`);
+    }
+
+    function resetActiveGroupPoolToDefault() {
+      const tabName = activeGroupTab === 'ru' ? 'Russisch' : (activeGroupTab === 'uk' ? 'Ukrainisch' : 'Deutsch');
+      if (confirm(`Möchtest du die Gruppenliste für [${tabName}] auf den Standard zurücksetzen?`)) {
+        activeGroupPools[activeGroupTab] = [...(DEFAULT_GROUP_POOLS[activeGroupTab] || [])];
+        if (activeGroupTab === 'de') {
+          activeGroupPools.main = [...DEFAULT_GROUP_POOLS.main];
+        }
+        renderGroupManagerList();
+        showToast(`Standard für ${tabName} wiederhergestellt`);
+      }
+    }
+
+    function saveGroupManagerChanges() {
+      const inputs = document.querySelectorAll('#groupManagerList .group-name-input');
+      const renameMap = new Map(); // oldName -> newName
+
+      const updatedList = [];
+      inputs.forEach(input => {
+        const orig = input.getAttribute('data-orig') || '';
+        const current = input.value.trim();
+        if (current) {
+          updatedList.push(current);
+          if (orig && orig !== current) {
+            renameMap.set(orig, current);
+          }
+        }
+      });
+
+      if (updatedList.length > 0) {
+        activeGroupPools[activeGroupTab] = updatedList;
+        if (activeGroupTab === 'de') {
+          activeGroupPools.main = [...updatedList];
+        }
+      }
+
+      // Prüfen, ob geänderte Gruppennamen auch im bestehenden Plan aktualisiert werden sollen
+      const syncChecked = document.getElementById('syncRenamedGroupsInSchedule').checked;
+      if (syncChecked && renameMap.size > 0) {
+        scheduleData.forEach(item => {
+          ['tuesdaySundayRu', 'midweekUk', 'sundayDe', 'weekendMain'].forEach(field => {
+            if (item[field] && renameMap.has(item[field])) {
+              item[field] = renameMap.get(item[field]);
+            }
+          });
+        });
+      }
+
+      // Dauerhaft im localStorage speichern
+      localStorage.setItem(GROUP_POOLS_KEY, JSON.stringify(activeGroupPools));
+
+      // Alle abhängigen Ansichten aktualisieren
+      updateAdminDatalists();
+      renderAdminTable();
+      applyAllFilters();
+      updatePersonalBanner();
+
+      closeGroupManagerModal();
+      showToast('Gruppenliste erfolgreich gespeichert!');
+    }
+
     function renderAdminTable() {
+      updateAdminDatalists();
       const tbody = document.getElementById('adminTableBody');
       tbody.innerHTML = '';
 
@@ -1412,10 +1951,10 @@
           <td class="p-1.5"><input type="text" value="${escapeHtml(item.kw)}" class="w-full px-2 py-1 border rounded text-xs font-bold ${!isSuper ? 'bg-slate-100 text-slate-500' : ''}" data-field="kw" data-index="${index}" ${!isSuper ? 'readonly' : ''}></td>
           <td class="p-1.5"><input type="text" value="${escapeHtml(item.fromDate)}" class="w-full px-2 py-1 border rounded text-xs ${!isSuper ? 'bg-slate-100 text-slate-500' : ''}" data-field="fromDate" data-index="${index}" ${!isSuper ? 'readonly' : ''}></td>
           <td class="p-1.5"><input type="text" value="${escapeHtml(item.toDate)}" class="w-full px-2 py-1 border rounded text-xs ${!isSuper ? 'bg-slate-100 text-slate-500' : ''}" data-field="toDate" data-index="${index}" ${!isSuper ? 'readonly' : ''}></td>
-          <td class="p-1.5"><input type="text" value="${escapeHtml(item.tuesdaySundayRu)}" class="w-full px-2 py-1 border rounded text-xs ${!canEditRuUk ? 'bg-slate-100 text-slate-400' : ''}" data-field="tuesdaySundayRu" data-index="${index}" ${!canEditRuUk ? 'readonly' : ''}></td>
-          <td class="p-1.5"><input type="text" value="${escapeHtml(item.midweekUk)}" class="w-full px-2 py-1 border rounded text-xs ${!canEditRuUk ? 'bg-slate-100 text-slate-400' : ''}" data-field="midweekUk" data-index="${index}" ${!canEditRuUk ? 'readonly' : ''}></td>
-          <td class="p-1.5"><input type="text" value="${escapeHtml(item.sundayDe)}" class="w-full px-2 py-1 border rounded text-xs ${!canEditDe ? 'bg-slate-100 text-slate-400' : ''}" data-field="sundayDe" data-index="${index}" ${!canEditDe ? 'readonly' : ''}></td>
-          <td class="p-1.5"><input type="text" value="${escapeHtml(item.weekendMain)}" class="w-full px-2 py-1 border rounded text-xs font-semibold ${!canEditDe ? 'bg-slate-100 text-slate-400' : ''}" data-field="weekendMain" data-index="${index}" ${!canEditDe ? 'readonly' : ''}></td>
+          <td class="p-1.5"><input type="text" list="adminListRu" value="${escapeHtml(item.tuesdaySundayRu)}" placeholder="Gruppe wählen / tippen" class="w-full px-2 py-1 border rounded text-xs focus:ring-1 focus:ring-indigo-500 ${!canEditRuUk ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800'}" data-field="tuesdaySundayRu" data-index="${index}" ${!canEditRuUk ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
+          <td class="p-1.5"><input type="text" list="adminListUk" value="${escapeHtml(item.midweekUk)}" placeholder="Gruppe wählen / tippen" class="w-full px-2 py-1 border rounded text-xs focus:ring-1 focus:ring-indigo-500 ${!canEditRuUk ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800'}" data-field="midweekUk" data-index="${index}" ${!canEditRuUk ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
+          <td class="p-1.5"><input type="text" list="adminListDe" value="${escapeHtml(item.sundayDe)}" placeholder="Gruppe wählen / tippen" class="w-full px-2 py-1 border rounded text-xs focus:ring-1 focus:ring-indigo-500 ${!canEditDe ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800'}" data-field="sundayDe" data-index="${index}" ${!canEditDe ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
+          <td class="p-1.5"><input type="text" list="adminListMain" value="${escapeHtml(item.weekendMain)}" placeholder="Gruppe wählen / tippen" class="w-full px-2 py-1 border rounded text-xs font-semibold focus:ring-1 focus:ring-indigo-500 ${!canEditDe ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800'}" data-field="weekendMain" data-index="${index}" ${!canEditDe ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
           <td class="p-1.5 text-center">
             ${isSuper ? `<button onclick="deleteAdminRow(${index})" class="p-1 text-rose-500 hover:text-rose-700 min-h-[36px] min-w-[36px] flex items-center justify-center mx-auto" title="Löschen"><i class="fa-solid fa-trash-can"></i></button>` : '—'}
           </td>
@@ -1463,7 +2002,13 @@
               action: 'auto_rotate',
               scope: scope,
               startKw: 26,
-              totalWeeks: scheduleData.length || 28
+              totalWeeks: scheduleData.length || 28,
+              customPools: {
+                tuesdaySundayRu: activeGroupPools.ru,
+                midweekUk: activeGroupPools.uk,
+                sundayDe: activeGroupPools.de,
+                weekendMain: activeGroupPools.main || activeGroupPools.de
+              }
             })
           });
 
