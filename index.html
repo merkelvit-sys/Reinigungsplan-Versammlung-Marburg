@@ -2168,25 +2168,13 @@
 
     function openAdminEditor() {
       const badge = document.getElementById('userRoleBadge');
-      const rotRuUkBtn = document.getElementById('rotRuUkBtn');
-      const rotDeBtn = document.getElementById('rotDeBtn');
-      const rotAllBtn = document.getElementById('rotAllBtn');
 
       if (userRole === 'SUPER_ADMIN') {
         badge.textContent = 'Super Admin (Alle Rechte)';
-        rotRuUkBtn.classList.remove('hidden');
-        rotDeBtn.classList.remove('hidden');
-        rotAllBtn.classList.remove('hidden');
       } else if (userRole === 'ADMIN_RU_UK') {
         badge.textContent = 'Admin RU/UK (Spalten D & E)';
-        rotRuUkBtn.classList.remove('hidden');
-        rotDeBtn.classList.add('hidden');
-        rotAllBtn.classList.add('hidden');
       } else if (userRole === 'ADMIN_DE') {
         badge.textContent = 'Admin DE (Spalten F & G)';
-        rotRuUkBtn.classList.add('hidden');
-        rotDeBtn.classList.remove('hidden');
-        rotAllBtn.classList.add('hidden');
       }
 
       renderAdminTable();
