@@ -36,12 +36,12 @@
 
         // Synchronisiere bestehende Gruppe und Sprache
         const savedGroup = localStorage.getItem('reinigungsplan_my_group_v2');
-        if (savedGroup && OneSignal.User && OneSignal.User.addTag) {
-          await OneSignal.User.addTag("cleaning_group", savedGroup).catch(() => {});
+        if (savedGroup && OneSignal.User && typeof OneSignal.User.addTag === 'function') {
+          try { OneSignal.User.addTag("cleaning_group", savedGroup); } catch(e) {}
         }
         const savedLang = localStorage.getItem('reinigungsplan_lang_v1') || 'de';
-        if (OneSignal.User && OneSignal.User.addTag) {
-          await OneSignal.User.addTag("lang", savedLang).catch(() => {});
+        if (OneSignal.User && typeof OneSignal.User.addTag === 'function') {
+          try { OneSignal.User.addTag("lang", savedLang); } catch(e) {}
         }
       } catch (err) {
         console.warn("OneSignal Web Push Initialisierung:", err.message || err);
@@ -2242,9 +2242,11 @@
         if (window.OneSignalDeferred) {
           window.OneSignalDeferred.push(async function(OneSignal) {
             try {
-              await OneSignal.User.addTag("cleaning_group", chosen);
-              await OneSignal.User.addTag("lang", currentLang);
-              if (OneSignal.Notifications && OneSignal.Notifications.permission !== true) {
+              if (OneSignal.User && typeof OneSignal.User.addTag === 'function') {
+                OneSignal.User.addTag("cleaning_group", chosen);
+                OneSignal.User.addTag("lang", currentLang);
+              }
+              if (OneSignal.Notifications && OneSignal.Notifications.permission !== true && typeof OneSignal.Notifications.requestPermission === 'function') {
                 await OneSignal.Notifications.requestPermission();
               }
             } catch (e) {
