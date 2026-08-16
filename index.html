@@ -1943,6 +1943,8 @@
     }
 
     function applyLanguage(lang) {
+      currentLang = lang;
+      localStorage.setItem('reinigungsplan_lang', lang);
       document.documentElement.lang = lang;
 
       // Update Header Title, Subtitle & Live Date
@@ -2025,11 +2027,12 @@
       const thUk = document.getElementById('thUk');
       const thDe = document.getElementById('thDe');
       const thMain = document.getElementById('thMain');
+      const thAct = document.getElementById('thActions');
       if (thKw) thKw.textContent = t('thKwTime');
-      if (thRu) thRu.textContent = getColumnTitle('ru');
-      if (thUk) thUk.textContent = getColumnTitle('uk');
-      if (thDe) thDe.textContent = getColumnTitle('de');
-      if (thMain) thMain.textContent = '🧹 ' + getColumnTitle('main');
+      if (thRu) thRu.textContent = getColumnTitle('ru', lang);
+      if (thUk) thUk.textContent = getColumnTitle('uk', lang);
+      if (thDe) thDe.textContent = getColumnTitle('de', lang);
+      if (thMain) thMain.textContent = '🧹 ' + getColumnTitle('main', lang);
       if (thAct) thAct.textContent = t('thActions');
 
       // Bottom Nav
