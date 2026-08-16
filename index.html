@@ -28,6 +28,9 @@
     window.OneSignalDeferred = window.OneSignalDeferred || [];
     window.OneSignalDeferred.push(async function(OneSignal) {
       try {
+        if (OneSignal.Debug && typeof OneSignal.Debug.setLogLevel === 'function') {
+          OneSignal.Debug.setLogLevel("none");
+        }
         await OneSignal.init({
           appId: "aedd7054-ee01-4e41-b992-5d5a94a4ab4c",
           allowLocalhostAsSecureOrigin: true,
