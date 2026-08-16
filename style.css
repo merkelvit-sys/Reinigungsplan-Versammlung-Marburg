@@ -450,3 +450,102 @@ table {
 @media (min-width: 1024px) {
   .lg\:inline { display: inline !important; }
 }
+
+/* Print Noticeboard Styles (A4 Landscape for Infotafel) */
+#printNoticeHeader, #printNoticeFooter {
+  display: none;
+}
+
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 8mm 8mm 8mm 8mm;
+  }
+
+  html, body {
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    font-size: 10pt !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    user-select: text !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide interactive controls in print */
+  header, nav, #toast, #personalBanner, #controlsBar, #filterBar, #loader,
+  #checklistModal, #adminModal, #pinModal, #rotationModal, #swapModal, 
+  #extendModal, #backupModal, #congressModal, #groupSelectModal, 
+  #pwaInstallBanner, .no-print, button {
+    display: none !important;
+  }
+
+  /* Show Noticeboard Header */
+  #printNoticeHeader {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #312e81;
+    padding-bottom: 6px;
+    margin-bottom: 10px;
+  }
+
+  #tableContainer {
+    display: block !important;
+    box-shadow: none !important;
+    border: none !important;
+    overflow: visible !important;
+  }
+
+  #cardsContainer {
+    display: none !important;
+  }
+
+  table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    font-size: 8.5pt !important;
+  }
+
+  thead {
+    display: table-header-group !important;
+  }
+
+  th {
+    background-color: #e2e8f0 !important;
+    color: #0f172a !important;
+    border: 1px solid #94a3b8 !important;
+    padding: 4px 6px !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    font-size: 8pt !important;
+  }
+
+  td {
+    border: 1px solid #cbd5e1 !important;
+    padding: 4px 6px !important;
+    page-break-inside: avoid;
+  }
+
+  tr:nth-child(even) {
+    background-color: #f8fafc !important;
+  }
+
+  .current-week-row {
+    background-color: #e0e7ff !important;
+    font-weight: bold !important;
+  }
+
+  #printNoticeFooter {
+    display: flex !important;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 10px;
+    padding-top: 6px;
+    border-top: 1px dashed #cbd5e1;
+    font-size: 7.5pt;
+    color: #64748b;
+  }
+}
+
