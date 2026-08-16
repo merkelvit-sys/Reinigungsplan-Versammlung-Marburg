@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="de" class="h-full bg-slate-50">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#4338ca">
+  <meta name="description" content="Aktueller Reinigungsplan für die Versammlung Marburg">
+  <title>Reinigungsplan – Versammlung Marburg</title>
+
+  <!-- PWA & Apple Web App Meta -->
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" type="image/svg+xml" href="icon.svg">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Reinigungsplan">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+
+  <style>
+    /* Smooth Scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+
+    /* Safe Area insets for modern mobile devices (iPhone Notch / Dynamic Island) */
+    body {
+      padding-top: env(safe-area-inset-top);
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    /* Print Optimization */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+      }
+      header, #controlsSection, #jumpToCurrentBtn, #statusToast, #pwaInstallBanner {
+        display: none !important;
+      }
+      #tableContainer {
+        display: block !important;
+        box-shadow: none !important;
+        border: 1px solid #cbd5e1 !important;
+      }
+      #cardsContainer {
+        display: none !important;
+      }
+      tr {
+        page-break-inside: avoid;
+      }
+      .current-week-row {
+        background-color: #f1f5f9 !important;
+      }
+    }
+
+    /* Animations */
+    .fade-in {
+      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="min-h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Header -->
+  <header class="bg-gradient-to-r from-indigo-700 via-indigo-800 to-slate-900 text-white shadow-md sticky top-0 z-40">
+    <div class="max-w-6xl mx-auto px-4 py-3.5 sm:py-5 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+      <div class="flex items-center justify-between w-full sm:w-auto">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/20 shrink-0">
+            <i class="fa-solid fa-broom text-indigo-200 text-lg"></i>
+          </div>
+          <div>
+            <h1 class="text-lg sm:text-2xl font-black tracking-tight flex items-center gap-2">
+              Reinigungsplan
+              <span id="currentKWBadge" class="hidden text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-medium"></span>
+            </h1>
+            <p class="text-indigo-200 text-xs sm:text-sm font-medium">Versammlung Marburg</p>
+          </div>
+        </div>
+
+        <!-- PWA Install Icon Button (Mobile Top Right) -->
+        <button 
+          id="pwaTopInstallBtn" 
+          class="hidden sm:hidden px-3 py-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white text-xs font-semibold rounded-lg border border-white/20 flex items-center gap-1.5 transition"
+        >
+          <i class="fa-solid fa-download text-xs"></i>
+          <span>App</span>
+        </button>
+      </div>
+
+      <!-- Live Search Box -->
+      <div class="w-full sm:w-80 relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <i class="fa-solid fa-magnifying-glass text-sm"></i>
+        </div>
+        <input 
+          type="text" 
+          id="searchInput" 
+          placeholder="Suchen nach Name, KW oder Gruppe..." 
+          class="w-full pl-9 pr-9 py-2 rounded-xl text-slate-900 bg-white/95 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 shadow-inner transition"
+          autocomplete="off"
+        >
+        <button 
+          id="clearSearchBtn" 
+          class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+          title="Suche zurücksetzen"
+        >
+          <i class="fa-solid fa-circle-xmark text-sm"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- PWA Install Banner (Dismissible Toast) -->
+  <div id="pwaInstallBanner" class="hidden bg-indigo-900 text-white border-b border-indigo-700/60 px-4 py-2.5 transition">
+    <div class="max-w-6xl mx-auto flex items-center justify-between gap-3 text-xs">
+      <div class="flex items-center gap-2.5">
+        <img src="icon.svg" alt="App Icon" class="w-7 h-7 rounded-lg shadow-sm border border-white/20">
+        <div>
+          <p class="font-bold">Als App zum Startbildschirm hinzufügen</p>
+          <p class="text-indigo-200 text-[11px]">Schneller Zugriff ohne Browser-Leiste & offline verfügbar</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        <button 
+          id="pwaBannerInstallBtn"
+          class="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600 text-white font-bold rounded-lg transition shadow-xs text-xs"
+        >
+          Installieren
+        </button>
+        <button 
+          id="pwaBannerCloseBtn"
+          class="p-1.5 text-indigo-300 hover:text-white"
+          title="Schließen"
+        >
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Control & Stats Bar -->
+  <section id="controlsSection" class="bg-white border-b border-slate-200/80 shadow-xs">
+    <div class="max-w-6xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+      <div class="flex items-center gap-3">
+        <span id="syncStatus" class="flex items-center gap-1.5 font-medium">
+          <span class="w-2 h-2 rounded-full bg-slate-300 animate-pulse" id="syncStatusDot"></span>
+          <span id="syncStatusText">Synchronisiere...</span>
+        </span>
+        <span class="text-slate-300">|</span>
+        <span id="recordsCount" class="font-medium">0 Wochen geladen</span>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button 
+          id="jumpToCurrentBtn" 
+          onclick="scrollToCurrentWeek()"
+          class="hidden px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold rounded-lg border border-indigo-200/70 transition flex items-center gap-1.5"
+        >
+          <i class="fa-solid fa-location-crosshairs text-xs"></i>
+          <span>Aktuelle Woche</span>
+        </button>
+
+        <button 
+          onclick="refreshData()" 
+          title="Manuell aktualisieren"
+          class="p-1.5 px-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition"
+        >
+          <i id="refreshIcon" class="fa-solid fa-arrows-rotate text-xs"></i>
+        </button>
+
+        <button 
+          onclick="window.print()" 
+          title="Drucken / PDF"
+          class="p-1.5 px-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition"
+        >
+          <i class="fa-solid fa-print text-xs"></i>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Main Content Area -->
+  <main class="max-w-6xl mx-auto p-4 sm:p-6 flex-1 w-full">
+
+    <!-- Loading Spinner -->
+    <div id="loader" class="text-center py-20 flex flex-col items-center justify-center">
+      <div class="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin mb-4"></div>
+      <p class="text-slate-600 font-medium text-sm">Lade aktuellen Reinigungsplan...</p>
+    </div>
+
+    <!-- Error State -->
+    <div id="errorBox" class="hidden bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl p-6 text-center my-6">
+      <i class="fa-solid fa-triangle-exclamation text-3xl text-rose-500 mb-2"></i>
+      <h3 class="font-bold text-base">Fehler beim Laden der Daten</h3>
+      <p id="errorMessage" class="text-xs text-rose-600 mt-1 mb-4">Die Verbindung zur Tabelle konnte nicht hergestellt werden.</p>
+      <button onclick="loadSchedule(true)" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow transition">
+        Erneut versuchen
+      </button>
+    </div>
+
+    <!-- Empty Search Results State -->
+    <div id="noResultsBox" class="hidden bg-slate-100 border border-slate-200 rounded-2xl p-10 text-center my-6 text-slate-500">
+      <i class="fa-solid fa-magnifying-glass text-3xl mb-2 text-slate-400"></i>
+      <p class="font-medium text-sm">Keine Einträge für diese Suchanfrage gefunden</p>
+      <button onclick="resetSearch()" class="mt-3 text-xs text-indigo-600 hover:underline font-semibold">
+        Filter zurücksetzen
+      </button>
+    </div>
+
+    <!-- Desktop View: Table -->
+    <div id="tableContainer" class="hidden overflow-hidden bg-white shadow-sm border border-slate-200/80 rounded-2xl">
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm border-collapse">
+          <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-600 uppercase font-semibold text-xs tracking-wider">
+            <tr>
+              <th class="p-3.5 pl-4 w-36">KW / Zeitraum</th>
+              <th class="p-3.5">Di & So <span class="text-slate-400 font-normal">(Russisch)</span></th>
+              <th class="p-3.5">Mi & Do <span class="text-slate-400 font-normal">(Ukrainisch)</span></th>
+              <th class="p-3.5">So <span class="text-slate-400 font-normal">(Deutsch)</span></th>
+              <th class="p-3.5 pr-4 bg-slate-100/50">Hauptreinigung <span class="text-slate-400 font-normal">(WE)</span></th>
+            </tr>
+          </thead>
+          <tbody id="planTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Mobile View: Cards -->
+    <div id="cardsContainer" class="hidden sm:hidden flex flex-col gap-3.5"></div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400 mt-auto">
+    <p>Reinigungsplan Versammlung Marburg &bull; PWA & Offline unterstützt</p>
+  </footer>
+
+  <!-- Application Logic -->
+  <script>
+    /**
+     * Konfiguration:
+     * Ersetze SCRIPT_URL mit der Web-App URL aus Google Apps Script.
+     */
+    const SCRIPT_URL = 'DEINE_APPS_SCRIPT_WEB_APP_URL';
+    const CACHE_KEY = 'reinigungsplan_marburg_cache_v2';
+    const CACHE_TIMESTAMP_KEY = 'reinigungsplan_marburg_timestamp_v2';
+
+    let scheduleData = [];
+    let currentCalculatedKW = getISOWeekNumber(new Date());
+    let deferredPrompt = null;
+
+    // DOM Elements
+    const tableContainer = document.getElementById('tableContainer');
+    const cardsContainer = document.getElementById('cardsContainer');
+    const tableBody = document.getElementById('planTableBody');
+    const loader = document.getElementById('loader');
+    const errorBox = document.getElementById('errorBox');
+    const errorMessage = document.getElementById('errorMessage');
+    const noResultsBox = document.getElementById('noResultsBox');
+    const searchInput = document.getElementById('searchInput');
+    const clearSearchBtn = document.getElementById('clearSearchBtn');
+    const syncStatusText = document.getElementById('syncStatusText');
+    const syncStatusDot = document.getElementById('syncStatusDot');
+    const recordsCount = document.getElementById('recordsCount');
+    const refreshIcon = document.getElementById('refreshIcon');
+    const currentKWBadge = document.getElementById('currentKWBadge');
+    const jumpToCurrentBtn = document.getElementById('jumpToCurrentBtn');
+    const pwaInstallBanner = document.getElementById('pwaInstallBanner');
+    const pwaBannerInstallBtn = document.getElementById('pwaBannerInstallBtn');
+    const pwaBannerCloseBtn = document.getElementById('pwaBannerCloseBtn');
+    const pwaTopInstallBtn = document.getElementById('pwaTopInstallBtn');
+
+    /**
+     * PWA Service Worker Registration
+     */
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+          .then(reg => console.log('Service Worker erfolgreich registriert:', reg.scope))
+          .catch(err => console.warn('Service Worker Registrierung fehlgeschlagen:', err));
+      });
+    }
+
+    /**
+     * PWA Install Prompt Handlers
+     */
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      
+      // Banner nur anzeigen, wenn nicht zuvor geschlossen
+      if (!sessionStorage.getItem('pwa_banner_dismissed')) {
+        pwaInstallBanner.classList.remove('hidden');
+      }
+      pwaTopInstallBtn.classList.remove('hidden');
+    });
+
+    async function triggerPwaInstall() {
+      if (!deferredPrompt) return;
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') {
+        pwaInstallBanner.classList.add('hidden');
+        pwaTopInstallBtn.classList.add('hidden');
+      }
+      deferredPrompt = null;
+    }
+
+    pwaBannerInstallBtn.addEventListener('click', triggerPwaInstall);
+    pwaTopInstallBtn.addEventListener('click', triggerPwaInstall);
+
+    pwaBannerCloseBtn.addEventListener('click', () => {
+      pwaInstallBanner.classList.add('hidden');
+      sessionStorage.setItem('pwa_banner_dismissed', 'true');
+    });
+
+    /**
+     * Berechnet die ISO-8601 Kalenderwoche für ein Datum
+     */
+    function getISOWeekNumber(date) {
+      const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+      const dayNum = d.getUTCDay() || 7;
+      d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
+    /**
+     * Prüft, ob ein Plan-Element der aktuellen Kalenderwoche entspricht
+     */
+    function isEntryCurrentWeek(item) {
+      if (item.kwNumber && item.kwNumber === currentCalculatedKW) {
+        return true;
+      }
+      if (item.kw && String(item.kw).includes(String(currentCalculatedKW))) {
+        return true;
+      }
+      return false;
+    }
+
+    /**
+     * HTML-Sanitizer zur Vermeidung von XSS-Injektionen
+     */
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    /**
+     * Daten laden mit Stale-While-Revalidate Strategie
+     */
+    async function loadSchedule(force = false) {
+      const cached = localStorage.getItem(CACHE_KEY);
+      const cachedTime = localStorage.getItem(CACHE_TIMESTAMP_KEY);
+
+      if (cached) {
+        try {
+          scheduleData = JSON.parse(cached);
+          render(scheduleData);
+          setSyncState('cached', cachedTime);
+          loader.classList.add('hidden');
+        } catch (e) {
+          console.warn('Cache-Parsing fehlgeschlagen', e);
+        }
+      }
+
+      if (SCRIPT_URL && SCRIPT_URL !== 'DEINE_APPS_SCRIPT_WEB_APP_URL') {
+        setSyncState('loading');
+        refreshIcon.classList.add('fa-spin');
+
+        try {
+          const response = await fetch(SCRIPT_URL, {
+            method: 'GET',
+            mode: 'cors',
+            cache: force ? 'no-cache' : 'default'
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP Fehler ${response.status}`);
+          }
+
+          const result = await response.json();
+
+          if (result.status === 'success' && Array.isArray(result.data)) {
+            scheduleData = result.data;
+            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            localStorage.setItem(CACHE_KEY, JSON.stringify(scheduleData));
+            localStorage.setItem(CACHE_TIMESTAMP_KEY, now);
+
+            render(scheduleData);
+            setSyncState('synced', now);
+            errorBox.classList.add('hidden');
+          } else {
+            throw new Error(result.message || 'Ungültiges Datenformat empfangen');
+          }
+        } catch (err) {
+          console.error("Fehler beim Abrufen der Daten:", err);
+          if (!cached) {
+            errorMessage.textContent = err.message;
+            errorBox.classList.remove('hidden');
+          }
+          setSyncState('error');
+        } finally {
+          loader.classList.add('hidden');
+          refreshIcon.classList.remove('fa-spin');
+        }
+      } else {
+        if (!cached) {
+          showDemoData();
+        }
+      }
+    }
+
+    function setSyncState(state, timeStr = '') {
+      if (state === 'loading') {
+        syncStatusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
+        syncStatusText.textContent = 'Synchronisiere...';
+      } else if (state === 'synced') {
+        syncStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
+        syncStatusText.textContent = `Aktualisiert um ${timeStr}`;
+      } else if (state === 'cached') {
+        syncStatusDot.className = 'w-2 h-2 rounded-full bg-indigo-400';
+        syncStatusText.textContent = `Offline-Stand (${timeStr || 'gespeichert'})`;
+      } else if (state === 'error') {
+        syncStatusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
+        syncStatusText.textContent = 'Offline / Verbindungsfehler';
+      }
+    }
+
+    function render(data) {
+      const isMobile = window.innerWidth < 640;
+      tableBody.innerHTML = '';
+      cardsContainer.innerHTML = '';
+
+      currentKWBadge.textContent = `Aktuell: KW ${currentCalculatedKW}`;
+      currentKWBadge.classList.remove('hidden');
+
+      recordsCount.textContent = `${data.length} ${data.length === 1 ? 'Woche' : 'Wochen'}`;
+
+      if (data.length === 0) {
+        noResultsBox.classList.remove('hidden');
+        tableContainer.classList.add('hidden');
+        cardsContainer.classList.add('hidden');
+        jumpToCurrentBtn.classList.add('hidden');
+        return;
+      }
+
+      noResultsBox.classList.add('hidden');
+      let foundCurrentWeekElement = false;
+
+      data.forEach((item) => {
+        const isCurrent = isEntryCurrentWeek(item);
+        if (isCurrent) foundCurrentWeekElement = true;
+
+        // Desktop Zeile
+        const tr = document.createElement('tr');
+        tr.className = `transition-colors duration-150 ${
+          isCurrent 
+            ? 'bg-indigo-50/80 current-week-row font-medium ring-2 ring-inset ring-indigo-400/60' 
+            : 'hover:bg-slate-50'
+        }`;
+        if (isCurrent) {
+          tr.id = 'currentWeekDesktopRow';
+        }
+
+        tr.innerHTML = `
+          <td class="p-3.5 pl-4 align-top">
+            <div class="flex items-center gap-2">
+              <span class="inline-flex items-center px-2 py-0.5 ${
+                isCurrent ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-800'
+              } rounded-md font-bold text-xs">
+                ${escapeHtml(item.kw)}
+              </span>
+              ${isCurrent ? '<span class="flex h-2 w-2 relative"><span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span><span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span></span>' : ''}
+            </div>
+            <div class="text-xs text-slate-500 mt-1 font-normal">
+              ${escapeHtml(item.fromDate)} – ${escapeHtml(item.toDate)}
+            </div>
+          </td>
+          <td class="p-3.5 align-top">${escapeHtml(item.tuesdaySundayRu) || '<span class="text-slate-300">—</span>'}</td>
+          <td class="p-3.5 align-top">${escapeHtml(item.midweekUk) || '<span class="text-slate-300">—</span>'}</td>
+          <td class="p-3.5 align-top">${escapeHtml(item.sundayDe) || '<span class="text-slate-300">—</span>'}</td>
+          <td class="p-3.5 pr-4 align-top font-semibold text-slate-900 bg-slate-50/40">
+            ${escapeHtml(item.weekendMain) || '<span class="text-slate-300">—</span>'}
+          </td>
+        `;
+        tableBody.appendChild(tr);
+
+        // Mobile Karte
+        const card = document.createElement('div');
+        card.className = `fade-in p-4 rounded-2xl border transition shadow-sm ${
+          isCurrent 
+            ? 'bg-gradient-to-br from-indigo-50/90 to-white border-indigo-300 ring-2 ring-indigo-400/40 shadow-indigo-100' 
+            : 'bg-white border-slate-200/80 hover:border-slate-300'
+        }`;
+        if (isCurrent) {
+          card.id = 'currentWeekMobileCard';
+        }
+
+        card.innerHTML = `
+          <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
+            <div class="flex items-center gap-2">
+              <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold ${
+                isCurrent ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-800'
+              }">
+                ${escapeHtml(item.kw)}
+              </span>
+              ${isCurrent ? '<span class="text-xs font-semibold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md">Aktuelle Woche</span>' : ''}
+            </div>
+            <span class="text-xs font-medium text-slate-500">${escapeHtml(item.fromDate)} – ${escapeHtml(item.toDate)}</span>
+          </div>
+
+          <div class="grid grid-cols-1 gap-2 pt-2.5 text-xs">
+            <div class="flex justify-between items-baseline py-0.5">
+              <span class="text-slate-500 font-medium">Di & So (Ru):</span>
+              <span class="font-semibold text-slate-800 text-right">${escapeHtml(item.tuesdaySundayRu) || '—'}</span>
+            </div>
+            <div class="flex justify-between items-baseline py-0.5">
+              <span class="text-slate-500 font-medium">Mi & Do (Uk):</span>
+              <span class="font-semibold text-slate-800 text-right">${escapeHtml(item.midweekUk) || '—'}</span>
+            </div>
+            <div class="flex justify-between items-baseline py-0.5">
+              <span class="text-slate-500 font-medium">So (De):</span>
+              <span class="font-semibold text-slate-800 text-right">${escapeHtml(item.sundayDe) || '—'}</span>
+            </div>
+            <div class="flex justify-between items-baseline pt-2 border-t border-slate-100 text-slate-900">
+              <span class="text-indigo-600 font-bold flex items-center gap-1">
+                <i class="fa-solid fa-sparkles text-xs"></i> Hauptreinigung:
+              </span>
+              <span class="font-black text-indigo-950 text-right">${escapeHtml(item.weekendMain) || '—'}</span>
+            </div>
+          </div>
+        `;
+        cardsContainer.appendChild(card);
+      });
+
+      tableContainer.classList.toggle('hidden', isMobile);
+      cardsContainer.classList.toggle('hidden', !isMobile);
+
+      if (foundCurrentWeekElement) {
+        jumpToCurrentBtn.classList.remove('hidden');
+      } else {
+        jumpToCurrentBtn.classList.add('hidden');
+      }
+    }
+
+    function scrollToCurrentWeek() {
+      const isMobile = window.innerWidth < 640;
+      const target = isMobile 
+        ? document.getElementById('currentWeekMobileCard') 
+        : document.getElementById('currentWeekDesktopRow');
+
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+    }
+
+    // Live-Suche
+    let searchTimeout;
+    searchInput.addEventListener('input', (e) => {
+      clearTimeout(searchTimeout);
+      const query = e.target.value.trim().toLowerCase();
+
+      clearSearchBtn.classList.toggle('hidden', query.length === 0);
+
+      searchTimeout = setTimeout(() => {
+        if (!query) {
+          render(scheduleData);
+          return;
+        }
+
+        const filtered = scheduleData.filter(item => {
+          return Object.values(item).some(val => 
+            val !== null && val !== undefined && String(val).toLowerCase().includes(query)
+          );
+        });
+
+        render(filtered);
+      }, 150);
+    });
+
+    function resetSearch() {
+      searchInput.value = '';
+      clearSearchBtn.classList.add('hidden');
+      render(scheduleData);
+      searchInput.focus();
+    }
+
+    clearSearchBtn.addEventListener('click', resetSearch);
+
+    function refreshData() {
+      loadSchedule(true);
+    }
+
+    function showDemoData() {
+      scheduleData = [
+        { id: 1, kw: "KW 32", kwNumber: 32, fromDate: "04.08.", toDate: "10.08.", tuesdaySundayRu: "Gruppe 1", midweekUk: "Gruppe 2", sundayDe: "Gruppe 3", weekendMain: "Gruppe 4" },
+        { id: 2, kw: "KW 33", kwNumber: 33, fromDate: "11.08.", toDate: "17.08.", tuesdaySundayRu: "Gruppe 2", midweekUk: "Gruppe 3", sundayDe: "Gruppe 4", weekendMain: "Gruppe 1" },
+        { id: 3, kw: `KW ${currentCalculatedKW}`, kwNumber: currentCalculatedKW, fromDate: "18.08.", toDate: "24.08.", tuesdaySundayRu: "Gruppe Marburg Nord", midweekUk: "Gruppe Ost", sundayDe: "Gruppe Süd", weekendMain: "Gruppe West" },
+        { id: 4, kw: "KW 35", kwNumber: 35, fromDate: "25.08.", toDate: "31.08.", tuesdaySundayRu: "Gruppe 4", midweekUk: "Gruppe 1", sundayDe: "Gruppe 2", weekendMain: "Gruppe 3" }
+      ];
+      render(scheduleData);
+      setSyncState('cached', 'Vorschau-Modus');
+      loader.classList.add('hidden');
+    }
+
+    window.addEventListener('resize', () => {
+      const query = searchInput.value.trim().toLowerCase();
+      if (!query) {
+        render(scheduleData);
+      }
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSchedule();
+      setTimeout(() => {
+        scrollToCurrentWeek();
+      }, 400);
+    });
+  </script>
+</body>
+</html>

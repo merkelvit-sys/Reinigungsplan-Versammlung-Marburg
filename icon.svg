@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4338ca;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#1e1b4b;stop-opacity:1" />
+    </linearGradient>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="12" stdDeviation="16" flood-color="#000000" flood-opacity="0.25"/>
+    </filter>
+  </defs>
+  
+  <!-- Background Rounded Rect with Shadow -->
+  <rect width="512" height="512" rx="112" fill="url(#grad)" />
+  
+  <!-- Broom & Sparkles Icon -->
+  <g fill="#ffffff" filter="url(#shadow)">
+    <!-- Sparkles -->
+    <path d="M160 120 L168 144 L192 152 L168 160 L160 184 L152 160 L128 152 L152 144 Z" opacity="0.9" />
+    <path d="M370 100 L376 118 L394 124 L376 130 L370 148 L364 130 L346 124 L364 118 Z" opacity="0.75" />
+    
+    <!-- Broom Stick -->
+    <rect x="244" y="90" width="24" height="210" rx="12" transform="rotate(40 256 195)" />
+    
+    <!-- Broom Base & Bristles -->
+    <path d="M 210 260 L 290 320 C 310 335, 330 380, 310 420 C 300 440, 270 445, 230 435 C 190 425, 170 400, 165 375 C 160 345, 185 285, 210 260 Z" />
+    <path d="M 180 370 C 210 395, 270 410, 305 405" stroke="#4338ca" stroke-width="8" stroke-linecap="round" fill="none" />
+  </g>
+</svg>
