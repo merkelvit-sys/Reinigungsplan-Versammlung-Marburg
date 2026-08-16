@@ -51,9 +51,7 @@
       }
     });
   </script>
-</head>
-<body class="min-h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white pb-20 sm:pb-0">
-
+<body class="min-h-full sm:h-screen sm:overflow-hidden flex flex-col font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white pb-20 sm:pb-0">
   <!-- Toast Notification -->
   <div id="toast" class="hidden fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white text-xs px-4 py-2.5 rounded-2xl shadow-2xl backdrop-blur-xs flex items-center gap-2 fade-in border border-white/10">
     <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
@@ -318,7 +316,7 @@
   </section>
 
   <!-- Main Content Area -->
-  <main class="max-w-6xl mx-auto p-3.5 sm:p-6 flex-1 w-full">
+  <main class="max-w-6xl mx-auto p-3.5 sm:p-6 flex-1 w-full flex flex-col min-h-0">
 
     <!-- Loading Spinner -->
     <div id="loader" class="text-center py-20 flex flex-col items-center justify-center">
@@ -358,15 +356,15 @@
     </div>
 
     <!-- Desktop View: Table -->
-    <div id="tableContainer" class="hidden bg-white shadow-sm border border-slate-200/80 rounded-2xl overflow-hidden">
-      <div class="overflow-x-auto max-h-[calc(100vh-210px)] overflow-y-auto">
+    <div id="tableContainer" class="hidden bg-white shadow-sm border border-slate-200/80 rounded-2xl flex-1 min-h-0 overflow-hidden flex flex-col">
+      <div class="overflow-x-auto overflow-y-auto flex-1 h-full">
         <table class="w-full text-left text-sm border-collapse">
           <thead class="sticky top-0 z-20 bg-slate-100/95 backdrop-blur-xs border-b border-slate-200 text-slate-700 uppercase font-bold text-xs tracking-wider shadow-xs">
             <tr>
               <th id="thKw" class="p-3.5 pl-4 w-36 bg-slate-100/95">KW / Zeitraum</th>
               <th id="thRu" class="p-3.5 bg-slate-100/95">Di & So (Russisch)</th>
               <th id="thUk" class="p-3.5 bg-slate-100/95">Mi & So (Ukrainisch)</th>
-              <th id="thDe" class="p-3.5 bg-slate-100/95">So (Deutsch)</th>
+              <th id="thDe" class="p-3.5 bg-slate-100/95">Do (Deutsch)</th>
               <th id="thMain" class="p-3.5 bg-indigo-50/90 text-indigo-950 font-black border-l border-r border-indigo-200/60">🧹 Hauptreinigung (WE)</th>
               <th id="thActions" class="p-3.5 pr-4 w-20 text-center bg-slate-100/95 no-print">Aktionen</th>
             </tr>
@@ -1307,6 +1305,7 @@
               <select id="meetingDayRuWk" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
                 <option value="So">Sonntag (So)</option>
                 <option value="Sa">Samstag (Sa)</option>
+                <option value="-">- (Kein Wochenende)</option>
               </select>
             </div>
           </div>
@@ -1334,6 +1333,7 @@
               <select id="meetingDayUkWk" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
                 <option value="So">Sonntag (So)</option>
                 <option value="Sa">Samstag (Sa)</option>
+                <option value="-">- (Kein Wochenende)</option>
               </select>
             </div>
           </div>
@@ -1361,6 +1361,7 @@
               <select id="meetingDayDeWk" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
                 <option value="So">Sonntag (So)</option>
                 <option value="Sa">Samstag (Sa)</option>
+                <option value="-">- (Kein Wochenende)</option>
               </select>
             </div>
           </div>
@@ -1437,7 +1438,7 @@
     const DEFAULT_MEETING_DAYS = {
       ru: { midweek: "Di", weekend: "So" },
       uk: { midweek: "Mi", weekend: "So" },
-      de: { midweek: "Do", weekend: "So" },
+      de: { midweek: "Do", weekend: "-" },
       main: { label: "WE" }
     };
 
@@ -1464,25 +1465,27 @@
       const days = getMeetingDays();
       const getShort = (code) => (DAY_NAMES[code] && DAY_NAMES[code].short[lang]) || code;
       
+      const buildTitle = (d1Code, d2Code, ruSuffix, ukSuffix, deSuffix) => {
+        const d1 = getShort(d1Code);
+        if (d2Code === '-' || !d2Code) {
+          if (lang === 'ru') return `${d1} ${ruSuffix}`;
+          if (lang === 'uk') return `${d1} ${ukSuffix}`;
+          return `${d1} ${deSuffix}`;
+        }
+        const d2 = getShort(d2Code);
+        if (lang === 'ru') return `${d1} и ${d2} ${ruSuffix}`;
+        if (lang === 'uk') return `${d1} і ${d2} ${ukSuffix}`;
+        return `${d1} & ${d2} ${deSuffix}`;
+      };
+
       if (type === 'ru') {
-        const d1 = getShort(days.ru.midweek);
-        const d2 = getShort(days.ru.weekend);
-        if (lang === 'ru') return `${d1} и ${d2} (Русское)`;
-        if (lang === 'uk') return `${d1} і ${d2} (Російська)`;
-        return `${d1} & ${d2} (Russisch)`;
+        return buildTitle(days.ru.midweek, days.ru.weekend, '(Русское)', '(Російська)', '(Russisch)');
       }
       if (type === 'uk') {
-        const d1 = getShort(days.uk.midweek);
-        const d2 = getShort(days.uk.weekend);
-        if (lang === 'ru') return `${d1} и ${d2} (Украинское)`;
-        if (lang === 'uk') return `${d1} і ${d2} (Українська)`;
-        return `${d1} & ${d2} (Ukrainisch)`;
+        return buildTitle(days.uk.midweek, days.uk.weekend, '(Украинское)', '(Українська)', '(Ukrainisch)');
       }
       if (type === 'de') {
-        const d = getShort(days.de.weekend);
-        if (lang === 'ru') return `${d} (Немецкое)`;
-        if (lang === 'uk') return `${d} (Німецька)`;
-        return `${d} (Deutsch)`;
+        return buildTitle(days.de.midweek, days.de.weekend, '(Немецкое)', '(Німецька)', '(Deutsch)');
       }
       if (type === 'main') {
         const lbl = getShort(days.main.label);
@@ -1610,7 +1613,7 @@
         thKwTime: "KW / Zeitraum",
         thRu: "Di & So (Russisch)",
         thUk: "Mi & So (Ukrainisch)",
-        thDe: "So (Deutsch)",
+        thDe: "Do (Deutsch)",
         thMain: "Hauptreinigung (WE)",
         thActions: "Aktionen",
         currentWeekBadge: "Aktuelle Woche",
@@ -1714,7 +1717,7 @@
         thKwTime: "НК / Период",
         thRu: "Вт и Вс (Русское)",
         thUk: "Ср и Вс (Украинское)",
-        thDe: "Вс (Немецкое)",
+        thDe: "Чт (Немецкое)",
         thMain: "Ген. уборка (Выходные)",
         thActions: "Действия",
         currentWeekBadge: "Текущая неделя",
@@ -1818,7 +1821,7 @@
         thKwTime: "ТЖ / Період",
         thRu: "Вт і Нд (Російська)",
         thUk: "Ср і Нд (Українська)",
-        thDe: "Нд (Німецька)",
+        thDe: "Чт (Німецька)",
         thMain: "Ген. прибирання (Вихідні)",
         thActions: "Дії",
         currentWeekBadge: "Поточний тиждень",
