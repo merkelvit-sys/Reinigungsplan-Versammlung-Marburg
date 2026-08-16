@@ -514,6 +514,11 @@ table {
   .lg\:inline { display: inline !important; }
 }
 
+/* Smooth Scroll Positioning for Current Week */
+#currentWeekMobileCard, #currentWeekDesktopRow, .current-week-row {
+  scroll-margin-top: 100px;
+}
+
 /* Print Noticeboard Styles (A4 Landscape for Infotafel) */
 #printNoticeHeader, #printNoticeFooter {
   display: none;

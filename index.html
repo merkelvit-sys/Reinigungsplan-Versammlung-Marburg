@@ -1950,9 +1950,9 @@
     }
 
     function isEntryCurrentWeek(item) {
-      if (item.kwNumber && item.kwNumber === currentCalculatedKW) return true;
-      if (item.kw && String(item.kw).includes(String(currentCalculatedKW))) return true;
-      return false;
+      if (!item) return false;
+      const num = item.kwNumber || parseInt(String(item.kw || '').replace(/\D/g, ''), 10);
+      return num === currentCalculatedKW;
     }
 
     function escapeHtml(str) {
@@ -2520,17 +2520,37 @@
       cardsContainer.classList.toggle('hidden', !isMobile);
 
       jumpToCurrentBtn.classList.toggle('hidden', !foundCurrentWeekElement);
+
+      if (foundCurrentWeekElement && !hasAutoScrolledOnStart) {
+        autoScrollToCurrentWeekOnStart();
+      }
     }
 
-    function scrollToCurrentWeek() {
+    let hasAutoScrolledOnStart = false;
+
+    function scrollToCurrentWeek(smooth = true) {
       const isMobile = window.innerWidth < 640;
       const target = isMobile 
         ? document.getElementById('currentWeekMobileCard') 
         : document.getElementById('currentWeekDesktopRow');
 
       if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        target.scrollIntoView({ 
+          behavior: smooth ? 'smooth' : 'auto', 
+          block: isMobile ? 'start' : 'center' 
+        });
       }
+    }
+
+    function autoScrollToCurrentWeekOnStart() {
+      if (hasAutoScrolledOnStart) return;
+      setTimeout(() => {
+        scrollToCurrentWeek(false);
+        setTimeout(() => {
+          scrollToCurrentWeek(true);
+          hasAutoScrolledOnStart = true;
+        }, 120);
+      }, 80);
     }
 
     // Live Search
