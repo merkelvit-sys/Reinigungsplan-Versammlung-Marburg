@@ -22,24 +22,19 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <style>
-    /* Smooth Scroll */
     html {
       scroll-behavior: smooth;
     }
-
-    /* Safe Area insets for modern mobile devices (iPhone Notch / Dynamic Island) */
     body {
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
     }
-
-    /* Print Optimization */
     @media print {
       body {
         background-color: #ffffff !important;
         color: #000000 !important;
       }
-      header, #controlsSection, #jumpToCurrentBtn, #statusToast, #pwaInstallBanner {
+      header, #controlsSection, #jumpToCurrentBtn, #statusToast, #pwaInstallBanner, #adminTriggerBtn, #adminModal, #pinModal {
         display: none !important;
       }
       #tableContainer {
@@ -57,10 +52,8 @@
         background-color: #f1f5f9 !important;
       }
     }
-
-    /* Animations */
     .fade-in {
-      animation: fadeIn 0.25s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+      animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(4px); }
@@ -87,53 +80,72 @@
           </div>
         </div>
 
-        <!-- PWA Install Icon Button (Mobile Top Right) -->
-        <button 
-          id="pwaTopInstallBtn" 
-          class="hidden sm:hidden px-3 py-1.5 bg-white/15 hover:bg-white/25 active:bg-white/30 text-white text-xs font-semibold rounded-lg border border-white/20 flex items-center gap-1.5 transition"
-        >
-          <i class="fa-solid fa-download text-xs"></i>
-          <span>App</span>
-        </button>
+        <!-- Header Actions (Mobile) -->
+        <div class="flex items-center gap-2 sm:hidden">
+          <button 
+            id="pwaTopInstallBtn" 
+            class="hidden px-2.5 py-1.5 bg-white/15 active:bg-white/30 text-white text-xs font-semibold rounded-lg border border-white/20 flex items-center gap-1.5 transition"
+          >
+            <i class="fa-solid fa-download text-xs"></i>
+            <span>App</span>
+          </button>
+          <button 
+            onclick="openPinModal()" 
+            class="p-2 bg-white/10 active:bg-white/20 text-indigo-200 rounded-lg text-xs" 
+            title="Admin-Bereich"
+          >
+            <i class="fa-solid fa-lock text-xs"></i>
+          </button>
+        </div>
       </div>
 
-      <!-- Live Search Box -->
-      <div class="w-full sm:w-80 relative">
-        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
-          <i class="fa-solid fa-magnifying-glass text-sm"></i>
+      <!-- Live Search & Desktop Admin Button -->
+      <div class="w-full sm:w-auto flex items-center gap-2">
+        <div class="w-full sm:w-80 relative">
+          <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+            <i class="fa-solid fa-magnifying-glass text-sm"></i>
+          </div>
+          <input 
+            type="text" 
+            id="searchInput" 
+            placeholder="Suchen nach Name, KW oder Gruppe..." 
+            class="w-full pl-9 pr-9 py-2 rounded-xl text-slate-900 bg-white/95 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 shadow-inner transition"
+            autocomplete="off"
+          >
+          <button 
+            id="clearSearchBtn" 
+            class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+            title="Suche zurücksetzen"
+          >
+            <i class="fa-solid fa-circle-xmark text-sm"></i>
+          </button>
         </div>
-        <input 
-          type="text" 
-          id="searchInput" 
-          placeholder="Suchen nach Name, KW oder Gruppe..." 
-          class="w-full pl-9 pr-9 py-2 rounded-xl text-slate-900 bg-white/95 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 shadow-inner transition"
-          autocomplete="off"
-        >
+
         <button 
-          id="clearSearchBtn" 
-          class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
-          title="Suche zurücksetzen"
+          onclick="openPinModal()" 
+          class="hidden sm:flex p-2.5 bg-white/10 hover:bg-white/20 text-indigo-200 hover:text-white rounded-xl text-sm transition shrink-0" 
+          title="Admin-Modus (Bearbeiten)"
         >
-          <i class="fa-solid fa-circle-xmark text-sm"></i>
+          <i class="fa-solid fa-lock"></i>
         </button>
       </div>
     </div>
   </header>
 
-  <!-- PWA Install Banner (Dismissible Toast) -->
+  <!-- PWA Install Banner -->
   <div id="pwaInstallBanner" class="hidden bg-indigo-900 text-white border-b border-indigo-700/60 px-4 py-2.5 transition">
     <div class="max-w-6xl mx-auto flex items-center justify-between gap-3 text-xs">
       <div class="flex items-center gap-2.5">
         <img src="icon.svg" alt="App Icon" class="w-7 h-7 rounded-lg shadow-sm border border-white/20">
         <div>
           <p class="font-bold">Als App zum Startbildschirm hinzufügen</p>
-          <p class="text-indigo-200 text-[11px]">Schneller Zugriff ohne Browser-Leiste & offline verfügbar</p>
+          <p class="text-indigo-200 text-[11px]">Schneller Zugriff & offline verfügbar</p>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button 
           id="pwaBannerInstallBtn"
-          class="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600 text-white font-bold rounded-lg transition shadow-xs text-xs"
+          class="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600 text-white font-bold rounded-lg transition text-xs"
         >
           Installieren
         </button>
@@ -239,6 +251,93 @@
     <div id="cardsContainer" class="hidden sm:hidden flex flex-col gap-3.5"></div>
   </main>
 
+  <!-- PIN Modal -->
+  <div id="pinModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center fade-in">
+      <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-3">
+        <i class="fa-solid fa-key text-xl"></i>
+      </div>
+      <h3 class="font-bold text-slate-800 text-lg">Admin-PIN eingeben</h3>
+      <p class="text-xs text-slate-500 mt-1 mb-4">Gib den 4-stelligen Sicherheitscode ein, um den Bearbeitungsmodus zu öffnen.</p>
+      
+      <input 
+        type="password" 
+        id="pinInput" 
+        maxlength="8" 
+        placeholder="PIN eingeben" 
+        class="w-full text-center text-xl tracking-widest font-mono py-2.5 border border-slate-300 rounded-xl mb-4 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+      >
+      <div id="pinError" class="hidden text-xs text-rose-600 font-medium mb-3">Falscher PIN-Code!</div>
+
+      <div class="flex gap-2">
+        <button onclick="closePinModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition">
+          Abbrechen
+        </button>
+        <button onclick="submitPin()" class="w-1/2 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition">
+          Entsperren
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Admin Editor Modal -->
+  <div id="adminModal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4">
+    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col fade-in overflow-hidden">
+      <!-- Admin Modal Header -->
+      <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-pen-to-square text-indigo-400"></i>
+          <h2 class="font-bold text-base sm:text-lg">Plan bearbeiten & in Google Sheets speichern</h2>
+        </div>
+        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white text-lg">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Admin Modal Body: Interactive Editor -->
+      <div class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
+        <div class="flex justify-between items-center">
+          <p class="text-xs text-slate-500">Bearbeite die Einträge direkt in der Liste. Nach dem Speichern wird die Google Tabelle aktualisiert.</p>
+          <button onclick="addNewAdminRow()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition">
+            <i class="fa-solid fa-plus"></i> Woche hinzufügen
+          </button>
+        </div>
+
+        <div class="border border-slate-200 rounded-xl overflow-x-auto">
+          <table class="w-full text-xs text-left">
+            <thead class="bg-slate-100 text-slate-700 font-semibold uppercase">
+              <tr>
+                <th class="p-2.5 w-24">KW</th>
+                <th class="p-2.5 w-24">Von</th>
+                <th class="p-2.5 w-24">Bis</th>
+                <th class="p-2.5">Di & So (Ru)</th>
+                <th class="p-2.5">Mi & Do (Uk)</th>
+                <th class="p-2.5">So (De)</th>
+                <th class="p-2.5">Hauptreinigung</th>
+                <th class="p-2.5 w-12 text-center">Aktion</th>
+              </tr>
+            </thead>
+            <tbody id="adminTableBody" class="divide-y divide-slate-100"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Admin Modal Footer -->
+      <div class="bg-slate-50 border-t border-slate-200 px-6 py-3.5 flex justify-between items-center shrink-0">
+        <span id="adminSaveStatus" class="text-xs text-slate-500"></span>
+        <div class="flex gap-2">
+          <button onclick="closeAdminModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-xl text-xs transition">
+            Schließen
+          </button>
+          <button id="saveBatchBtn" onclick="saveAdminChanges()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition flex items-center gap-1.5">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>In Google Sheets speichern</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400 mt-auto">
     <p>Reinigungsplan Versammlung Marburg &bull; PWA & Offline unterstützt</p>
@@ -250,13 +349,14 @@
      * Konfiguration:
      * Ersetze SCRIPT_URL mit der Web-App URL aus Google Apps Script.
      */
-    const SCRIPT_URL = 'DEINE_APPS_SCRIPT_WEB_APP_URL';
+    const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzVTTsOtwkodbjB0P9UsBSbNsepUDg4R2x8D3oOfu4gphuhwRbGZCd0GMLjVILPEl7TPg/exec';
     const CACHE_KEY = 'reinigungsplan_marburg_cache_v2';
     const CACHE_TIMESTAMP_KEY = 'reinigungsplan_marburg_timestamp_v2';
 
     let scheduleData = [];
     let currentCalculatedKW = getISOWeekNumber(new Date());
     let deferredPrompt = null;
+    let verifiedAdminPin = null;
 
     // DOM Elements
     const tableContainer = document.getElementById('tableContainer');
@@ -279,25 +379,19 @@
     const pwaBannerCloseBtn = document.getElementById('pwaBannerCloseBtn');
     const pwaTopInstallBtn = document.getElementById('pwaTopInstallBtn');
 
-    /**
-     * PWA Service Worker Registration
-     */
+    // Service Worker Registration
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('Service Worker erfolgreich registriert:', reg.scope))
-          .catch(err => console.warn('Service Worker Registrierung fehlgeschlagen:', err));
+          .then(reg => console.log('SW registriert:', reg.scope))
+          .catch(err => console.warn('SW fehlgeschlagen:', err));
       });
     }
 
-    /**
-     * PWA Install Prompt Handlers
-     */
+    // PWA Install Handlers
     window.addEventListener('beforeinstallprompt', (e) => {
       e.preventDefault();
       deferredPrompt = e;
-      
-      // Banner nur anzeigen, wenn nicht zuvor geschlossen
       if (!sessionStorage.getItem('pwa_banner_dismissed')) {
         pwaInstallBanner.classList.remove('hidden');
       }
@@ -317,15 +411,11 @@
 
     pwaBannerInstallBtn.addEventListener('click', triggerPwaInstall);
     pwaTopInstallBtn.addEventListener('click', triggerPwaInstall);
-
     pwaBannerCloseBtn.addEventListener('click', () => {
       pwaInstallBanner.classList.add('hidden');
       sessionStorage.setItem('pwa_banner_dismissed', 'true');
     });
 
-    /**
-     * Berechnet die ISO-8601 Kalenderwoche für ein Datum
-     */
     function getISOWeekNumber(date) {
       const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
       const dayNum = d.getUTCDay() || 7;
@@ -334,22 +424,12 @@
       return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     }
 
-    /**
-     * Prüft, ob ein Plan-Element der aktuellen Kalenderwoche entspricht
-     */
     function isEntryCurrentWeek(item) {
-      if (item.kwNumber && item.kwNumber === currentCalculatedKW) {
-        return true;
-      }
-      if (item.kw && String(item.kw).includes(String(currentCalculatedKW))) {
-        return true;
-      }
+      if (item.kwNumber && item.kwNumber === currentCalculatedKW) return true;
+      if (item.kw && String(item.kw).includes(String(currentCalculatedKW))) return true;
       return false;
     }
 
-    /**
-     * HTML-Sanitizer zur Vermeidung von XSS-Injektionen
-     */
     function escapeHtml(str) {
       if (!str) return '';
       return String(str)
@@ -360,9 +440,6 @@
         .replace(/'/g, '&#039;');
     }
 
-    /**
-     * Daten laden mit Stale-While-Revalidate Strategie
-     */
     async function loadSchedule(force = false) {
       const cached = localStorage.getItem(CACHE_KEY);
       const cachedTime = localStorage.getItem(CACHE_TIMESTAMP_KEY);
@@ -373,9 +450,7 @@
           render(scheduleData);
           setSyncState('cached', cachedTime);
           loader.classList.add('hidden');
-        } catch (e) {
-          console.warn('Cache-Parsing fehlgeschlagen', e);
-        }
+        } catch (e) {}
       }
 
       if (SCRIPT_URL && SCRIPT_URL !== 'DEINE_APPS_SCRIPT_WEB_APP_URL') {
@@ -389,10 +464,7 @@
             cache: force ? 'no-cache' : 'default'
           });
 
-          if (!response.ok) {
-            throw new Error(`HTTP Fehler ${response.status}`);
-          }
-
+          if (!response.ok) throw new Error(`HTTP ${response.status}`);
           const result = await response.json();
 
           if (result.status === 'success' && Array.isArray(result.data)) {
@@ -405,10 +477,10 @@
             setSyncState('synced', now);
             errorBox.classList.add('hidden');
           } else {
-            throw new Error(result.message || 'Ungültiges Datenformat empfangen');
+            throw new Error(result.message || 'Ungültige Datenstruktur');
           }
         } catch (err) {
-          console.error("Fehler beim Abrufen der Daten:", err);
+          console.error("Ladefehler:", err);
           if (!cached) {
             errorMessage.textContent = err.message;
             errorBox.classList.remove('hidden');
@@ -419,9 +491,7 @@
           refreshIcon.classList.remove('fa-spin');
         }
       } else {
-        if (!cached) {
-          showDemoData();
-        }
+        if (!cached) showDemoData();
       }
     }
 
@@ -448,7 +518,6 @@
 
       currentKWBadge.textContent = `Aktuell: KW ${currentCalculatedKW}`;
       currentKWBadge.classList.remove('hidden');
-
       recordsCount.textContent = `${data.length} ${data.length === 1 ? 'Woche' : 'Wochen'}`;
 
       if (data.length === 0) {
@@ -473,9 +542,7 @@
             ? 'bg-indigo-50/80 current-week-row font-medium ring-2 ring-inset ring-indigo-400/60' 
             : 'hover:bg-slate-50'
         }`;
-        if (isCurrent) {
-          tr.id = 'currentWeekDesktopRow';
-        }
+        if (isCurrent) tr.id = 'currentWeekDesktopRow';
 
         tr.innerHTML = `
           <td class="p-3.5 pl-4 align-top">
@@ -507,9 +574,7 @@
             ? 'bg-gradient-to-br from-indigo-50/90 to-white border-indigo-300 ring-2 ring-indigo-400/40 shadow-indigo-100' 
             : 'bg-white border-slate-200/80 hover:border-slate-300'
         }`;
-        if (isCurrent) {
-          card.id = 'currentWeekMobileCard';
-        }
+        if (isCurrent) card.id = 'currentWeekMobileCard';
 
         card.innerHTML = `
           <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
@@ -551,11 +616,7 @@
       tableContainer.classList.toggle('hidden', isMobile);
       cardsContainer.classList.toggle('hidden', !isMobile);
 
-      if (foundCurrentWeekElement) {
-        jumpToCurrentBtn.classList.remove('hidden');
-      } else {
-        jumpToCurrentBtn.classList.add('hidden');
-      }
+      jumpToCurrentBtn.classList.toggle('hidden', !foundCurrentWeekElement);
     }
 
     function scrollToCurrentWeek() {
@@ -574,7 +635,6 @@
     searchInput.addEventListener('input', (e) => {
       clearTimeout(searchTimeout);
       const query = e.target.value.trim().toLowerCase();
-
       clearSearchBtn.classList.toggle('hidden', query.length === 0);
 
       searchTimeout = setTimeout(() => {
@@ -601,11 +661,9 @@
     }
 
     clearSearchBtn.addEventListener('click', resetSearch);
+    function refreshData() { loadSchedule(true); }
 
-    function refreshData() {
-      loadSchedule(true);
-    }
-
+    // Demo Data
     function showDemoData() {
       scheduleData = [
         { id: 1, kw: "KW 32", kwNumber: 32, fromDate: "04.08.", toDate: "10.08.", tuesdaySundayRu: "Gruppe 1", midweekUk: "Gruppe 2", sundayDe: "Gruppe 3", weekendMain: "Gruppe 4" },
@@ -618,18 +676,177 @@
       loader.classList.add('hidden');
     }
 
+    // Admin & PIN Mode Logic
+    function openPinModal() {
+      document.getElementById('pinInput').value = '';
+      document.getElementById('pinError').classList.add('hidden');
+      document.getElementById('pinModal').classList.remove('hidden');
+      document.getElementById('pinInput').focus();
+    }
+
+    function closePinModal() {
+      document.getElementById('pinModal').classList.add('hidden');
+    }
+
+    async function submitPin() {
+      const pin = document.getElementById('pinInput').value.trim();
+      if (!pin) return;
+
+      // Wenn Backend verbunden ist, validieren
+      if (SCRIPT_URL && SCRIPT_URL !== 'DEINE_APPS_SCRIPT_WEB_APP_URL') {
+        try {
+          const res = await fetch(`${SCRIPT_URL}?action=verify&pin=${encodeURIComponent(pin)}`);
+          const data = await res.json();
+          if (data.authenticated) {
+            verifiedAdminPin = pin;
+            closePinModal();
+            openAdminEditor();
+          } else {
+            document.getElementById('pinError').classList.remove('hidden');
+          }
+        } catch (e) {
+          // Fallback falls PIN 7788
+          if (pin === "7788") {
+            verifiedAdminPin = pin;
+            closePinModal();
+            openAdminEditor();
+          } else {
+            document.getElementById('pinError').classList.remove('hidden');
+          }
+        }
+      } else {
+        if (pin === "7788") {
+          verifiedAdminPin = pin;
+          closePinModal();
+          openAdminEditor();
+        } else {
+          document.getElementById('pinError').classList.remove('hidden');
+        }
+      }
+    }
+
+    document.getElementById('pinInput').addEventListener('keyup', (e) => {
+      if (e.key === 'Enter') submitPin();
+    });
+
+    function openAdminEditor() {
+      renderAdminTable();
+      document.getElementById('adminModal').classList.remove('hidden');
+    }
+
+    function closeAdminModal() {
+      document.getElementById('adminModal').classList.add('hidden');
+    }
+
+    function renderAdminTable() {
+      const tbody = document.getElementById('adminTableBody');
+      tbody.innerHTML = '';
+
+      scheduleData.forEach((item, index) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50';
+        tr.innerHTML = `
+          <td class="p-1.5"><input type="text" value="${escapeHtml(item.kw)}" class="w-full px-2 py-1 border rounded text-xs font-bold" data-field="kw" data-index="${index}"></td>
+          <td class="p-1.5"><input type="text" value="${escapeHtml(item.fromDate)}" class="w-full px-2 py-1 border rounded text-xs" data-field="fromDate" data-index="${index}"></td>
+          <td class="p-1.5"><input type="text" value="${escapeHtml(item.toDate)}" class="w-full px-2 py-1 border rounded text-xs" data-field="toDate" data-index="${index}"></td>
+          <td class="p-1.5"><input type="text" value="${escapeHtml(item.tuesdaySundayRu)}" class="w-full px-2 py-1 border rounded text-xs" data-field="tuesdaySundayRu" data-index="${index}"></td>
+          <td class="p-1.5"><input type="text" value="${escapeHtml(item.midweekUk)}" class="w-full px-2 py-1 border rounded text-xs" data-field="midweekUk" data-index="${index}"></td>
+          <td class="p-1.5"><input type="text" value="${escapeHtml(item.sundayDe)}" class="w-full px-2 py-1 border rounded text-xs" data-field="sundayDe" data-index="${index}"></td>
+          <td class="p-1.5"><input type="text" value="${escapeHtml(item.weekendMain)}" class="w-full px-2 py-1 border rounded text-xs font-semibold" data-field="weekendMain" data-index="${index}"></td>
+          <td class="p-1.5 text-center">
+            <button onclick="deleteAdminRow(${index})" class="p-1 text-rose-500 hover:text-rose-700" title="Löschen">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function addNewAdminRow() {
+      scheduleData.push({
+        id: scheduleData.length + 1,
+        kw: `KW ${scheduleData.length + 1}`,
+        fromDate: "",
+        toDate: "",
+        tuesdaySundayRu: "",
+        midweekUk: "",
+        sundayDe: "",
+        weekendMain: ""
+      });
+      renderAdminTable();
+    }
+
+    function deleteAdminRow(index) {
+      if (confirm('Diese Zeile wirklich löschen?')) {
+        scheduleData.splice(index, 1);
+        renderAdminTable();
+      }
+    }
+
+    async function saveAdminChanges() {
+      // Eingaben auslesen
+      const inputs = document.querySelectorAll('#adminTableBody input');
+      inputs.forEach(input => {
+        const index = parseInt(input.getAttribute('data-index'), 10);
+        const field = input.getAttribute('data-field');
+        if (scheduleData[index]) {
+          scheduleData[index][field] = input.value.trim();
+        }
+      });
+
+      const statusEl = document.getElementById('adminSaveStatus');
+      const saveBtn = document.getElementById('saveBatchBtn');
+      statusEl.textContent = 'Speichere in Google Sheets...';
+      saveBtn.disabled = true;
+
+      try {
+        if (SCRIPT_URL && SCRIPT_URL !== 'DEINE_APPS_SCRIPT_WEB_APP_URL') {
+          const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              pin: verifiedAdminPin,
+              action: 'batch_update',
+              data: scheduleData
+            })
+          });
+
+          const result = await response.json();
+          if (result.status === 'success') {
+            statusEl.textContent = '✅ Erfolgreich gespeichert!';
+            localStorage.setItem(CACHE_KEY, JSON.stringify(scheduleData));
+            render(scheduleData);
+            setTimeout(() => {
+              closeAdminModal();
+              statusEl.textContent = '';
+            }, 1200);
+          } else {
+            statusEl.textContent = `❌ Fehler: ${result.message}`;
+          }
+        } else {
+          localStorage.setItem(CACHE_KEY, JSON.stringify(scheduleData));
+          render(scheduleData);
+          statusEl.textContent = '✅ Lokal gespeichert (Demo-Modus)';
+          setTimeout(() => {
+            closeAdminModal();
+            statusEl.textContent = '';
+          }, 1200);
+        }
+      } catch (err) {
+        statusEl.textContent = `❌ Netzwerkfehler: ${err.message}`;
+      } finally {
+        saveBtn.disabled = false;
+      }
+    }
+
     window.addEventListener('resize', () => {
       const query = searchInput.value.trim().toLowerCase();
-      if (!query) {
-        render(scheduleData);
-      }
+      if (!query) render(scheduleData);
     });
 
     document.addEventListener('DOMContentLoaded', () => {
       loadSchedule();
-      setTimeout(() => {
-        scrollToCurrentWeek();
-      }, 400);
+      setTimeout(() => { scrollToCurrentWeek(); }, 400);
     });
   </script>
 </body>
