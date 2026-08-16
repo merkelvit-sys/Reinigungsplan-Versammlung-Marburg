@@ -663,6 +663,10 @@
                 <i class="fa-solid fa-floppy-disk text-slate-500"></i>
                 <span id="btnBackupText">Backup</span>
               </button>
+              <button onclick="formatSheetAdmin()" class="hidden super-admin-only px-3 py-2 min-h-[36px] bg-indigo-50 hover:bg-indigo-100 text-indigo-800 border border-indigo-200 font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs">
+                <i class="fa-solid fa-wand-magic-sparkles text-indigo-600"></i>
+                <span id="btnFormatSheetText">Design anwenden</span>
+              </button>
               <button onclick="triggerNoticeboardPrint()" class="px-3 py-2 min-h-[36px] bg-slate-800 hover:bg-slate-900 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs border border-slate-700" title="Druckversion für Infotafel">
                 <i class="fa-solid fa-print text-indigo-300"></i>
                 <span id="btnPrintNoticeText">Drucken (A4)</span>
@@ -2258,24 +2262,24 @@
 
       if (currentLang === 'ru') {
         return `🧹 *График уборки — Собрание Марбург*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
-               `🇷🇺 *${ruLbl}:* ${item.tuesdaySundayRu || '—'}\n` +
-               `🇺🇦 *${ukLbl}:* ${item.midweekUk || '—'}\n` +
-               `🇩🇪 *${deLbl}:* ${item.sundayDe || '—'}\n` +
-               `✨ *${mainLbl}:* ${item.weekendMain || '—'}\n\n` +
+               `🇷🇺 *${ruLbl}:* ${item.ru || '—'}\n` +
+               `🇺🇦 *${ukLbl}:* ${item.uk || '—'}\n` +
+               `🇩🇪 *${deLbl}:* ${item.de || '—'}\n` +
+               `✨ *${mainLbl}:* ${item.main || '—'}\n\n` +
                `🔗 Онлайн-график: ${window.location.href}`;
       } else if (currentLang === 'uk') {
         return `🧹 *Графік прибирання — Збір Марбург*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
-               `🇷🇺 *${ruLbl}:* ${item.tuesdaySundayRu || '—'}\n` +
-               `🇺🇦 *${ukLbl}:* ${item.midweekUk || '—'}\n` +
-               `🇩🇪 *${deLbl}:* ${item.sundayDe || '—'}\n` +
-               `✨ *${mainLbl}:* ${item.weekendMain || '—'}\n\n` +
+               `🇷🇺 *${ruLbl}:* ${item.ru || '—'}\n` +
+               `🇺🇦 *${ukLbl}:* ${item.uk || '—'}\n` +
+               `🇩🇪 *${deLbl}:* ${item.de || '—'}\n` +
+               `✨ *${mainLbl}:* ${item.main || '—'}\n\n` +
                `🔗 Онлайн-графік: ${window.location.href}`;
       } else {
         return `🧹 *Reinigungsplan — Versammlung Marburg*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
-               `🇷🇺 *${ruLbl}:* ${item.tuesdaySundayRu || '—'}\n` +
-               `🇺🇦 *${ukLbl}:* ${item.midweekUk || '—'}\n` +
-               `🇩🇪 *${deLbl}:* ${item.sundayDe || '—'}\n` +
-               `✨ *${mainLbl}:* ${item.weekendMain || '—'}\n\n` +
+               `🇷🇺 *${ruLbl}:* ${item.ru || '—'}\n` +
+               `🇺🇦 *${ukLbl}:* ${item.uk || '—'}\n` +
+               `🇩🇪 *${deLbl}:* ${item.de || '—'}\n` +
+               `✨ *${mainLbl}:* ${item.main || '—'}\n\n` +
                `🔗 Zum Online-Plan: ${window.location.href}`;
       }
     }
@@ -2317,7 +2321,7 @@
 
       const currentYear = new Date().getFullYear();
       const summary = `Reinigungsdienst Saal Marburg (${item.kw})`;
-      const description = `Reinigungsplan Versammlung Marburg\\nKW: ${item.kw}\\n${getColumnTitle('ru', 'de')}: ${item.tuesdaySundayRu || '—'}\\n${getColumnTitle('uk', 'de')}: ${item.midweekUk || '—'}\\n${getColumnTitle('de', 'de')}: ${item.sundayDe || '—'}\\n${getColumnTitle('main', 'de')}: ${item.weekendMain || '—'}`;
+      const description = `Reinigungsplan Versammlung Marburg\\nKW: ${item.kw}\\n${getColumnTitle('ru', 'de')}: ${item.ru || '—'}\\n${getColumnTitle('uk', 'de')}: ${item.uk || '—'}\\n${getColumnTitle('de', 'de')}: ${item.de || '—'}\\n${getColumnTitle('main', 'de')}: ${item.main || '—'}`;
 
       const icsContent = [
         'BEGIN:VCALENDAR',
@@ -2363,11 +2367,11 @@
             val !== null && val !== undefined && String(val).toLowerCase().includes(groupQuery)
           );
         } else if (activeFilterChip === 'RU') {
-          return item.tuesdaySundayRu && !item.tuesdaySundayRu.toLowerCase().includes('kongress');
+          return item.ru && !item.ru.toLowerCase().includes('kongress');
         } else if (activeFilterChip === 'UK') {
-          return item.midweekUk && item.midweekUk !== 'Keine' && item.midweekUk !== '';
+          return item.uk && item.uk !== 'Keine' && item.uk !== '';
         } else if (activeFilterChip === 'DE') {
-          return item.sundayDe || item.weekendMain;
+          return item.de || item.main;
         } else if (activeFilterChip === 'KONGRESS') {
           const rowStr = JSON.stringify(item).toLowerCase();
           return rowStr.includes('kongress') || rowStr.includes('kreisaufseher');
@@ -2454,7 +2458,7 @@
         }
       });
       scheduleData.forEach(item => {
-        [item.tuesdaySundayRu, item.midweekUk, item.sundayDe, item.weekendMain].forEach(name => {
+        [item.ru, item.uk, item.de, item.main].forEach(name => {
           if (name && !name.toLowerCase().includes('kongress') && !name.toLowerCase().includes('kreisaufseher') && name !== 'Keine' && name !== 'Ortsbedürfnisse') {
             uniqueNames.add(name.trim());
           }
@@ -2695,11 +2699,11 @@
               ${escapeHtml(item.fromDate)} – ${escapeHtml(item.toDate)}
             </div>
           </td>
-          <td class="p-3.5 align-top">${formatCellContent(item.tuesdaySundayRu)}</td>
-          <td class="p-3.5 align-top">${formatCellContent(item.midweekUk)}</td>
-          <td class="p-3.5 align-top">${formatCellContent(item.sundayDe)}</td>
+          <td class="p-3.5 align-top">${formatCellContent(item.ru)}</td>
+          <td class="p-3.5 align-top">${formatCellContent(item.uk)}</td>
+          <td class="p-3.5 align-top">${formatCellContent(item.de)}</td>
           <td class="p-3.5 align-top font-semibold text-slate-900 bg-slate-50/40">
-            ${formatCellContent(item.weekendMain)}
+            ${formatCellContent(item.main)}
           </td>
           <td class="p-3.5 pr-4 align-top text-center no-print">
             <div class="flex items-center justify-center gap-1">
@@ -2747,21 +2751,21 @@
           <div class="grid grid-cols-1 gap-2 pt-2.5 text-xs">
             <div class="flex justify-between items-baseline py-0.5">
               <span class="text-slate-500 font-medium">${getColumnTitle('ru')}:</span>
-              <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.tuesdaySundayRu)}</span>
+              <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.ru)}</span>
             </div>
             <div class="flex justify-between items-baseline py-0.5">
               <span class="text-slate-500 font-medium">${getColumnTitle('uk')}:</span>
-              <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.midweekUk)}</span>
+              <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.uk)}</span>
             </div>
             <div class="flex justify-between items-baseline py-0.5">
               <span class="text-slate-500 font-medium">${getColumnTitle('de')}:</span>
-              <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.sundayDe)}</span>
+              <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.de)}</span>
             </div>
             <div class="flex justify-between items-baseline pt-2 border-t border-slate-100 text-slate-900">
               <span class="text-indigo-600 font-bold flex items-center gap-1">
                 <i class="fa-solid fa-sparkles text-xs"></i> ${getColumnTitle('main')}:
               </span>
-              <span class="font-black text-indigo-950 text-right">${formatCellContent(item.weekendMain)}</span>
+              <span class="font-black text-indigo-950 text-right">${formatCellContent(item.main)}</span>
             </div>
           </div>
         `;
@@ -2908,10 +2912,10 @@
 
       // Dynamisch auch bereits bestehende Einträge aus dem aktuellen Plan erfassen
       scheduleData.forEach(item => {
-        if (item.tuesdaySundayRu && item.tuesdaySundayRu.trim()) pools.adminListRu.add(item.tuesdaySundayRu.trim());
-        if (item.midweekUk && item.midweekUk.trim()) pools.adminListUk.add(item.midweekUk.trim());
-        if (item.sundayDe && item.sundayDe.trim()) pools.adminListDe.add(item.sundayDe.trim());
-        if (item.weekendMain && item.weekendMain.trim()) pools.adminListMain.add(item.weekendMain.trim());
+        if (item.ru && item.ru.trim()) pools.adminListRu.add(item.ru.trim());
+        if (item.uk && item.uk.trim()) pools.adminListUk.add(item.uk.trim());
+        if (item.de && item.de.trim()) pools.adminListDe.add(item.de.trim());
+        if (item.main && item.main.trim()) pools.adminListMain.add(item.main.trim());
       });
 
       for (const [id, set] of Object.entries(pools)) {
@@ -3017,11 +3021,11 @@
 
       // Vorschläge aus bestehendem Plan für diesen Bereich
       scheduleData.forEach(item => {
-        if (activeGroupTab === 'ru' && item.tuesdaySundayRu) candidates.add(item.tuesdaySundayRu.trim());
-        if (activeGroupTab === 'uk' && item.midweekUk) candidates.add(item.midweekUk.trim());
+        if (activeGroupTab === 'ru' && item.ru) candidates.add(item.ru.trim());
+        if (activeGroupTab === 'uk' && item.uk) candidates.add(item.uk.trim());
         if (activeGroupTab === 'de') {
-          if (item.sundayDe) candidates.add(item.sundayDe.trim());
-          if (item.weekendMain) candidates.add(item.weekendMain.trim());
+          if (item.de) candidates.add(item.de.trim());
+          if (item.main) candidates.add(item.main.trim());
         }
       });
 
@@ -3214,7 +3218,7 @@
       const syncChecked = document.getElementById('syncRenamedGroupsInSchedule').checked;
       if (syncChecked && renameMap.size > 0) {
         scheduleData.forEach(item => {
-          ['tuesdaySundayRu', 'midweekUk', 'sundayDe', 'weekendMain'].forEach(field => {
+          ['ru', 'uk', 'de', 'main'].forEach(field => {
             if (item[field] && renameMap.has(item[field])) {
               item[field] = renameMap.get(item[field]);
             }
@@ -3233,6 +3237,41 @@
 
       closeGroupManagerModal();
       showToast('Gruppenliste erfolgreich gespeichert!');
+    }
+
+    async function formatSheetAdmin() {
+      if (!SCRIPT_URL || SCRIPT_URL === 'DEINE_APPS_SCRIPT_WEB_APP_URL') {
+        showToast('App Script URL nicht konfiguriert', true);
+        return;
+      }
+      if (!verifiedAdminPin || verifiedAdminRole !== 'SUPER_ADMIN') {
+        showToast('Nur Super-Admins können das Design anwenden.', true);
+        return;
+      }
+      
+      const btn = document.getElementById('btnFormatSheetText');
+      if (btn) btn.textContent = 'Wende an...';
+      
+      try {
+        const response = await fetch(SCRIPT_URL, {
+          method: 'POST',
+          body: JSON.stringify({
+            pin: verifiedAdminPin,
+            action: 'format_sheet'
+          })
+        });
+        const res = await response.json();
+        
+        if (res.status === 'success') {
+          showToast('✅ Google Sheet komplett formatiert & geschützt!');
+        } else {
+          showToast('Fehler: ' + res.message, true);
+        }
+      } catch (err) {
+        showToast('Verbindungsfehler.', true);
+      } finally {
+        if (btn) btn.textContent = 'Design anwenden';
+      }
     }
 
     // ---------------------- WOCHENTAGE VERWALTUNG (Meeting Days Manager) ----------------------
@@ -3354,10 +3393,10 @@
           <td class="p-1.5"><input type="text" value="${escapeHtml(item.kw)}" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs font-bold text-center ${!isSuper ? 'bg-slate-100 text-slate-500' : 'bg-white text-slate-900'}" data-field="kw" data-index="${index}" ${!isSuper ? 'readonly' : ''}></td>
           <td class="p-1.5"><input type="text" value="${escapeHtml(item.fromDate)}" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs text-center ${!isSuper ? 'bg-slate-100 text-slate-500' : 'bg-white text-slate-900'}" data-field="fromDate" data-index="${index}" ${!isSuper ? 'readonly' : ''}></td>
           <td class="p-1.5"><input type="text" value="${escapeHtml(item.toDate)}" class="w-full px-2 py-1.5 border border-slate-300 rounded-lg text-xs text-center ${!isSuper ? 'bg-slate-100 text-slate-500' : 'bg-white text-slate-900'}" data-field="toDate" data-index="${index}" ${!isSuper ? 'readonly' : ''}></td>
-          <td class="p-1.5"><input type="text" list="adminListRu" value="${escapeHtml(item.tuesdaySundayRu)}" placeholder="Gruppe wählen / tippen" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 ${!canEditRuUk ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800 font-medium'}" data-field="tuesdaySundayRu" data-index="${index}" ${!canEditRuUk ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
-          <td class="p-1.5"><input type="text" list="adminListUk" value="${escapeHtml(item.midweekUk)}" placeholder="Gruppe wählen / tippen" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 ${!canEditRuUk ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800 font-medium'}" data-field="midweekUk" data-index="${index}" ${!canEditRuUk ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
-          <td class="p-1.5"><input type="text" list="adminListDe" value="${escapeHtml(item.sundayDe)}" placeholder="Gruppe wählen / tippen" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 ${!canEditDe ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800 font-medium'}" data-field="sundayDe" data-index="${index}" ${!canEditDe ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
-          <td class="p-1.5"><input type="text" list="adminListMain" value="${escapeHtml(item.weekendMain)}" placeholder="Gruppe wählen / tippen" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-indigo-500 ${!canEditDe ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800'}" data-field="weekendMain" data-index="${index}" ${!canEditDe ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
+          <td class="p-1.5"><input type="text" list="adminListRu" value="${escapeHtml(item.ru)}" placeholder="Gruppe wählen / tippen" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 ${!canEditRuUk ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800 font-medium'}" data-field="ru" data-index="${index}" ${!canEditRuUk ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
+          <td class="p-1.5"><input type="text" list="adminListUk" value="${escapeHtml(item.uk)}" placeholder="Gruppe wählen / tippen" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 ${!canEditRuUk ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800 font-medium'}" data-field="uk" data-index="${index}" ${!canEditRuUk ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
+          <td class="p-1.5"><input type="text" list="adminListDe" value="${escapeHtml(item.de)}" placeholder="Gruppe wählen / tippen" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-indigo-500 ${!canEditDe ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800 font-medium'}" data-field="de" data-index="${index}" ${!canEditDe ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
+          <td class="p-1.5"><input type="text" list="adminListMain" value="${escapeHtml(item.main)}" placeholder="Gruppe wählen / tippen" class="w-full px-2.5 py-1.5 border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-indigo-500 ${!canEditDe ? 'bg-slate-100 text-slate-400' : 'bg-white text-slate-800'}" data-field="main" data-index="${index}" ${!canEditDe ? 'readonly' : ''} onclick="if(!this.readOnly && this.showPicker) { try { this.showPicker(); } catch(e){} }"></td>
           <td class="p-1.5 text-center">
             ${isSuper ? `<button onclick="deleteAdminRow(${index})" class="p-1 text-rose-500 hover:text-rose-700 min-h-[36px] min-w-[36px] flex items-center justify-center mx-auto" title="Löschen"><i class="fa-solid fa-trash-can"></i></button>` : '—'}
           </td>
@@ -3372,10 +3411,10 @@
         kw: `KW ${scheduleData.length + 1}`,
         fromDate: "",
         toDate: "",
-        tuesdaySundayRu: "",
-        midweekUk: "",
-        sundayDe: "",
-        weekendMain: ""
+        ru: "",
+        uk: "",
+        de: "",
+        main: ""
       });
       renderAdminTable();
     }
@@ -3437,8 +3476,8 @@
       const rA = scheduleData[idxA];
       const rB = scheduleData[idxB];
 
-      previewA.innerHTML = `<div class="truncate">🇷🇺 ${escapeHtml(rA.tuesdaySundayRu || '-')}</div><div class="truncate">🇺🇦 ${escapeHtml(rA.midweekUk || '-')}</div><div class="truncate">🇩🇪 ${escapeHtml(rA.sundayDe || '-')}</div><div class="truncate">🧹 ${escapeHtml(rA.weekendMain || '-')}</div>`;
-      previewB.innerHTML = `<div class="truncate">🇷🇺 ${escapeHtml(rB.tuesdaySundayRu || '-')}</div><div class="truncate">🇺🇦 ${escapeHtml(rB.midweekUk || '-')}</div><div class="truncate">🇩🇪 ${escapeHtml(rB.sundayDe || '-')}</div><div class="truncate">🧹 ${escapeHtml(rB.weekendMain || '-')}</div>`;
+      previewA.innerHTML = `<div class="truncate">🇷🇺 ${escapeHtml(rA.ru || '-')}</div><div class="truncate">🇺🇦 ${escapeHtml(rA.uk || '-')}</div><div class="truncate">🇩🇪 ${escapeHtml(rA.de || '-')}</div><div class="truncate">🧹 ${escapeHtml(rA.main || '-')}</div>`;
+      previewB.innerHTML = `<div class="truncate">🇷🇺 ${escapeHtml(rB.ru || '-')}</div><div class="truncate">🇺🇦 ${escapeHtml(rB.uk || '-')}</div><div class="truncate">🇩🇪 ${escapeHtml(rB.de || '-')}</div><div class="truncate">🧹 ${escapeHtml(rB.main || '-')}</div>`;
 
       if (idxA === idxB) {
         note.textContent = t('swapSameWeekWarning');
@@ -3467,23 +3506,23 @@
       if (!rA || !rB) return;
 
       if (scope === 'ALL' || scope === 'RU_UK') {
-        const tmpRu = rA.tuesdaySundayRu;
-        rA.tuesdaySundayRu = rB.tuesdaySundayRu;
-        rB.tuesdaySundayRu = tmpRu;
+        const tmpRu = rA.ru;
+        rA.ru = rB.ru;
+        rB.ru = tmpRu;
 
-        const tmpUk = rA.midweekUk;
-        rA.midweekUk = rB.midweekUk;
-        rB.midweekUk = tmpUk;
+        const tmpUk = rA.uk;
+        rA.uk = rB.uk;
+        rB.uk = tmpUk;
       }
 
       if (scope === 'ALL' || scope === 'DE') {
-        const tmpDe = rA.sundayDe;
-        rA.sundayDe = rB.sundayDe;
-        rB.sundayDe = tmpDe;
+        const tmpDe = rA.de;
+        rA.de = rB.de;
+        rB.de = tmpDe;
 
-        const tmpMain = rA.weekendMain;
-        rA.weekendMain = rB.weekendMain;
-        rB.weekendMain = tmpMain;
+        const tmpMain = rA.main;
+        rA.main = rB.main;
+        rB.main = tmpMain;
       }
 
       renderAdminTable();
@@ -3552,10 +3591,10 @@
           kwNumber: nextKw,
           fromDate: fromStr,
           toDate: toStr,
-          tuesdaySundayRu: '',
-          midweekUk: '',
-          sundayDe: '',
-          weekendMain: ''
+          ru: '',
+          uk: '',
+          de: '',
+          main: ''
         });
 
         currentDate = sun;
@@ -3571,10 +3610,10 @@
           firstWeekJoint: true,
           fairQueue: true,
           customPools: {
-            tuesdaySundayRu: activeGroupPools.ru || DEFAULT_GROUP_POOLS.ru,
-            midweekUk: activeGroupPools.uk || DEFAULT_GROUP_POOLS.uk,
-            sundayDe: activeGroupPools.de || DEFAULT_GROUP_POOLS.de,
-            weekendMain: activeGroupPools.main || DEFAULT_GROUP_POOLS.main
+            ru: activeGroupPools.ru || DEFAULT_GROUP_POOLS.ru,
+            uk: activeGroupPools.uk || DEFAULT_GROUP_POOLS.uk,
+            de: activeGroupPools.de || DEFAULT_GROUP_POOLS.de,
+            main: activeGroupPools.main || DEFAULT_GROUP_POOLS.main
           }
         };
         const { schedule } = generateRotationScheduleLocally(config);
@@ -3619,7 +3658,7 @@
 
       const counts = {};
       scheduleData.forEach(item => {
-        [item.tuesdaySundayRu, item.midweekUk, item.sundayDe, item.weekendMain].forEach(val => {
+        [item.ru, item.uk, item.de, item.main].forEach(val => {
           if (val && !val.toLowerCase().includes('kongress') && !val.toLowerCase().includes('kreisaufseher') && val !== 'Keine' && val !== 'Ortsbedürfnisse') {
             counts[val] = (counts[val] || 0) + 1;
           }
@@ -3836,10 +3875,10 @@
         firstWeekJoint,
         fairQueue,
         customPools: {
-          tuesdaySundayRu: activeGroupPools.ru || DEFAULT_GROUP_POOLS.ru,
-          midweekUk: activeGroupPools.uk || DEFAULT_GROUP_POOLS.uk,
-          sundayDe: activeGroupPools.de || DEFAULT_GROUP_POOLS.de,
-          weekendMain: activeGroupPools.main || DEFAULT_GROUP_POOLS.main
+          ru: activeGroupPools.ru || DEFAULT_GROUP_POOLS.ru,
+          uk: activeGroupPools.uk || DEFAULT_GROUP_POOLS.uk,
+          de: activeGroupPools.de || DEFAULT_GROUP_POOLS.de,
+          main: activeGroupPools.main || DEFAULT_GROUP_POOLS.main
         }
       };
     }
@@ -3853,10 +3892,10 @@
     function generateRotationScheduleLocally(config) {
       const { startKw, totalWeeks, startDate, scope, firstWeekJoint, fairQueue, customPools } = config;
       
-      const ruPool = (customPools.tuesdaySundayRu && customPools.tuesdaySundayRu.length) ? customPools.tuesdaySundayRu : DEFAULT_GROUP_POOLS.ru;
-      const ukPool = (customPools.midweekUk && customPools.midweekUk.length) ? customPools.midweekUk : DEFAULT_GROUP_POOLS.uk;
-      const dePool = (customPools.sundayDe && customPools.sundayDe.length) ? customPools.sundayDe : DEFAULT_GROUP_POOLS.de;
-      const mainPool = (customPools.weekendMain && customPools.weekendMain.length) ? customPools.weekendMain : DEFAULT_GROUP_POOLS.main;
+      const ruPool = (customPools.ru && customPools.ru.length) ? customPools.ru : DEFAULT_GROUP_POOLS.ru;
+      const ukPool = (customPools.uk && customPools.uk.length) ? customPools.uk : DEFAULT_GROUP_POOLS.uk;
+      const dePool = (customPools.de && customPools.de.length) ? customPools.de : DEFAULT_GROUP_POOLS.de;
+      const mainPool = (customPools.main && customPools.main.length) ? customPools.main : DEFAULT_GROUP_POOLS.main;
 
       let ruQueueIndex = 0;
       let ukQueueIndex = 0;
@@ -3884,19 +3923,19 @@
         const existing = scheduleData.find(s => s.kw === kwLabel || s.kwNumber === kwNumber) || {};
 
         // Kongresse/Ereignisse prüfen (aus bestehenden Zellen falls Kongress)
-        let isRuEvent = existing.tuesdaySundayRu && (existing.tuesdaySundayRu.toLowerCase().includes('kongress') || existing.tuesdaySundayRu.toLowerCase().includes('kreisaufseher'));
-        let isUkEvent = existing.midweekUk && (existing.midweekUk.toLowerCase().includes('kongress') || existing.midweekUk.toLowerCase().includes('kreisaufseher'));
-        let isDeEvent = existing.sundayDe && (existing.sundayDe.toLowerCase().includes('kongress') || existing.sundayDe.toLowerCase().includes('kreisaufseher'));
+        let isRuEvent = existing.ru && (existing.ru.toLowerCase().includes('kongress') || existing.ru.toLowerCase().includes('kreisaufseher'));
+        let isUkEvent = existing.uk && (existing.uk.toLowerCase().includes('kongress') || existing.uk.toLowerCase().includes('kreisaufseher'));
+        let isDeEvent = existing.de && (existing.de.toLowerCase().includes('kongress') || existing.de.toLowerCase().includes('kreisaufseher'));
 
-        let ruAssignee = existing.tuesdaySundayRu || '';
-        let ukAssignee = existing.midweekUk || '';
-        let deAssignee = existing.sundayDe || '';
-        let mainAssignee = existing.weekendMain || '';
+        let ruAssignee = existing.ru || '';
+        let ukAssignee = existing.uk || '';
+        let deAssignee = existing.de || '';
+        let mainAssignee = existing.main || '';
 
         // 1. Russisch (Di & So)
         if (scope === 'RU_UK' || scope === 'ALL') {
           if (isRuEvent) {
-            ruAssignee = existing.tuesdaySundayRu;
+            ruAssignee = existing.ru;
             if (!fairQueue) ruQueueIndex++;
           } else {
             ruAssignee = ruPool[ruQueueIndex % ruPool.length];
@@ -3906,7 +3945,7 @@
 
           // 2. Ukrainisch (Mi & Do)
           if (isUkEvent) {
-            ukAssignee = existing.midweekUk;
+            ukAssignee = existing.uk;
             if (!fairQueue) ukQueueIndex++;
           } else if (firstWeekJoint && isFirstWeek) {
             ukAssignee = 'Keine';
@@ -3920,7 +3959,7 @@
         // 3. Deutsch (So & WE Hauptreinigung)
         if (scope === 'DE' || scope === 'ALL') {
           if (isDeEvent) {
-            deAssignee = existing.sundayDe;
+            deAssignee = existing.de;
             if (!fairQueue) deQueueIndex++;
           } else {
             deAssignee = dePool[deQueueIndex % dePool.length];
@@ -3929,8 +3968,8 @@
           if (deAssignee) shiftCounts[deAssignee] = (shiftCounts[deAssignee] || 0) + 1;
 
           // Hauptreinigung am Wochenende
-          if (existing.weekendMain && (existing.weekendMain.toLowerCase().includes('kongress') || existing.weekendMain.toLowerCase().includes('kreisaufseher'))) {
-            mainAssignee = existing.weekendMain;
+          if (existing.main && (existing.main.toLowerCase().includes('kongress') || existing.main.toLowerCase().includes('kreisaufseher'))) {
+            mainAssignee = existing.main;
             if (!fairQueue) mainQueueIndex++;
           } else if (isDeEvent) {
             // Wenn deutsche Versammlung Kongress hat: Deutsche Gruppen sind abwesend -> Hauptreinigung automatisch RU oder UK Gruppe!
@@ -3963,10 +4002,10 @@
           kwNumber: kwNumber,
           fromDate: existing.fromDate || fromStr,
           toDate: existing.toDate || toStr,
-          tuesdaySundayRu: ruAssignee,
-          midweekUk: ukAssignee,
-          sundayDe: deAssignee,
-          weekendMain: mainAssignee
+          ru: ruAssignee,
+          uk: ukAssignee,
+          de: deAssignee,
+          main: mainAssignee
         });
 
         currentMonday.setDate(currentMonday.getDate() + 7);
@@ -4003,7 +4042,7 @@
         eventsList.innerHTML = '';
         const foundEvents = [];
         schedule.forEach(item => {
-          [item.tuesdaySundayRu, item.midweekUk, item.sundayDe, item.weekendMain].forEach(val => {
+          [item.ru, item.uk, item.de, item.main].forEach(val => {
             if (val && (val.toLowerCase().includes('kongress') || val.toLowerCase().includes('kreisaufseher'))) {
               if (!foundEvents.some(e => e.kw === item.kw && e.title === val)) {
                 foundEvents.push({ kw: item.kw, dates: `${item.fromDate} – ${item.toDate}`, title: val });

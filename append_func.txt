@@ -1,0 +1,40 @@
+
+function enforceSheetFormatAndProtection(sheet) {
+  // 1. Freeze Header Rows (Top 2) and KW Column (First 1)
+  sheet.setFrozenRows(CONFIG.HEADER_ROWS);
+  sheet.setFrozenColumns(1);
+  
+  // 2. Format Header Colors & Fonts
+  sheet.getRange(1, 1, 2, 7).setBackground('#e0e7ff').setFontColor('#312e81').setFontWeight('bold');
+  
+  // 3. Set Column Widths (Approximate sizes for readability)
+  sheet.setColumnWidth(1, 100); // KW
+  sheet.setColumnWidth(2, 100); // vom
+  sheet.setColumnWidth(3, 100); // bis
+  sheet.setColumnWidth(4, 250); // Ru
+  sheet.setColumnWidth(5, 250); // Uk
+  sheet.setColumnWidth(6, 250); // De
+  sheet.setColumnWidth(7, 280); // Hauptreinigung
+  
+  // 4. Wrap text for data columns
+  sheet.getRange(1, 1, sheet.getMaxRows(), 7).setWrap(true).setVerticalAlignment('middle');
+  sheet.getRange(3, 1, sheet.getMaxRows()-2, 3).setHorizontalAlignment('center');
+  
+  // 5. Hardware Protection for A:C and Headers
+  const protections = sheet.getProtections(SpreadsheetApp.ProtectionType.RANGE);
+  const description = 'SSOT_PROTECTION';
+  
+  for (let i = 0; i < protections.length; i++) {
+    if (protections[i].getDescription() === description) {
+      protections[i].remove();
+    }
+  }
+  
+  const headerProtection = sheet.getRange(1, 1, 2, 7).protect().setDescription(description);
+  headerProtection.setWarningOnly(false);
+  
+  const lastRow = Math.max(3, sheet.getMaxRows());
+  const dateProtection = sheet.getRange(3, 1, lastRow - 2, 3).protect().setDescription(description);
+  dateProtection.setWarningOnly(false);
+}
+
