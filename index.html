@@ -49,12 +49,19 @@
 
         <!-- Header Actions (Mobile) -->
         <div class="flex items-center gap-1.5 sm:hidden">
+          <!-- Mobile Language Switcher -->
+          <div class="flex items-center bg-white/10 p-0.5 rounded-lg border border-white/20 text-[10px] font-bold">
+            <button onclick="setLanguage('de')" id="mobLangBtnDe" class="px-1.5 py-1 rounded transition text-white">🇩🇪</button>
+            <button onclick="setLanguage('ru')" id="mobLangBtnRu" class="px-1.5 py-1 rounded transition text-indigo-200">🇷🇺</button>
+            <button onclick="setLanguage('uk')" id="mobLangBtnUk" class="px-1.5 py-1 rounded transition text-indigo-200">🇺🇦</button>
+          </div>
+
           <button 
             id="pwaTopInstallBtn" 
-            class="hidden px-2.5 py-1 bg-white/15 active:bg-white/30 text-white text-xs font-semibold rounded-lg border border-white/20 flex items-center gap-1 transition"
+            class="hidden px-2 py-1 bg-white/15 active:bg-white/30 text-white text-xs font-semibold rounded-lg border border-white/20 flex items-center gap-1 transition"
           >
-            <i class="fa-solid fa-download text-[11px]"></i>
-            <span>App</span>
+            <i class="fa-solid fa-download text-[10px]"></i>
+            <span data-i18n="pwaTopBtn">App</span>
           </button>
           <button 
             onclick="openChecklistModal()" 
@@ -75,7 +82,7 @@
 
       <!-- Live Search & Header Buttons -->
       <div class="w-full sm:w-auto flex items-center gap-2">
-        <div class="w-full sm:w-80 relative">
+        <div class="w-full sm:w-72 relative">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <i class="fa-solid fa-magnifying-glass text-sm"></i>
           </div>
@@ -96,6 +103,13 @@
           >
             <i class="fa-solid fa-circle-xmark text-sm"></i>
           </button>
+        </div>
+
+        <!-- Desktop Language Switcher -->
+        <div class="hidden sm:flex items-center bg-white/10 p-0.5 rounded-xl border border-white/20 text-xs font-bold shrink-0">
+          <button onclick="setLanguage('de')" id="langBtnDe" class="px-2 py-1 rounded-lg transition text-white">🇩🇪 DE</button>
+          <button onclick="setLanguage('ru')" id="langBtnRu" class="px-2 py-1 rounded-lg transition text-indigo-200 hover:text-white">🇷🇺 RU</button>
+          <button onclick="setLanguage('uk')" id="langBtnUk" class="px-2 py-1 rounded-lg transition text-indigo-200 hover:text-white">🇺🇦 UK</button>
         </div>
 
         <button 
@@ -154,7 +168,7 @@
         </div>
         <div>
           <div class="flex items-center gap-2">
-            <span class="font-semibold text-indigo-200">Mein Bereich:</span>
+            <span id="myAreaLabel" class="font-semibold text-indigo-200">Mein Bereich:</span>
             <span id="userGroupName" class="font-bold bg-white/15 px-2 py-0.5 rounded-md text-white"></span>
           </div>
           <p id="nextShiftInfo" class="text-xs text-white/95 mt-0.5 font-medium"></p>
@@ -166,14 +180,16 @@
           onclick="openGroupSelectModal()" 
           class="px-2.5 py-1.5 min-h-[36px] bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1"
         >
-          <i class="fa-solid fa-pen-to-square text-[10px]"></i> Gruppe ändern
+          <i class="fa-solid fa-pen-to-square text-[10px]"></i>
+          <span id="changeGroupBtnText">Gruppe ändern</span>
         </button>
         <button 
           id="myShiftIcsBtn"
           onclick="downloadMyShiftIcs()" 
           class="hidden px-2.5 py-1.5 min-h-[36px] bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-bold rounded-lg text-xs transition flex items-center gap-1 shadow-xs"
         >
-          <i class="fa-solid fa-calendar-plus text-[10px]"></i> In Kalender
+          <i class="fa-solid fa-calendar-plus text-[10px]"></i>
+          <span id="myShiftIcsBtnText">In Kalender</span>
         </button>
       </div>
     </div>
@@ -183,22 +199,24 @@
   <section id="filterChipsBar" class="bg-white border-b border-slate-200/80 sticky top-[56px] sm:top-[68px] z-30 shadow-xs">
     <div class="max-w-6xl mx-auto px-4 py-2 flex items-center gap-1.5 overflow-x-auto touch-scroll no-scrollbar text-xs">
       <button onclick="setFilterChip('ALL')" id="chip-ALL" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-bold bg-indigo-600 text-white shadow-xs shrink-0 transition flex items-center justify-center">
-        Alle Wochen
+        <span id="chipAllText">Alle Wochen</span>
       </button>
       <button onclick="setFilterChip('MINE')" id="chip-MINE" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1">
-        <i class="fa-solid fa-star text-amber-500 text-[10px]"></i> Meine Einsätze
+        <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
+        <span id="chipMineText">Meine Einsätze</span>
       </button>
       <button onclick="setFilterChip('RU')" id="chip-RU" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
-        🇷🇺 Russisch
+        <span id="chipRuText">🇷🇺 Russisch</span>
       </button>
       <button onclick="setFilterChip('UK')" id="chip-UK" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
-        🇺🇦 Ukrainisch
+        <span id="chipUkText">🇺🇦 Ukrainisch</span>
       </button>
       <button onclick="setFilterChip('DE')" id="chip-DE" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
-        🇩🇪 Deutsch
+        <span id="chipDeText">🇩🇪 Deutsch</span>
       </button>
       <button onclick="setFilterChip('KONGRESS')" id="chip-KONGRESS" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1">
-        <i class="fa-solid fa-star text-amber-500 text-[10px]"></i> Nur Kongresse
+        <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
+        <span id="chipKongressText">Nur Kongresse</span>
       </button>
     </div>
   </section>
@@ -222,7 +240,7 @@
           class="hidden px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-semibold rounded-lg border border-indigo-200/70 transition flex items-center gap-1.5"
         >
           <i class="fa-solid fa-location-crosshairs text-xs"></i>
-          <span>Aktuelle Woche</span>
+          <span id="jumpToCurrentBtnText">Aktuelle Woche</span>
         </button>
 
         <button 
@@ -240,7 +258,7 @@
           class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold rounded-lg border border-emerald-200/70 transition flex items-center gap-1.5"
         >
           <i class="fa-solid fa-share-nodes text-xs"></i>
-          <span>Woche teilen</span>
+          <span id="shareWeekBtnText">Woche teilen</span>
         </button>
 
         <button 
@@ -268,15 +286,15 @@
     <!-- Loading Spinner -->
     <div id="loader" class="text-center py-20 flex flex-col items-center justify-center">
       <div class="w-12 h-12 rounded-full border-4 border-indigo-200 border-t-indigo-600 animate-spin mb-4"></div>
-      <p class="text-slate-600 font-medium text-sm">Lade aktuellen Reinigungsplan...</p>
+      <p id="loaderText" class="text-slate-600 font-medium text-sm">Lade aktuellen Reinigungsplan...</p>
     </div>
 
     <!-- Error State -->
     <div id="errorBox" class="hidden bg-rose-50 border border-rose-200 text-rose-800 rounded-2xl p-6 text-center my-6">
       <i class="fa-solid fa-triangle-exclamation text-3xl text-rose-500 mb-2"></i>
-      <h3 class="font-bold text-base">Fehler beim Laden der Daten</h3>
+      <h3 id="errorTitleText" class="font-bold text-base">Fehler beim Laden der Daten</h3>
       <p id="errorMessage" class="text-xs text-rose-600 mt-1 mb-4">Die Verbindung zur Tabelle konnte nicht hergestellt werden.</p>
-      <button onclick="loadSchedule(true)" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow transition min-h-[44px]">
+      <button id="errorRetryBtn" onclick="loadSchedule(true)" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow transition min-h-[44px]">
         Erneut versuchen
       </button>
     </div>
@@ -284,8 +302,8 @@
     <!-- Empty Search Results State -->
     <div id="noResultsBox" class="hidden bg-slate-100 border border-slate-200 rounded-2xl p-8 sm:p-10 text-center my-6 text-slate-500">
       <i class="fa-solid fa-magnifying-glass text-3xl mb-2 text-slate-400"></i>
-      <p class="font-medium text-sm">Keine Einträge für diesen Filter gefunden</p>
-      <button onclick="resetSearch()" class="mt-3 text-xs text-indigo-600 hover:underline font-semibold min-h-[44px] flex items-center justify-center mx-auto">
+      <p id="noResultsText" class="font-medium text-sm">Keine Einträge für diesen Filter gefunden</p>
+      <button id="resetFilterBtn" onclick="resetSearch()" class="mt-3 text-xs text-indigo-600 hover:underline font-semibold min-h-[44px] flex items-center justify-center mx-auto">
         Filter zurücksetzen
       </button>
     </div>
@@ -296,12 +314,12 @@
         <table class="w-full text-left text-sm border-collapse">
           <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-600 uppercase font-semibold text-xs tracking-wider">
             <tr>
-              <th class="p-3.5 pl-4 w-36">KW / Zeitraum</th>
-              <th class="p-3.5">Di & So <span class="text-slate-400 font-normal">(Russisch)</span></th>
-              <th class="p-3.5">Mi & Do <span class="text-slate-400 font-normal">(Ukrainisch)</span></th>
-              <th class="p-3.5">So <span class="text-slate-400 font-normal">(Deutsch)</span></th>
-              <th class="p-3.5 bg-slate-100/50">Hauptreinigung <span class="text-slate-400 font-normal">(WE)</span></th>
-              <th class="p-3.5 pr-4 w-20 text-center no-print">Aktionen</th>
+              <th id="thKw" class="p-3.5 pl-4 w-36">KW / Zeitraum</th>
+              <th id="thRu" class="p-3.5">Di & So (Russisch)</th>
+              <th id="thUk" class="p-3.5">Mi & Do (Ukrainisch)</th>
+              <th id="thDe" class="p-3.5">So (Deutsch)</th>
+              <th id="thMain" class="p-3.5 bg-slate-100/50">Hauptreinigung (WE)</th>
+              <th id="thActions" class="p-3.5 pr-4 w-20 text-center no-print">Aktionen</th>
             </tr>
           </thead>
           <tbody id="planTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
@@ -317,23 +335,23 @@
   <nav id="mobileBottomBar" class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-4 py-2 flex items-center justify-around shadow-lg no-print">
     <button onclick="scrollToCurrentWeek()" class="flex flex-col items-center gap-0.5 text-indigo-700 active:text-indigo-900 min-w-[56px]">
       <i class="fa-solid fa-location-crosshairs text-base"></i>
-      <span class="text-[10px] font-bold">Aktuell</span>
+      <span id="navTextCurrent" class="text-[10px] font-bold">Aktuell</span>
     </button>
     <button onclick="openGroupSelectModal()" class="flex flex-col items-center gap-0.5 text-slate-600 active:text-indigo-600 min-w-[56px]">
       <i class="fa-solid fa-user-tag text-base"></i>
-      <span class="text-[10px] font-semibold">Gruppe</span>
+      <span id="navTextGroup" class="text-[10px] font-semibold">Gruppe</span>
     </button>
     <button onclick="shareCurrentWeek()" class="flex flex-col items-center gap-0.5 text-emerald-600 active:text-emerald-800 min-w-[56px]">
       <i class="fa-solid fa-share-nodes text-base"></i>
-      <span class="text-[10px] font-semibold">Teilen</span>
+      <span id="navTextShare" class="text-[10px] font-semibold">Teilen</span>
     </button>
     <button onclick="openChecklistModal()" class="flex flex-col items-center gap-0.5 text-slate-600 active:text-indigo-600 min-w-[56px]">
       <i class="fa-solid fa-list-check text-base"></i>
-      <span class="text-[10px] font-semibold">Checkliste</span>
+      <span id="navTextChecklist" class="text-[10px] font-semibold">Checkliste</span>
     </button>
     <button onclick="refreshData()" class="flex flex-col items-center gap-0.5 text-slate-500 active:text-slate-800 min-w-[56px]">
       <i class="fa-solid fa-arrows-rotate text-base"></i>
-      <span class="text-[10px] font-semibold">Aktualisieren</span>
+      <span id="navTextRefresh" class="text-[10px] font-semibold">Aktualisieren</span>
     </button>
   </nav>
 
@@ -409,19 +427,19 @@
         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
           <div class="flex items-center gap-2 font-bold text-indigo-950 border-b border-slate-200 pb-1.5">
             <i class="fa-solid fa-chair text-indigo-600"></i>
-            <span>1. Hauptsaal & Bühne</span>
+            <span id="checkSec1Title">1. Hauptsaal & Bühne</span>
           </div>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_saal_1" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Teppichboden gründlich saugen</span>
+            <span id="task_saal_1_label" class="text-slate-700 leading-snug">Teppichboden gründlich saugen</span>
           </label>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_saal_2" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Bühne, Rednerpult und Mikrofonständer abstauben</span>
+            <span id="task_saal_2_label" class="text-slate-700 leading-snug">Bühne, Rednerpult und Mikrofonständer abstauben</span>
           </label>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_saal_3" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Stühle ausrichten und Müll unter den Sitzen prüfen</span>
+            <span id="task_saal_3_label" class="text-slate-700 leading-snug">Stühle ausrichten und Müll unter den Sitzen prüfen</span>
           </label>
         </div>
 
@@ -429,23 +447,23 @@
         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
           <div class="flex items-center gap-2 font-bold text-indigo-950 border-b border-slate-200 pb-1.5">
             <i class="fa-solid fa-restroom text-indigo-600"></i>
-            <span>2. Sanitäre Anlagen (Toiletten)</span>
+            <span id="checkSec2Title">2. Sanitäre Anlagen (Toiletten)</span>
           </div>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_wc_1" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Waschbecken, Armaturen und Spiegel reinigen</span>
+            <span id="task_wc_1_label" class="text-slate-700 leading-snug">Waschbecken, Armaturen und Spiegel reinigen</span>
           </label>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_wc_2" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Toilettenbecken und Brillen desinfizieren & säubern</span>
+            <span id="task_wc_2_label" class="text-slate-700 leading-snug">Toilettenbecken und Brillen desinfizieren & säubern</span>
           </label>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_wc_3" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Flüssigseife, Papierhandtücher und Toilettenpapier auffüllen</span>
+            <span id="task_wc_3_label" class="text-slate-700 leading-snug">Flüssigseife, Papierhandtücher und Toilettenpapier auffüllen</span>
           </label>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_wc_4" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Fußböden nass wischen</span>
+            <span id="task_wc_4_label" class="text-slate-700 leading-snug">Fußböden nass wischen</span>
           </label>
         </div>
 
@@ -453,19 +471,19 @@
         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
           <div class="flex items-center gap-2 font-bold text-indigo-950 border-b border-slate-200 pb-1.5">
             <i class="fa-solid fa-door-open text-indigo-600"></i>
-            <span>3. Foyer, Garderobe & Eingang</span>
+            <span id="checkSec3Title">3. Foyer, Garderobe & Eingang</span>
           </div>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_foyer_1" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Eingangsbereich & Fußmatten fegen / saugen</span>
+            <span id="task_foyer_1_label" class="text-slate-700 leading-snug">Eingangsbereich & Fußmatten fegen / saugen</span>
           </label>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_foyer_2" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Glastüren und Griffspuren reinigen</span>
+            <span id="task_foyer_2_label" class="text-slate-700 leading-snug">Glastüren und Griffspuren reinigen</span>
           </label>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_foyer_3" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Boden im Foyer feucht wischen</span>
+            <span id="task_foyer_3_label" class="text-slate-700 leading-snug">Boden im Foyer feucht wischen</span>
           </label>
         </div>
 
@@ -473,29 +491,30 @@
         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
           <div class="flex items-center gap-2 font-bold text-indigo-950 border-b border-slate-200 pb-1.5">
             <i class="fa-solid fa-trash-can text-indigo-600"></i>
-            <span>4. Müllentsorgung & Abschluss</span>
+            <span id="checkSec4Title">4. Müllentsorgung & Abschluss</span>
           </div>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_end_1" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Alle Mülleimer leeren und neue Beutel einsetzen</span>
+            <span id="task_end_1_label" class="text-slate-700 leading-snug">Alle Mülleimer leeren und neue Beutel einsetzen</span>
           </label>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_end_2" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Müllsäcke in die Außentonnen bringen</span>
+            <span id="task_end_2_label" class="text-slate-700 leading-snug">Müllsäcke in die Außentonnen bringen</span>
           </label>
           <label class="flex items-start gap-2 cursor-pointer select-none py-1">
             <input type="checkbox" data-task="task_end_3" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
-            <span class="text-slate-700 leading-snug">Fenster kontrollieren, Licht ausschalten und abschließen</span>
+            <span id="task_end_3_label" class="text-slate-700 leading-snug">Fenster kontrollieren, Licht ausschalten und abschließen</span>
           </label>
         </div>
       </div>
 
       <div class="bg-slate-50 border-t border-slate-200 px-6 py-3.5 flex justify-between items-center shrink-0">
         <button onclick="resetChecklist()" class="text-xs text-rose-600 hover:text-rose-800 font-semibold flex items-center gap-1 min-h-[44px]">
-          <i class="fa-solid fa-rotate-left"></i> Häkchen zurücksetzen
+          <i class="fa-solid fa-rotate-left"></i>
+          <span id="checklistResetBtnText">Häkchen zurücksetzen</span>
         </button>
         <button onclick="closeChecklistModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-xs min-h-[44px] flex items-center justify-center">
-          Fertig
+          <span id="checklistDoneBtnText">Fertig</span>
         </button>
       </div>
     </div>
@@ -568,15 +587,9 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-            <span class="text-xs text-slate-500 font-medium hidden lg:inline">Auto-Rotation:</span>
-            <button id="rotRuUkBtn" onclick="triggerAutoRotation('RU_UK')" class="hidden px-3 py-1.5 min-h-[36px] bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold rounded-xl text-xs transition flex items-center gap-1">
-              🇷🇺/🇺🇦 Nur RU/UK
-            </button>
-            <button id="rotDeBtn" onclick="triggerAutoRotation('DE')" class="hidden px-3 py-1.5 min-h-[36px] bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold rounded-xl text-xs transition flex items-center gap-1">
-              🇩🇪 Nur Deutsch
-            </button>
-            <button id="rotAllBtn" onclick="triggerAutoRotation('ALL')" class="hidden px-3 py-1.5 min-h-[36px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-xs">
-              🌐 Alles rotieren
+            <button onclick="openRotationModal()" class="px-3.5 py-2 min-h-[38px] bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 active:bg-indigo-900 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs">
+              <i class="fa-solid fa-wand-magic-sparkles text-amber-300"></i>
+              <span>Auto-Rotation Generator</span>
             </button>
           </div>
         </div>
@@ -788,6 +801,158 @@
     </div>
   </div>
 
+  <!-- Intelligent Rotation Generator Modal -->
+  <div id="rotationModal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-2xl w-full max-h-[92vh] shadow-2xl border border-slate-100 fade-in flex flex-col overflow-hidden">
+      
+      <!-- Header -->
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-indigo-600 text-white flex items-center justify-center shadow-xs shrink-0">
+            <i class="fa-solid fa-wand-magic-sparkles text-base text-amber-300"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+              Intelligenter Rotations-Generator
+              <span class="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full">Faire Queue</span>
+            </h3>
+            <p class="text-xs text-slate-500">Gerechte Verteilung, Monatsanfang-Regel & Kongress-Verschiebung</p>
+          </div>
+        </div>
+        <button onclick="closeRotationModal()" class="text-slate-400 hover:text-slate-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Body Settings -->
+      <div class="flex-1 overflow-y-auto touch-scroll py-3 space-y-3.5 text-xs">
+        
+        <!-- 1. Scope Selection -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5">
+          <label class="block font-bold text-slate-800 mb-2">1. Zu rotierender Bereich:</label>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <label id="rotScopeAllOption" class="flex items-center gap-2 p-2.5 bg-white border border-slate-300 rounded-xl cursor-pointer hover:border-indigo-400 transition select-none">
+              <input type="radio" name="rotScope" value="ALL" checked onchange="updateRotationPreview()" class="text-indigo-600 focus:ring-indigo-500">
+              <span class="font-bold text-slate-800">🌐 Gesamter Plan</span>
+            </label>
+            <label id="rotScopeRuUkOption" class="flex items-center gap-2 p-2.5 bg-white border border-slate-300 rounded-xl cursor-pointer hover:border-indigo-400 transition select-none">
+              <input type="radio" name="rotScope" value="RU_UK" onchange="updateRotationPreview()" class="text-indigo-600 focus:ring-indigo-500">
+              <span class="font-semibold text-slate-800">🇷🇺/🇺🇦 RU & UK</span>
+            </label>
+            <label id="rotScopeDeOption" class="flex items-center gap-2 p-2.5 bg-white border border-slate-300 rounded-xl cursor-pointer hover:border-indigo-400 transition select-none">
+              <input type="radio" name="rotScope" value="DE" onchange="updateRotationPreview()" class="text-indigo-600 focus:ring-indigo-500">
+              <span class="font-semibold text-slate-800">🇩🇪 Deutsch & WE</span>
+            </label>
+          </div>
+        </div>
+
+        <!-- 2. Time Period -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Start-KW:</label>
+            <input type="number" id="rotStartKw" value="26" min="1" max="53" onchange="updateRotationPreview()" class="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 min-h-[40px]">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Start-Montag:</label>
+            <input type="date" id="rotStartDate" value="2026-06-22" onchange="updateRotationPreview()" class="w-full p-2 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-medium text-slate-800 min-h-[40px]">
+          </div>
+          <div>
+            <label class="block font-bold text-slate-700 mb-1">Wochenanzahl:</label>
+            <input type="number" id="rotTotalWeeks" value="28" min="4" max="52" onchange="updateRotationPreview()" class="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-bold text-slate-800 min-h-[40px]">
+          </div>
+        </div>
+
+        <!-- 3. Smart Rules Checkboxes -->
+        <div class="bg-indigo-50/70 border border-indigo-100 rounded-2xl p-3.5 space-y-2.5">
+          <span class="block font-bold text-indigo-950">2. Intelligente Regeln & Kriterien:</span>
+          
+          <label class="flex items-start gap-2.5 cursor-pointer select-none">
+            <input type="checkbox" id="rotRuleMonthlyJoint" checked onchange="updateRotationPreview()" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-800 leading-snug">
+              <b>1. Woche im Monat (Monatsanfang):</b> Russisch & Ukrainisch treffen sich gemeinsam.<br>
+              <span class="text-slate-500 text-[11px]">&bull; In der ersten Woche des Monats wird für Ukrainisch (Mi & Do) automatisch <i>Keine</i> eingetragen (Ukrainische Rotation pausiert ohne Verlust der Reihenfolge).</span>
+            </span>
+          </label>
+
+          <label class="flex items-start gap-2.5 cursor-pointer select-none">
+            <input type="checkbox" id="rotRuleFairQueue" checked onchange="updateRotationPreview()" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-800 leading-snug">
+              <b>Faire Warteschlange (Kongresse & Besuche):</b><br>
+              <span class="text-slate-500 text-[11px]">&bull; Fällt ein Kongress oder Besuch in eine Woche, wird die Gruppe nicht übersprungen, sondern auf die nächste freie reguläre Woche verschoben. Alle Gruppen bleiben 100% gleichmäßig eingeteilt.</span>
+            </span>
+          </label>
+        </div>
+
+        <!-- 4. Fairness Live Preview & Counts -->
+        <div class="border border-slate-200 rounded-2xl p-3.5 bg-white">
+          <div class="flex justify-between items-center mb-2 pb-1.5 border-b border-slate-100">
+            <span class="font-bold text-slate-800 flex items-center gap-1.5">
+              <i class="fa-solid fa-scale-balanced text-indigo-600"></i>
+              Fairness-Check & Dienst-Verteilung:
+            </span>
+            <span id="rotFairnessScoreBadge" class="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+              100% Ausgeglichen
+            </span>
+          </div>
+          <div id="rotFairnessList" class="flex flex-wrap gap-1.5 pt-1">
+            <!-- Dynamically populated tags with turn counts -->
+          </div>
+        </div>
+
+        <!-- 5. Kongresse in diesem Zeitraum -->
+        <div class="border border-slate-200 rounded-2xl p-3.5 bg-slate-50">
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-bold text-slate-800 flex items-center gap-1.5">
+              <i class="fa-solid fa-star text-amber-500"></i>
+              Eingetragene Kongresse / Events im Zeitraum:
+            </span>
+            <button type="button" onclick="openCongressModal()" class="text-xs text-indigo-600 hover:text-indigo-800 font-bold flex items-center gap-1">
+              <i class="fa-solid fa-plus text-[10px]"></i> Kongress eintragen
+            </button>
+          </div>
+          <div id="rotEventsList" class="space-y-1 text-slate-600">
+            <!-- Dynamically listed events -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Action Buttons -->
+      <div class="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-100 shrink-0">
+        <button 
+          type="button" 
+          onclick="closeRotationModal()" 
+          class="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition text-xs min-h-[42px]"
+        >
+          Abbrechen
+        </button>
+
+        <div class="flex flex-wrap gap-2">
+          <button 
+            type="button" 
+            onclick="applyRotationToTableLocally()" 
+            class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-800 rounded-xl font-bold transition text-xs flex items-center gap-1.5 min-h-[42px]"
+            title="Setzt die Rotation in die Bearbeitungstabelle ein zur Überprüfung"
+          >
+            <i class="fa-solid fa-table"></i>
+            <span>In Tabelle einsetzen (Vorschau)</span>
+          </button>
+
+          <button 
+            type="button" 
+            id="rotExecuteSaveBtn"
+            onclick="executeRotationAndSave()" 
+            class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white rounded-xl font-bold shadow-md transition text-xs flex items-center gap-1.5 min-h-[42px]"
+          >
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <span>Generieren & Speichern</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400 mt-auto hidden sm:block">
     <p>Reinigungsplan Versammlung Marburg &bull; iOS & Android Ready</p>
@@ -872,6 +1037,424 @@
     }
 
     let activeGroupPools = loadGroupPools();
+
+    // ---------------------- INTERNATIONALISIERUNG (i18n) ----------------------
+    const LANG_KEY = 'reinigungsplan_lang_v1';
+
+    const TRANSLATIONS = {
+      de: {
+        appTitle: "Reinigungsplan",
+        appSubtitle: "Versammlung Marburg",
+        currentKW: "Aktuell: KW {kw}",
+        searchPlaceholder: "Suchen nach Name, KW oder Gruppe...",
+        searchEmpty: "Keine Einträge für diesen Filter gefunden",
+        filterReset: "Filter zurücksetzen",
+        loading: "Lade aktuellen Reinigungsplan...",
+        errorTitle: "Fehler beim Laden der Daten",
+        errorDesc: "Die Verbindung zur Tabelle konnte nicht hergestellt werden.",
+        retry: "Erneut versuchen",
+        weeksCount: "{count} Wochen geladen",
+        weekCountSingle: "1 Woche geladen",
+        syncStatusLoading: "Synchronisiere...",
+        syncStatusSynced: "Aktualisiert um {time}",
+        syncStatusCached: "Offline-Stand ({time})",
+        syncStatusError: "Offline / Verbindungsfehler",
+        currentWeekBtn: "Aktuelle Woche",
+        chooseGroupBtn: "Gruppe wählen",
+        shareWeekBtn: "Woche teilen",
+        printBtn: "Drucken / PDF",
+        pwaBannerTitle: "Als App zum Startbildschirm hinzufügen",
+        pwaBannerSubtitle: "Schneller Zugriff ohne Browser-Leiste",
+        pwaInstallBtn: "Installieren",
+        pwaTopBtn: "App",
+        
+        // Chips
+        chipAll: "Alle Wochen",
+        chipMine: "Meine Einsätze",
+        chipRu: "🇷🇺 Russisch",
+        chipUk: "🇺🇦 Ukrainisch",
+        chipDe: "🇩🇪 Deutsch",
+        chipCongress: "Nur Kongresse",
+
+        // Table & Cards
+        thKwTime: "KW / Zeitraum",
+        thRu: "Di & So (Russisch)",
+        thUk: "Mi & Do (Ukrainisch)",
+        thDe: "So (Deutsch)",
+        thMain: "Hauptreinigung (WE)",
+        thActions: "Aktionen",
+        currentWeekBadge: "Aktuelle Woche",
+        shareTitle: "Woche teilen",
+        calendarTitle: "In Kalender (.ics)",
+
+        // Personal Banner
+        myArea: "Mein Bereich:",
+        nextShift: "Nächster Einsatz:",
+        inWeeks: "in {weeks} Wochen",
+        thisWeek: "Diese Woche im Dienst!",
+        nextWeek: "Nächste Woche",
+        noUpcoming: "Aktuell keine anstehenden Einsätze im hinterlegten Plan gefunden.",
+        changeGroup: "Gruppe ändern",
+        inCalendar: "In Kalender",
+
+        // Bottom Bar
+        navCurrent: "Aktuell",
+        navGroup: "Gruppe",
+        navShare: "Teilen",
+        navChecklist: "Checkliste",
+        navRefresh: "Aktualisieren",
+
+        // Checklist
+        checklistTitle: "Reinigung-Checkliste",
+        checklistSubtitle: "Aufgabenplan für den Saal",
+        checkSec1: "1. Hauptsaal & Bühne",
+        task_saal_1: "Teppichboden gründlich saugen",
+        task_saal_2: "Bühne, Rednerpult und Mikrofonständer abstauben",
+        task_saal_3: "Stühle ausrichten und Müll unter den Sitzen prüfen",
+        checkSec2: "2. Sanitäre Anlagen (Toiletten)",
+        task_wc_1: "Waschbecken, Armaturen und Spiegel reinigen",
+        task_wc_2: "Toilettenbecken und Brillen desinfizieren & säubern",
+        task_wc_3: "Flüssigseife, Papierhandtücher und Toilettenpapier auffüllen",
+        task_wc_4: "Fußböden nass wischen",
+        checkSec3: "3. Foyer, Garderobe & Eingang",
+        task_foyer_1: "Eingangsbereich & Fußmatten fegen / saugen",
+        task_foyer_2: "Glastüren und Griffspuren reinigen",
+        task_foyer_3: "Boden im Foyer feucht wischen",
+        checkSec4: "4. Müllentsorgung & Abschluss",
+        task_end_1: "Alle Mülleimer leeren und neue Beutel einsetzen",
+        task_end_2: "Müllsäcke in die Außentonnen bringen",
+        task_end_3: "Fenster kontrollieren, Licht ausschalten und abschließen",
+        checklistReset: "Häkchen zurücksetzen",
+        checklistDone: "Fertig"
+      },
+      ru: {
+        appTitle: "График уборки",
+        appSubtitle: "Собрание Марбург",
+        currentKW: "Текущая: НК {kw}",
+        searchPlaceholder: "Поиск по имени, неделе (НК) или группе...",
+        searchEmpty: "Ничего не найдено по этому фильтру",
+        filterReset: "Сбросить фильтр",
+        loading: "Загрузка актуального графика уборки...",
+        errorTitle: "Ошибка при загрузке данных",
+        errorDesc: "Не удалось установить соединение с таблицей.",
+        retry: "Попробовать снова",
+        weeksCount: "{count} недель загружено",
+        weekCountSingle: "1 неделя загружена",
+        syncStatusLoading: "Синхронизация...",
+        syncStatusSynced: "Обновлено в {time}",
+        syncStatusCached: "Офлайн-копия ({time})",
+        syncStatusError: "Офлайн / Ошибка сети",
+        currentWeekBtn: "Текущая неделя",
+        chooseGroupBtn: "Выбрать группу",
+        shareWeekBtn: "Поделиться",
+        printBtn: "Печать / PDF",
+        pwaBannerTitle: "Добавить как приложение на главный экран",
+        pwaBannerSubtitle: "Быстрый доступ без адресной строки браузера",
+        pwaInstallBtn: "Установить",
+        pwaTopBtn: "Приложение",
+        
+        // Chips
+        chipAll: "Все недели",
+        chipMine: "Мои дежурства",
+        chipRu: "🇷🇺 Русское",
+        chipUk: "🇺🇦 Украинское",
+        chipDe: "🇩🇪 Немецкое",
+        chipCongress: "Только конгрессы",
+
+        // Table & Cards
+        thKwTime: "НК / Период",
+        thRu: "Вт и Вс (Русское)",
+        thUk: "Ср и Чт (Украинское)",
+        thDe: "Вс (Немецкое)",
+        thMain: "Ген. уборка (Выходные)",
+        thActions: "Действия",
+        currentWeekBadge: "Текущая неделя",
+        shareTitle: "Поделиться неделей",
+        calendarTitle: "В календарь (.ics)",
+
+        // Personal Banner
+        myArea: "Мой сектор / имя:",
+        nextShift: "Следующее дежурство:",
+        inWeeks: "через {weeks} нед.",
+        thisWeek: "Дежурство на этой неделе!",
+        nextWeek: "На следующей неделе",
+        noUpcoming: "Предстоящих дежурств для выбранной группы не найдено.",
+        changeGroup: "Сменить группу",
+        inCalendar: "В календарь",
+
+        // Bottom Bar
+        navCurrent: "Текущая",
+        navGroup: "Группа",
+        navShare: "Поделиться",
+        navChecklist: "Чек-лист",
+        navRefresh: "Обновить",
+
+        // Checklist
+        checklistTitle: "Чек-лист уборки",
+        checklistSubtitle: "Список задач по уборке Зала Царства",
+        checkSec1: "1. Главный зал и сцена",
+        task_saal_1: "Тщательно пропылесосить ковровое покрытие",
+        task_saal_2: "Протереть пыль со сцены, пюпитра и микрофонных стоек",
+        task_saal_3: "Выровнять стулья и проверить мусор под сиденьями",
+        checkSec2: "2. Санитарные узлы (туалеты)",
+        task_wc_1: "Вымыть раковины, смесители и зеркала",
+        task_wc_2: "Продезинфицировать и вымыть унитазы и сиденья",
+        task_wc_3: "Пополнить жидкое мыло, бумажные полотенца и туалетную бумагу",
+        task_wc_4: "Вымыть полы влажной тряпкой",
+        checkSec3: "3. Фойе, гардероб и вход",
+        task_foyer_1: "Подмести / пропылесосить входную зону и коврики",
+        task_foyer_2: "Очистить стеклянные двери и следы пальцев",
+        task_foyer_3: "Вымыть пол в фойе влажной тряпкой",
+        checkSec4: "4. Вынос мусора и закрытие",
+        task_end_1: "Очистить все мусорные корзины и вставить новые пакеты",
+        task_end_2: "Вынести мусорные мешки в уличные контейнеры",
+        task_end_3: "Проверить окна, выключить свет и закрыть зал",
+        checklistReset: "Сбросить галочки",
+        checklistDone: "Готово"
+      },
+      uk: {
+        appTitle: "Графік прибирання",
+        appSubtitle: "Збір Марбург",
+        currentKW: "Поточний: ТЖ {kw}",
+        searchPlaceholder: "Пошук за ім'ям, тижнем (ТЖ) або групою...",
+        searchEmpty: "Нічого не знайдено за цим фільтром",
+        filterReset: "Скинути фільтр",
+        loading: "Завантаження актуального графіка прибирання...",
+        errorTitle: "Помилка завантаження даних",
+        errorDesc: "Не вдалося з'єднатися з таблицею.",
+        retry: "Спробувати знову",
+        weeksCount: "{count} тижнів завантажено",
+        weekCountSingle: "1 тиждень завантажено",
+        syncStatusLoading: "Синхронізація...",
+        syncStatusSynced: "Оновлено о {time}",
+        syncStatusCached: "Офлайн-копія ({time})",
+        syncStatusError: "Офлайн / Помилка мережі",
+        currentWeekBtn: "Поточний тиждень",
+        chooseGroupBtn: "Обрати групу",
+        shareWeekBtn: "Поділитися",
+        printBtn: "Друк / PDF",
+        pwaBannerTitle: "Додати як додаток на головний екран",
+        pwaBannerSubtitle: "Швидкий доступ без адресного рядка браузера",
+        pwaInstallBtn: "Встановити",
+        pwaTopBtn: "Додаток",
+        
+        // Chips
+        chipAll: "Усі тижні",
+        chipMine: "Мої чергування",
+        chipRu: "🇷🇺 Російська",
+        chipUk: "🇺🇦 Українська",
+        chipDe: "🇩🇪 Німецька",
+        chipCongress: "Тільки конгреси",
+
+        // Table & Cards
+        thKwTime: "ТЖ / Період",
+        thRu: "Вт і Нд (Російська)",
+        thUk: "Ср і Чт (Українська)",
+        thDe: "Нд (Німецька)",
+        thMain: "Ген. прибирання (Вихідні)",
+        thActions: "Дії",
+        currentWeekBadge: "Поточний тиждень",
+        shareTitle: "Поділитися тижнем",
+        calendarTitle: "У календар (.ics)",
+
+        // Personal Banner
+        myArea: "Мій сектор / ім'я:",
+        nextShift: "Наступне чергування:",
+        inWeeks: "через {weeks} тиж.",
+        thisWeek: "Чергування цього тижня!",
+        nextWeek: "Наступного тижня",
+        noUpcoming: "Майбутніх чергувань для обраної групи не знайдено.",
+        changeGroup: "Змінити групу",
+        inCalendar: "У календар",
+
+        // Bottom Bar
+        navCurrent: "Поточний",
+        navGroup: "Група",
+        navShare: "Поділитися",
+        navChecklist: "Чек-лист",
+        navRefresh: "Оновити",
+
+        // Checklist
+        checklistTitle: "Чек-лист прибирання",
+        checklistSubtitle: "Список завдань з прибирання Залу Царства",
+        checkSec1: "1. Головний зал і сцена",
+        task_saal_1: "Ретельно пропилососити килимове покриття",
+        task_saal_2: "Витерти пил зі сцени, пюпітра та стійок мікрофонів",
+        task_saal_3: "Вирівняти стільці та перевірити сміття під сидіннями",
+        checkSec2: "2. Санітарні приміщення (туалети)",
+        task_wc_1: "Помити умивальники, змішувачі та дзеркала",
+        task_wc_2: "Продезінфікувати та помити унітази та сидіння",
+        task_wc_3: "Поповнити рідке мило, паперові рушники та туалетний папір",
+        task_wc_4: "Помити підлогу вологою ганчіркою",
+        checkSec3: "3. Фоє, гардероб і вхід",
+        task_foyer_1: "Підмести / пропилососити вхідну зону та килимки",
+        task_foyer_2: "Очистити скляні двері та сліди пальців",
+        task_foyer_3: "Помити підлогу у фоє вологою ганчіркою",
+        checkSec4: "4. Виніс сміття та закриття",
+        task_end_1: "Очистити всі смітники та вставити нові пакети",
+        task_end_2: "Винести мішки зі сміттям у вуличні контейнери",
+        task_end_3: "Перевірити вікна, вимкнути світло та зачинити зал",
+        checklistReset: "Скинути позначки",
+        checklistDone: "Готово"
+      }
+    };
+
+    function detectInitialLanguage() {
+      const saved = localStorage.getItem(LANG_KEY);
+      if (saved && (saved === 'de' || saved === 'ru' || saved === 'uk')) {
+        return saved;
+      }
+      const rawLangs = (typeof navigator !== 'undefined' && navigator.languages && navigator.languages.length)
+        ? navigator.languages 
+        : [typeof navigator !== 'undefined' ? (navigator.language || navigator.userLanguage || navigator.browserLanguage || 'de') : 'de'];
+      
+      for (const l of rawLangs) {
+        if (!l) continue;
+        const lower = String(l).toLowerCase();
+        if (lower.startsWith('ru')) return 'ru';
+        if (lower.startsWith('uk')) return 'uk';
+        if (lower.startsWith('de')) return 'de';
+      }
+      return 'de';
+    }
+
+    let currentLang = detectInitialLanguage();
+
+    function t(key, params = {}) {
+      const dict = TRANSLATIONS[currentLang] || TRANSLATIONS.de;
+      let text = dict[key] || TRANSLATIONS.de[key] || key;
+      Object.entries(params).forEach(([k, v]) => {
+        text = text.replace(new RegExp(`\\{${k}\\}`, 'g'), v);
+      });
+      return text;
+    }
+
+    function setLanguage(lang) {
+      if (lang !== 'de' && lang !== 'ru' && lang !== 'uk') return;
+      currentLang = lang;
+      localStorage.setItem(LANG_KEY, lang);
+      applyLanguage(lang);
+    }
+
+    function applyLanguage(lang) {
+      document.documentElement.lang = lang;
+
+      // Update switcher buttons (Desktop + Mobile)
+      ['de', 'ru', 'uk'].forEach(l => {
+        const dBtn = document.getElementById(`langBtn${l.charAt(0).toUpperCase() + l.slice(1)}`);
+        if (dBtn) {
+          if (l === lang) {
+            dBtn.className = 'px-2.5 py-1.5 rounded-lg transition bg-white text-indigo-950 font-bold shadow-xs';
+          } else {
+            dBtn.className = 'px-2.5 py-1.5 rounded-lg transition text-indigo-200 hover:text-white font-semibold';
+          }
+        }
+
+        const mBtn = document.getElementById(`mobLangBtn${l.charAt(0).toUpperCase() + l.slice(1)}`);
+        if (mBtn) {
+          if (l === lang) {
+            mBtn.className = 'px-1.5 py-1 rounded transition bg-white text-indigo-950 font-bold shadow-xs';
+          } else {
+            mBtn.className = 'px-1.5 py-1 rounded transition text-indigo-200';
+          }
+        }
+      });
+
+      // Update static UI texts
+      if (searchInput) searchInput.placeholder = t('searchPlaceholder');
+      if (loader) {
+        const lt = document.getElementById('loaderText');
+        if (lt) lt.textContent = t('loading');
+      }
+      if (errorBox) {
+        const et = document.getElementById('errorTitleText');
+        const er = document.getElementById('errorRetryBtn');
+        if (et) et.textContent = t('errorTitle');
+        if (er) er.textContent = t('retry');
+      }
+      if (noResultsBox) {
+        const nt = document.getElementById('noResultsText');
+        const rf = document.getElementById('resetFilterBtn');
+        if (nt) nt.textContent = t('searchEmpty');
+        if (rf) rf.textContent = t('filterReset');
+      }
+
+      // Filter chips
+      const cAll = document.getElementById('chipAllText');
+      const cMine = document.getElementById('chipMineText');
+      const cRu = document.getElementById('chipRuText');
+      const cUk = document.getElementById('chipUkText');
+      const cDe = document.getElementById('chipDeText');
+      const cKg = document.getElementById('chipKongressText');
+      if (cAll) cAll.textContent = t('chipAll');
+      if (cMine) cMine.textContent = t('chipMine');
+      if (cRu) cRu.textContent = t('chipRu');
+      if (cUk) cUk.textContent = t('chipUk');
+      if (cDe) cDe.textContent = t('chipDe');
+      if (cKg) cKg.textContent = t('chipCongress');
+
+      // Controls Bar
+      const jBtn = document.getElementById('jumpToCurrentBtnText');
+      const sBtn = document.getElementById('shareWeekBtnText');
+      const maLabel = document.getElementById('myAreaLabel');
+      const cgBtn = document.getElementById('changeGroupBtnText');
+      const msBtn = document.getElementById('myShiftIcsBtnText');
+      if (jBtn) jBtn.textContent = t('currentWeekBtn');
+      if (sBtn) sBtn.textContent = t('shareWeekBtn');
+      if (maLabel) maLabel.textContent = t('myArea');
+      if (cgBtn) cgBtn.textContent = t('changeGroup');
+      if (msBtn) msBtn.textContent = t('inCalendar');
+
+      // Table headers
+      const thKw = document.getElementById('thKw');
+      const thRu = document.getElementById('thRu');
+      const thUk = document.getElementById('thUk');
+      const thDe = document.getElementById('thDe');
+      const thMain = document.getElementById('thMain');
+      const thAct = document.getElementById('thActions');
+      if (thKw) thKw.textContent = t('thKwTime');
+      if (thRu) thRu.textContent = t('thRu');
+      if (thUk) thUk.textContent = t('thUk');
+      if (thDe) thDe.textContent = t('thDe');
+      if (thMain) thMain.textContent = t('thMain');
+      if (thAct) thAct.textContent = t('thActions');
+
+      // Bottom Nav
+      const nCur = document.getElementById('navTextCurrent');
+      const nGrp = document.getElementById('navTextGroup');
+      const nShr = document.getElementById('navTextShare');
+      const nChk = document.getElementById('navTextChecklist');
+      const nRef = document.getElementById('navTextRefresh');
+      if (nCur) nCur.textContent = t('navCurrent');
+      if (nGrp) nGrp.textContent = t('navGroup');
+      if (nShr) nShr.textContent = t('navShare');
+      if (nChk) nChk.textContent = t('navChecklist');
+      if (nRef) nRef.textContent = t('navRefresh');
+
+      // Checklist tasks
+      const sec1 = document.getElementById('checkSec1Title');
+      const sec2 = document.getElementById('checkSec2Title');
+      const sec3 = document.getElementById('checkSec3Title');
+      const sec4 = document.getElementById('checkSec4Title');
+      if (sec1) sec1.textContent = t('checkSec1');
+      if (sec2) sec2.textContent = t('checkSec2');
+      if (sec3) sec3.textContent = t('checkSec3');
+      if (sec4) sec4.textContent = t('checkSec4');
+
+      ['task_saal_1', 'task_saal_2', 'task_saal_3', 'task_wc_1', 'task_wc_2', 'task_wc_3', 'task_wc_4', 'task_foyer_1', 'task_foyer_2', 'task_foyer_3', 'task_end_1', 'task_end_2', 'task_end_3'].forEach(taskId => {
+        const el = document.getElementById(`${taskId}_label`);
+        if (el) el.textContent = t(taskId);
+      });
+
+      const chkReset = document.getElementById('checklistResetBtnText');
+      const chkDone = document.getElementById('checklistDoneBtnText');
+      if (chkReset) chkReset.textContent = t('checklistReset');
+      if (chkDone) chkDone.textContent = t('checklistDone');
+
+      // Re-render views
+      applyAllFilters();
+      updatePersonalBanner();
+    }
 
     let scheduleData = [];
     let currentCalculatedKW = getISOWeekNumber(new Date());
@@ -1013,12 +1596,28 @@
     }
 
     function buildShareMessage(item) {
-      return `🧹 *Reinigungsplan Versammlung Marburg*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
-             `🇷🇺 *Di & So (Ru):* ${item.tuesdaySundayRu || '—'}\n` +
-             `🇺🇦 *Mi & Do (Uk):* ${item.midweekUk || '—'}\n` +
-             `🇩🇪 *So (De):* ${item.sundayDe || '—'}\n` +
-             `✨ *Hauptreinigung (WE):* ${item.weekendMain || '—'}\n\n` +
-             `🔗 Zum Online-Plan: ${window.location.href}`;
+      if (currentLang === 'ru') {
+        return `🧹 *График уборки — Собрание Марбург*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
+               `🇷🇺 *Вт и Вс (Русское):* ${item.tuesdaySundayRu || '—'}\n` +
+               `🇺🇦 *Ср и Чт (Украинское):* ${item.midweekUk || '—'}\n` +
+               `🇩🇪 *Вс (Немецкое):* ${item.sundayDe || '—'}\n` +
+               `✨ *Ген. уборка (Выходные):* ${item.weekendMain || '—'}\n\n` +
+               `🔗 Онлайн-график: ${window.location.href}`;
+      } else if (currentLang === 'uk') {
+        return `🧹 *Графік прибирання — Збір Марбург*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
+               `🇷🇺 *Вт і Нд (Російська):* ${item.tuesdaySundayRu || '—'}\n` +
+               `🇺🇦 *Ср і Чт (Українська):* ${item.midweekUk || '—'}\n` +
+               `🇩🇪 *Нд (Німецька):* ${item.sundayDe || '—'}\n` +
+               `✨ *Ген. прибирання (Вихідні):* ${item.weekendMain || '—'}\n\n` +
+               `🔗 Онлайн-графік: ${window.location.href}`;
+      } else {
+        return `🧹 *Reinigungsplan — Versammlung Marburg*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
+               `🇷🇺 *Di & So (Ru):* ${item.tuesdaySundayRu || '—'}\n` +
+               `🇺🇦 *Mi & Do (Uk):* ${item.midweekUk || '—'}\n` +
+               `🇩🇪 *So (De):* ${item.sundayDe || '—'}\n` +
+               `✨ *Hauptreinigung (WE):* ${item.weekendMain || '—'}\n\n` +
+               `🔗 Zum Online-Plan: ${window.location.href}`;
+      }
     }
 
     async function shareWeekItem(kwNumber) {
@@ -1087,7 +1686,7 @@
     }
 
     function applyAllFilters() {
-      const query = searchInput.value.trim().toLowerCase();
+      const query = (searchInput && searchInput.value) ? searchInput.value.trim().toLowerCase() : '';
       
       let filtered = scheduleData.filter(item => {
         if (query) {
@@ -1138,12 +1737,12 @@
     function updatePersonalBanner() {
       if (!mySavedGroup) {
         personalBanner.classList.add('hidden');
-        groupBtnLabel.textContent = 'Gruppe wählen';
+        if (groupBtnLabel) groupBtnLabel.textContent = t('chooseGroupBtn');
         return;
       }
 
-      groupBtnLabel.textContent = mySavedGroup;
-      userGroupName.textContent = mySavedGroup;
+      if (groupBtnLabel) groupBtnLabel.textContent = mySavedGroup;
+      if (userGroupName) userGroupName.textContent = mySavedGroup;
 
       const groupQuery = mySavedGroup.toLowerCase();
       const nextShift = scheduleData.find(item => {
@@ -1159,17 +1758,17 @@
         const diffWeeks = nextShift.kwNumber - currentCalculatedKW;
         let timeLabel = '';
         if (diffWeeks === 0) {
-          timeLabel = '🔥 <span class="text-amber-300 font-bold">Diese Woche im Dienst!</span>';
+          timeLabel = `🔥 <span class="text-amber-300 font-bold">${t('thisWeek')}</span>`;
         } else if (diffWeeks === 1) {
-          timeLabel = '⚡ <span class="text-emerald-300 font-bold">Nächste Woche</span>';
+          timeLabel = `⚡ <span class="text-emerald-300 font-bold">${t('nextWeek')}</span>`;
         } else {
-          timeLabel = `in ${diffWeeks} Wochen`;
+          timeLabel = t('inWeeks', { weeks: diffWeeks });
         }
 
-        nextShiftInfo.innerHTML = `Nächster Einsatz: <b>${nextShift.kw}</b> (${nextShift.fromDate} – ${nextShift.toDate}) &bull; ${timeLabel}`;
+        nextShiftInfo.innerHTML = `${t('nextShift')} <b>${nextShift.kw}</b> (${nextShift.fromDate} – ${nextShift.toDate}) &bull; ${timeLabel}`;
         myShiftIcsBtn.classList.remove('hidden');
       } else {
-        nextShiftInfo.textContent = 'Aktuell keine anstehenden Einsätze im hinterlegten Plan gefunden.';
+        nextShiftInfo.textContent = t('noUpcoming');
         myShiftIcsBtn.classList.add('hidden');
       }
 
@@ -1343,16 +1942,16 @@
     function setSyncState(state, timeStr = '') {
       if (state === 'loading') {
         syncStatusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
-        syncStatusText.textContent = 'Synchronisiere...';
+        syncStatusText.textContent = t('syncStatusLoading');
       } else if (state === 'synced') {
         syncStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-        syncStatusText.textContent = `Aktualisiert um ${timeStr}`;
+        syncStatusText.textContent = t('syncStatusSynced', { time: timeStr });
       } else if (state === 'cached') {
         syncStatusDot.className = 'w-2 h-2 rounded-full bg-indigo-400';
-        syncStatusText.textContent = `Offline-Stand (${timeStr || 'gespeichert'})`;
+        syncStatusText.textContent = t('syncStatusCached', { time: timeStr || 'offline' });
       } else if (state === 'error') {
         syncStatusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
-        syncStatusText.textContent = 'Offline / Verbindungsfehler';
+        syncStatusText.textContent = t('syncStatusError');
       }
     }
 
@@ -1361,9 +1960,9 @@
       tableBody.innerHTML = '';
       cardsContainer.innerHTML = '';
 
-      currentKWBadge.textContent = `Aktuell: KW ${currentCalculatedKW}`;
+      currentKWBadge.textContent = t('currentKW', { kw: currentCalculatedKW });
       currentKWBadge.classList.remove('hidden');
-      recordsCount.textContent = `${data.length} ${data.length === 1 ? 'Woche' : 'Wochen'}`;
+      recordsCount.textContent = (data.length === 1) ? t('weekCountSingle') : t('weeksCount', { count: data.length });
 
       if (data.length === 0) {
         noResultsBox.classList.remove('hidden');
@@ -1412,10 +2011,10 @@
           </td>
           <td class="p-3.5 pr-4 align-top text-center no-print">
             <div class="flex items-center justify-center gap-1">
-              <button onclick="shareWeekItem(${kwNum})" class="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Woche teilen">
+              <button onclick="shareWeekItem(${kwNum})" class="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="${t('shareTitle')}">
                 <i class="fa-solid fa-share-nodes text-xs"></i>
               </button>
-              <button onclick="downloadIcsForWeek(${kwNum})" class="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="In Kalender (.ics)">
+              <button onclick="downloadIcsForWeek(${kwNum})" class="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="${t('calendarTitle')}">
                 <i class="fa-solid fa-calendar-plus text-xs"></i>
               </button>
             </div>
@@ -1440,14 +2039,14 @@
               }">
                 ${escapeHtml(item.kw)}
               </span>
-              ${isCurrent ? '<span class="text-xs font-semibold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md">Aktuelle Woche</span>' : ''}
+              ${isCurrent ? `<span class="text-xs font-semibold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md">${t('currentWeekBadge')}</span>` : ''}
             </div>
             <div class="flex items-center gap-1">
               <span class="text-xs font-medium text-slate-500 mr-1">${escapeHtml(item.fromDate)} – ${escapeHtml(item.toDate)}</span>
-              <button onclick="shareWeekItem(${kwNum})" class="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-400 hover:text-emerald-600 active:text-emerald-700" title="Teilen">
+              <button onclick="shareWeekItem(${kwNum})" class="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-400 hover:text-emerald-600 active:text-emerald-700" title="${t('shareTitle')}">
                 <i class="fa-solid fa-share-nodes text-sm"></i>
               </button>
-              <button onclick="downloadIcsForWeek(${kwNum})" class="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-400 hover:text-indigo-600 active:text-indigo-700" title="Kalender (.ics)">
+              <button onclick="downloadIcsForWeek(${kwNum})" class="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-400 hover:text-indigo-600 active:text-indigo-700" title="${t('calendarTitle')}">
                 <i class="fa-solid fa-calendar-plus text-sm"></i>
               </button>
             </div>
@@ -1455,20 +2054,20 @@
 
           <div class="grid grid-cols-1 gap-2 pt-2.5 text-xs">
             <div class="flex justify-between items-baseline py-0.5">
-              <span class="text-slate-500 font-medium">Di & So (Ru):</span>
+              <span class="text-slate-500 font-medium">${t('thRu')}:</span>
               <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.tuesdaySundayRu)}</span>
             </div>
             <div class="flex justify-between items-baseline py-0.5">
-              <span class="text-slate-500 font-medium">Mi & Do (Uk):</span>
+              <span class="text-slate-500 font-medium">${t('thUk')}:</span>
               <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.midweekUk)}</span>
             </div>
             <div class="flex justify-between items-baseline py-0.5">
-              <span class="text-slate-500 font-medium">So (De):</span>
+              <span class="text-slate-500 font-medium">${t('thDe')}:</span>
               <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.sundayDe)}</span>
             </div>
             <div class="flex justify-between items-baseline pt-2 border-t border-slate-100 text-slate-900">
               <span class="text-indigo-600 font-bold flex items-center gap-1">
-                <i class="fa-solid fa-sparkles text-xs"></i> Hauptreinigung:
+                <i class="fa-solid fa-sparkles text-xs"></i> ${t('thMain')}:
               </span>
               <span class="font-black text-indigo-950 text-right">${formatCellContent(item.weekendMain)}</span>
             </div>
@@ -1984,14 +2583,245 @@
       }
     }
 
-    async function triggerAutoRotation(scope) {
-      const scopeLabel = scope === 'RU_UK' ? 'Russisch / Ukrainisch' : (scope === 'DE' ? 'Deutsch & Wochenende' : 'Gesamter Plan');
-      if (!confirm(`Möchtest du die automatische Rotation für [${scopeLabel}] ausführen? Kongresse bleiben erhalten.`)) {
-        return;
+    // ---------------------- INTELLIGENTER ROTATIONS-GENERATOR ----------------------
+    function openRotationModal(presetScope) {
+      const scopeRadioAll = document.getElementById('rotScopeAllOption');
+      const scopeRadioRuUk = document.getElementById('rotScopeRuUkOption');
+      const scopeRadioDe = document.getElementById('rotScopeDeOption');
+
+      if (userRole === 'ADMIN_DE') {
+        scopeRadioAll.classList.add('hidden');
+        scopeRadioRuUk.classList.add('hidden');
+        scopeRadioDe.classList.remove('hidden');
+        document.querySelector('input[name="rotScope"][value="DE"]').checked = true;
+      } else if (userRole === 'ADMIN_RU_UK') {
+        scopeRadioAll.classList.add('hidden');
+        scopeRadioRuUk.classList.remove('hidden');
+        scopeRadioDe.classList.add('hidden');
+        document.querySelector('input[name="rotScope"][value="RU_UK"]').checked = true;
+      } else {
+        scopeRadioAll.classList.remove('hidden');
+        scopeRadioRuUk.classList.remove('hidden');
+        scopeRadioDe.classList.remove('hidden');
+        const chosenScope = presetScope || 'ALL';
+        const radio = document.querySelector(`input[name="rotScope"][value="${chosenScope}"]`);
+        if (radio) radio.checked = true;
       }
 
-      const statusEl = document.getElementById('adminSaveStatus');
-      statusEl.textContent = 'Berechne Rotation...';
+      // Startwerte aus aktuellem Plan ermitteln
+      if (scheduleData && scheduleData.length > 0) {
+        const first = scheduleData[0];
+        if (first.kwNumber) document.getElementById('rotStartKw').value = first.kwNumber;
+        document.getElementById('rotTotalWeeks').value = scheduleData.length;
+      }
+
+      updateRotationPreview();
+      document.getElementById('rotationModal').classList.remove('hidden');
+    }
+
+    function closeRotationModal() {
+      document.getElementById('rotationModal').classList.add('hidden');
+    }
+
+    function getRotationModalConfig() {
+      const selectedScopeRadio = document.querySelector('input[name="rotScope"]:checked');
+      const scope = selectedScopeRadio ? selectedScopeRadio.value : (userRole === 'ADMIN_DE' ? 'DE' : (userRole === 'ADMIN_RU_UK' ? 'RU_UK' : 'ALL'));
+      const startKw = parseInt(document.getElementById('rotStartKw').value, 10) || 26;
+      const totalWeeks = parseInt(document.getElementById('rotTotalWeeks').value, 10) || (scheduleData.length || 28);
+      const startDateVal = document.getElementById('rotStartDate').value || '2026-06-22';
+      const firstWeekJoint = document.getElementById('rotRuleMonthlyJoint').checked;
+      const fairQueue = document.getElementById('rotRuleFairQueue').checked;
+
+      return {
+        scope,
+        startKw,
+        totalWeeks,
+        startDate: startDateVal,
+        firstWeekJoint,
+        fairQueue,
+        customPools: {
+          tuesdaySundayRu: activeGroupPools.ru || DEFAULT_GROUP_POOLS.ru,
+          midweekUk: activeGroupPools.uk || DEFAULT_GROUP_POOLS.uk,
+          sundayDe: activeGroupPools.de || DEFAULT_GROUP_POOLS.de,
+          weekendMain: activeGroupPools.main || activeGroupPools.de || DEFAULT_GROUP_POOLS.main
+        }
+      };
+    }
+
+    function generateRotationScheduleLocally(config) {
+      const { startKw, totalWeeks, startDate, scope, firstWeekJoint, fairQueue, customPools } = config;
+      
+      const ruPool = (customPools.tuesdaySundayRu && customPools.tuesdaySundayRu.length) ? customPools.tuesdaySundayRu : DEFAULT_GROUP_POOLS.ru;
+      const ukPool = (customPools.midweekUk && customPools.midweekUk.length) ? customPools.midweekUk : DEFAULT_GROUP_POOLS.uk;
+      const dePool = (customPools.sundayDe && customPools.sundayDe.length) ? customPools.sundayDe : DEFAULT_GROUP_POOLS.de;
+      const mainPool = (customPools.weekendMain && customPools.weekendMain.length) ? customPools.weekendMain : (customPools.sundayDe || DEFAULT_GROUP_POOLS.main);
+
+      let ruQueueIndex = 0;
+      let ukQueueIndex = 0;
+      let deQueueIndex = 0;
+      let mainQueueIndex = 0;
+
+      const currentMonday = new Date(startDate);
+      const resultSchedule = [];
+      const shiftCounts = {};
+
+      for (let i = 0; i < totalWeeks; i++) {
+        const kwNumber = startKw + i;
+        const kwLabel = `KW ${kwNumber}`;
+        const fromStr = formatShortDate(currentMonday);
+        const sundayDate = new Date(currentMonday);
+        sundayDate.setDate(currentMonday.getDate() + 6);
+        const toStr = formatShortDate(sundayDate);
+
+        // 1. Woche im Monat prüfen
+        const tuesdayDate = new Date(currentMonday);
+        tuesdayDate.setDate(currentMonday.getDate() + 1);
+        const isFirstWeek = (tuesdayDate.getDate() <= 7 || sundayDate.getDate() <= 7);
+
+        // Bestehenden Eintrag suchen
+        const existing = scheduleData.find(s => s.kw === kwLabel || s.kwNumber === kwNumber) || {};
+
+        // Kongresse/Ereignisse prüfen (aus bestehenden Zellen falls Kongress)
+        let isRuEvent = existing.tuesdaySundayRu && (existing.tuesdaySundayRu.toLowerCase().includes('kongress') || existing.tuesdaySundayRu.toLowerCase().includes('kreisaufseher'));
+        let isUkEvent = existing.midweekUk && (existing.midweekUk.toLowerCase().includes('kongress') || existing.midweekUk.toLowerCase().includes('kreisaufseher'));
+        let isDeEvent = existing.sundayDe && (existing.sundayDe.toLowerCase().includes('kongress') || existing.sundayDe.toLowerCase().includes('kreisaufseher'));
+
+        let ruAssignee = existing.tuesdaySundayRu || '';
+        let ukAssignee = existing.midweekUk || '';
+        let deAssignee = existing.sundayDe || '';
+        let mainAssignee = existing.weekendMain || '';
+
+        // 1. Russisch (Di & So)
+        if (scope === 'RU_UK' || scope === 'ALL') {
+          if (isRuEvent) {
+            ruAssignee = existing.tuesdaySundayRu;
+            if (!fairQueue) ruQueueIndex++;
+          } else {
+            ruAssignee = ruPool[ruQueueIndex % ruPool.length];
+            ruQueueIndex++;
+          }
+          if (ruAssignee) shiftCounts[ruAssignee] = (shiftCounts[ruAssignee] || 0) + 1;
+
+          // 2. Ukrainisch (Mi & Do)
+          if (isUkEvent) {
+            ukAssignee = existing.midweekUk;
+            if (!fairQueue) ukQueueIndex++;
+          } else if (firstWeekJoint && isFirstWeek) {
+            ukAssignee = 'Keine';
+          } else {
+            ukAssignee = ukPool[ukQueueIndex % ukPool.length];
+            ukQueueIndex++;
+          }
+          if (ukAssignee && ukAssignee !== 'Keine') shiftCounts[ukAssignee] = (shiftCounts[ukAssignee] || 0) + 1;
+        }
+
+        // 3. Deutsch (So & WE Hauptreinigung)
+        if (scope === 'DE' || scope === 'ALL') {
+          if (isDeEvent) {
+            deAssignee = existing.sundayDe;
+            mainAssignee = existing.weekendMain || existing.sundayDe;
+            if (!fairQueue) {
+              deQueueIndex++;
+              mainQueueIndex++;
+            }
+          } else {
+            deAssignee = dePool[deQueueIndex % dePool.length];
+            deQueueIndex++;
+            mainAssignee = mainPool[mainQueueIndex % mainPool.length];
+            mainQueueIndex++;
+          }
+          if (deAssignee) shiftCounts[deAssignee] = (shiftCounts[deAssignee] || 0) + 1;
+          if (mainAssignee && mainAssignee !== deAssignee) shiftCounts[mainAssignee] = (shiftCounts[mainAssignee] || 0) + 1;
+        }
+
+        resultSchedule.push({
+          id: i + 1,
+          kw: kwLabel,
+          kwNumber: kwNumber,
+          fromDate: existing.fromDate || fromStr,
+          toDate: existing.toDate || toStr,
+          tuesdaySundayRu: ruAssignee,
+          midweekUk: ukAssignee,
+          sundayDe: deAssignee,
+          weekendMain: mainAssignee
+        });
+
+        currentMonday.setDate(currentMonday.getDate() + 7);
+      }
+
+      return { schedule: resultSchedule, shiftCounts };
+    }
+
+    function updateRotationPreview() {
+      const config = getRotationModalConfig();
+      const { schedule, shiftCounts } = generateRotationScheduleLocally(config);
+
+      // Fairness Tags
+      const fairnessList = document.getElementById('rotFairnessList');
+      if (fairnessList) {
+        fairnessList.innerHTML = '';
+        const entries = Object.entries(shiftCounts).filter(([name]) => !name.toLowerCase().includes('kongress') && !name.toLowerCase().includes('kreisaufseher') && name !== 'Keine' && name !== 'Ortsbedürfnisse');
+        
+        if (entries.length === 0) {
+          fairnessList.innerHTML = '<span class="text-slate-400 italic">Keine Gruppen zugewiesen</span>';
+        } else {
+          entries.forEach(([name, count]) => {
+            const span = document.createElement('span');
+            span.className = 'inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 border border-slate-200 text-slate-700 font-semibold text-[11px]';
+            span.innerHTML = `<span>${escapeHtml(name)}:</span> <b class="text-indigo-600">${count}&times;</b>`;
+            fairnessList.appendChild(span);
+          });
+        }
+      }
+
+      // Events in this period
+      const eventsList = document.getElementById('rotEventsList');
+      if (eventsList) {
+        eventsList.innerHTML = '';
+        const foundEvents = [];
+        schedule.forEach(item => {
+          [item.tuesdaySundayRu, item.midweekUk, item.sundayDe, item.weekendMain].forEach(val => {
+            if (val && (val.toLowerCase().includes('kongress') || val.toLowerCase().includes('kreisaufseher'))) {
+              if (!foundEvents.some(e => e.kw === item.kw && e.title === val)) {
+                foundEvents.push({ kw: item.kw, dates: `${item.fromDate} – ${item.toDate}`, title: val });
+              }
+            }
+          });
+        });
+
+        if (foundEvents.length === 0) {
+          eventsList.innerHTML = '<p class="text-slate-400 italic text-[11px]">Keine Kongresse im gewählten Zeitraum eingetragen.</p>';
+        } else {
+          foundEvents.forEach(ev => {
+            const div = document.createElement('div');
+            div.className = 'flex justify-between items-center bg-white p-1.5 px-2.5 rounded-lg border border-amber-200/80 text-amber-900 font-medium text-[11px]';
+            div.innerHTML = `<span><b>${escapeHtml(ev.kw)}</b> (${escapeHtml(ev.dates)}):</span> <span class="font-bold flex items-center gap-1"><i class="fa-solid fa-star text-[10px] text-amber-500"></i> ${escapeHtml(ev.title)}</span>`;
+            eventsList.appendChild(div);
+          });
+        }
+      }
+    }
+
+    function applyRotationToTableLocally() {
+      const config = getRotationModalConfig();
+      const { schedule } = generateRotationScheduleLocally(config);
+      
+      scheduleData = schedule;
+      renderAdminTable();
+      applyAllFilters();
+      updatePersonalBanner();
+      closeRotationModal();
+      
+      showToast('Rotation in Tabelle eingesetzt! Zum Speichern auf "In Google Sheets speichern" klicken.');
+    }
+
+    async function executeRotationAndSave() {
+      const config = getRotationModalConfig();
+      const { schedule } = generateRotationScheduleLocally(config);
+      
+      const saveBtn = document.getElementById('rotExecuteSaveBtn');
+      saveBtn.disabled = true;
+      saveBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i><span>Speichere in Sheets...</span>';
 
       try {
         if (SCRIPT_URL && SCRIPT_URL !== 'DEINE_APPS_SCRIPT_WEB_APP_URL') {
@@ -2000,32 +2830,42 @@
             body: JSON.stringify({
               pin: verifiedAdminPin,
               action: 'auto_rotate',
-              scope: scope,
-              startKw: 26,
-              totalWeeks: scheduleData.length || 28,
-              customPools: {
-                tuesdaySundayRu: activeGroupPools.ru,
-                midweekUk: activeGroupPools.uk,
-                sundayDe: activeGroupPools.de,
-                weekendMain: activeGroupPools.main || activeGroupPools.de
-              }
+              scope: config.scope,
+              startKw: config.startKw,
+              totalWeeks: config.totalWeeks,
+              startDate: config.startDate,
+              firstWeekJoint: config.firstWeekJoint,
+              fairQueue: config.fairQueue,
+              customPools: config.customPools
             })
           });
 
           const result = await res.json();
           if (result.status === 'success') {
-            scheduleData = result.data;
+            scheduleData = result.data || schedule;
             localStorage.setItem(CACHE_KEY, JSON.stringify(scheduleData));
             renderAdminTable();
             applyAllFilters();
             updatePersonalBanner();
-            statusEl.textContent = `✅ ${result.message}`;
+            closeRotationModal();
+            showToast(`✅ ${result.message}`);
           } else {
-            statusEl.textContent = `❌ Fehler: ${result.message}`;
+            alert(`Fehler: ${result.message}`);
           }
+        } else {
+          scheduleData = schedule;
+          localStorage.setItem(CACHE_KEY, JSON.stringify(scheduleData));
+          renderAdminTable();
+          applyAllFilters();
+          updatePersonalBanner();
+          closeRotationModal();
+          showToast('✅ Rotation lokal gespeichert!');
         }
       } catch (err) {
-        statusEl.textContent = `❌ Netzwerkfehler: ${err.message}`;
+        alert(`Netzwerkfehler: ${err.message}`);
+      } finally {
+        saveBtn.disabled = false;
+        saveBtn.innerHTML = '<i class="fa-solid fa-cloud-arrow-up"></i><span>Generieren & Speichern</span>';
       }
     }
 
@@ -2171,6 +3011,7 @@
     });
 
     document.addEventListener('DOMContentLoaded', () => {
+      applyLanguage(currentLang);
       loadSchedule();
       setTimeout(() => { scrollToCurrentWeek(); }, 400);
     });
