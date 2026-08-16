@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reinigungsplan-marburg-v3';
+const CACHE_NAME = 'reinigungsplan-marburg-v4';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -7,7 +7,7 @@ const STATIC_ASSETS = [
   './icon.svg'
 ];
 
-// Install: Pre-cache local core assets atomically
+// Install: Pre-cache local core assets
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
@@ -35,25 +35,27 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: Stale-While-Revalidate for app shell, Network-First for Apps Script API
+// Fetch: Stale-While-Revalidate for local app shell only
 self.addEventListener('fetch', (event) => {
-  const url = new URL(event.request.url);
-
-  // 1. Google Apps Script Web App API calls
-  if (url.origin.includes('script.google.com') || url.origin.includes('googleusercontent.com')) {
-    event.respondWith(
-      fetch(event.request)
-        .catch(() => caches.match(event.request))
-    );
+  // Only handle GET requests
+  if (event.request.method !== 'GET') {
     return;
   }
 
-  // 2. Static Assets & Third-Party CDN (FontAwesome)
+  const url = new URL(event.request.url);
+
+  // Ignore cross-origin requests (CDNs, Google Apps Script API, fonts)
+  // Let the browser handle cross-origin caching natively to prevent opaque CORS errors
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  // Local Static Assets (App Shell)
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)
         .then((networkResponse) => {
-          if (networkResponse && (networkResponse.status === 200 || networkResponse.type === 'opaque')) {
+          if (networkResponse && networkResponse.status === 200) {
             const responseClone = networkResponse.clone();
             caches.open(CACHE_NAME).then((cache) => {
               cache.put(event.request, responseClone).catch(() => {});
