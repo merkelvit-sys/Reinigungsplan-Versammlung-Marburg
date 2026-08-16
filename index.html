@@ -989,7 +989,7 @@
         </button>
       </div>
 
-      <!-- Scope Tabs (RU, UK, DE) -->
+      <!-- Scope Tabs (RU, UK, DE, MAIN) -->
       <div class="flex items-center gap-1.5 py-3 border-b border-slate-100 shrink-0 overflow-x-auto touch-scroll">
         <button id="groupTabRu" onclick="setGroupManagerTab('ru')" class="px-3 py-1.5 rounded-xl font-bold text-xs bg-indigo-600 text-white shadow-xs transition flex items-center gap-1.5 shrink-0">
           <span>🇷🇺 Russisch (Di & So)</span>
@@ -998,7 +998,10 @@
           <span>🇺🇦 Ukrainisch (Mi & Do)</span>
         </button>
         <button id="groupTabDe" onclick="setGroupManagerTab('de')" class="px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 shrink-0">
-          <span>🇩🇪 Deutsch & WE</span>
+          <span>🇩🇪 Deutsch (Sonntag)</span>
+        </button>
+        <button id="groupTabMain" onclick="setGroupManagerTab('main')" class="px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 shrink-0">
+          <span>🧹 Hauptreinigung (14 Gruppen)</span>
         </button>
       </div>
 
@@ -1290,7 +1293,14 @@
         "4 Faupel, Lothar",
         "5 Scherwitzl Oliver",
         "6 Beck Roland",
-        "7 Krause Benjamin"
+        "7 Krause Benjamin",
+        "Marburg 1 - Andrej Tarantasow",
+        "Marburg 2 und 3 - Schewchuk & Ashurov",
+        "Ukrainisch 1 - Petro Hyliuk",
+        "Ukrainisch 2 - Valerij Melnik",
+        "Bad Laasphe - Andrej Bauer",
+        "Elnhausen - Artur Akopjan",
+        "Gladenbach - Daniel Engelbrecht"
       ]
     };
 
@@ -2679,7 +2689,7 @@
     }
 
     // ---------------------- GRUPPEN-VERWALTUNG (Group Manager) ----------------------
-    let activeGroupTab = 'ru'; // 'ru' | 'uk' | 'de'
+    let activeGroupTab = 'ru'; // 'ru' | 'uk' | 'de' | 'main'
 
     function openGroupManagerModal() {
       if (userRole === 'ADMIN_DE') {
@@ -2687,16 +2697,19 @@
         document.getElementById('groupTabRu').classList.add('hidden');
         document.getElementById('groupTabUk').classList.add('hidden');
         document.getElementById('groupTabDe').classList.remove('hidden');
+        document.getElementById('groupTabMain').classList.remove('hidden');
       } else if (userRole === 'ADMIN_RU_UK') {
         activeGroupTab = 'ru';
         document.getElementById('groupTabRu').classList.remove('hidden');
         document.getElementById('groupTabUk').classList.remove('hidden');
         document.getElementById('groupTabDe').classList.add('hidden');
+        document.getElementById('groupTabMain').classList.add('hidden');
       } else {
         activeGroupTab = 'ru';
         document.getElementById('groupTabRu').classList.remove('hidden');
         document.getElementById('groupTabUk').classList.remove('hidden');
         document.getElementById('groupTabDe').classList.remove('hidden');
+        document.getElementById('groupTabMain').classList.remove('hidden');
       }
 
       setGroupManagerTab(activeGroupTab);
@@ -2711,7 +2724,7 @@
       syncCurrentTabInputsToMemory();
       activeGroupTab = tab;
 
-      const tabs = ['ru', 'uk', 'de'];
+      const tabs = ['ru', 'uk', 'de', 'main'];
       tabs.forEach(t => {
         const btn = document.getElementById(`groupTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
         if (btn) {
@@ -2736,9 +2749,6 @@
         });
         if (updated.length > 0) {
           activeGroupPools[activeGroupTab] = updated;
-          if (activeGroupTab === 'de') {
-            activeGroupPools.main = [...updated];
-          }
         }
       }
     }
