@@ -362,7 +362,7 @@
             <tr>
               <th id="thKw" class="p-3.5 pl-4 w-36 bg-slate-100/95">KW / Zeitraum</th>
               <th id="thRu" class="p-3.5 bg-slate-100/95">Di & So (Russisch)</th>
-              <th id="thUk" class="p-3.5 bg-slate-100/95">Mi & Do (Ukrainisch)</th>
+              <th id="thUk" class="p-3.5 bg-slate-100/95">Mi & So (Ukrainisch)</th>
               <th id="thDe" class="p-3.5 bg-slate-100/95">So (Deutsch)</th>
               <th id="thMain" class="p-3.5 bg-indigo-50/90 text-indigo-950 font-black border-l border-r border-indigo-200/60">🧹 Hauptreinigung (WE)</th>
               <th id="thActions" class="p-3.5 pr-4 w-20 text-center bg-slate-100/95 no-print">Aktionen</th>
@@ -641,6 +641,10 @@
                 <i class="fa-solid fa-calendar-plus text-emerald-600"></i>
                 <span id="btnExtendText">+ Verlängern</span>
               </button>
+              <button onclick="openMeetingDaysModal()" class="px-3 py-2 min-h-[36px] bg-purple-50 hover:bg-purple-100 active:bg-purple-200 text-purple-800 font-bold rounded-xl text-xs border border-purple-200/80 transition flex items-center gap-1.5 shadow-xs" title="Wochentage der Zusammenkünfte flexibel ändern">
+                <i class="fa-solid fa-calendar-days text-purple-600"></i>
+                <span id="btnMeetingDaysText">Tage</span>
+              </button>
               <button onclick="addNewAdminRow()" class="px-3 py-2 min-h-[36px] bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-xl text-xs transition flex items-center gap-1">
                 <i class="fa-solid fa-plus"></i>
                 <span id="btnAddRowText">Zeile</span>
@@ -691,10 +695,10 @@
                 <th class="p-2.5 w-20 text-center">KW</th>
                 <th class="p-2.5 w-28 text-center">Von</th>
                 <th class="p-2.5 w-28 text-center">Bis</th>
-                <th class="p-2.5 min-w-[170px]">Di & So (Ru)</th>
-                <th class="p-2.5 min-w-[170px]">Mi & Do (Uk)</th>
-                <th class="p-2.5 min-w-[170px]">So (De)</th>
-                <th class="p-2.5 min-w-[170px]">Hauptreinigung (WE)</th>
+                <th id="adminThRu" class="p-2.5 min-w-[170px]">Di & So (Ru)</th>
+                <th id="adminThUk" class="p-2.5 min-w-[170px]">Mi & So (Uk)</th>
+                <th id="adminThDe" class="p-2.5 min-w-[170px]">So (De)</th>
+                <th id="adminThMain" class="p-2.5 min-w-[170px]">Hauptreinigung (WE)</th>
                 <th class="p-2.5 w-12 text-center">Aktion</th>
               </tr>
             </thead>
@@ -995,7 +999,7 @@
           <span>🇷🇺 Russisch (Di & So)</span>
         </button>
         <button id="groupTabUk" onclick="setGroupManagerTab('uk')" class="px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 shrink-0">
-          <span>🇺🇦 Ukrainisch (Mi & Do)</span>
+          <span>🇺🇦 Ukrainisch (Mi & So)</span>
         </button>
         <button id="groupTabDe" onclick="setGroupManagerTab('de')" class="px-3 py-1.5 rounded-xl font-semibold text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center gap-1.5 shrink-0">
           <span>🇩🇪 Deutsch (Sonntag)</span>
@@ -1160,7 +1164,7 @@
             <input type="checkbox" id="rotRuleMonthlyJoint" checked onchange="updateRotationPreview()" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
             <span class="text-slate-800 leading-snug">
               <b>1. Woche im Monat (Monatsanfang):</b> Russisch & Ukrainisch treffen sich gemeinsam.<br>
-              <span class="text-slate-500 text-[11px]">&bull; In der ersten Woche des Monats wird für Ukrainisch (Mi & Do) automatisch <i>Keine</i> eingetragen (Ukrainische Rotation pausiert ohne Verlust der Reihenfolge).</span>
+              <span class="text-slate-500 text-[11px]">&bull; In der ersten Woche des Monats wird für Ukrainisch (Mi & So) automatisch <i>Keine</i> eingetragen (Ukrainische Rotation pausiert ohne Verlust der Reihenfolge).</span>
             </span>
           </label>
 
@@ -1243,6 +1247,168 @@
     </div>
   </div>
 
+  <!-- Meeting Days Configuration Modal (Tage der Zusammenkünfte anpassen) -->
+  <div id="meetingDaysModal" class="hidden fixed inset-0 bg-slate-900/70 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-3xl p-5 sm:p-6 max-w-xl w-full h-[92vh] max-h-[92vh] shadow-2xl border border-slate-100 fade-in flex flex-col overflow-hidden">
+      
+      <!-- Header -->
+      <div class="flex justify-between items-center pb-3 border-b border-slate-100 shrink-0">
+        <div class="flex items-center gap-2.5">
+          <div class="w-9 h-9 rounded-xl bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 shadow-xs">
+            <i class="fa-solid fa-calendar-days text-base"></i>
+          </div>
+          <div>
+            <h3 class="text-base font-bold text-slate-800">Tage der Zusammenkünfte</h3>
+            <p class="text-xs text-slate-500">Wochentage für RU, UK & DE flexibel einstellen</p>
+          </div>
+        </div>
+        <button onclick="closeMeetingDaysModal()" class="text-slate-400 hover:text-slate-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center rounded-xl transition">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <!-- Body Settings -->
+      <div class="flex-1 min-h-0 overflow-y-auto touch-scroll py-3 space-y-4 text-xs">
+        
+        <!-- Info Alert -->
+        <div class="p-3 bg-purple-50/70 border border-purple-200/80 rounded-2xl text-purple-950 flex items-start gap-2">
+          <i class="fa-solid fa-circle-info text-purple-600 mt-0.5 shrink-0"></i>
+          <span class="leading-relaxed">
+            Wenn sich die Tage der Zusammenkünfte ändern, passe die Tage hier an. Die Spaltenüberschriften, Benachrichtigungen und Kalender-Exporte passen sich <b>automatisch</b> an, ohne dass der bestehende Plan neu geschrieben werden muss!
+          </span>
+        </div>
+
+        <!-- 1. Russische Versammlung -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-3">
+          <div class="font-bold text-slate-800 flex items-center gap-2">
+            <span>🇷🇺 Russische Versammlung</span>
+            <span class="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full">Spalte D</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Unter der Woche:</label>
+              <select id="meetingDayRuMid" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                <option value="Di">Dienstag (Di)</option>
+                <option value="Mo">Montag (Mo)</option>
+                <option value="Mi">Mittwoch (Mi)</option>
+                <option value="Do">Donnerstag (Do)</option>
+                <option value="Fr">Freitag (Fr)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Am Wochenende:</label>
+              <select id="meetingDayRuWk" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                <option value="So">Sonntag (So)</option>
+                <option value="Sa">Samstag (Sa)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 2. Ukrainische Gruppe -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-3">
+          <div class="font-bold text-slate-800 flex items-center gap-2">
+            <span>🇺🇦 Ukrainische Gruppe</span>
+            <span class="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full">Spalte E</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Unter der Woche:</label>
+              <select id="meetingDayUkMid" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                <option value="Mi">Mittwoch (Mi)</option>
+                <option value="Di">Dienstag (Di)</option>
+                <option value="Do">Donnerstag (Do)</option>
+                <option value="Fr">Freitag (Fr)</option>
+                <option value="Mo">Montag (Mo)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Am Wochenende:</label>
+              <select id="meetingDayUkWk" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                <option value="So">Sonntag (So)</option>
+                <option value="Sa">Samstag (Sa)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 3. Deutsche Versammlung -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-3">
+          <div class="font-bold text-slate-800 flex items-center gap-2">
+            <span>🇩🇪 Deutsche Versammlung</span>
+            <span class="text-[10px] bg-indigo-100 text-indigo-700 font-bold px-2 py-0.5 rounded-full">Spalten F & G</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Unter der Woche (Treffpunkt):</label>
+              <select id="meetingDayDeMid" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                <option value="Do">Donnerstag (Do)</option>
+                <option value="Di">Dienstag (Di)</option>
+                <option value="Mi">Mittwoch (Mi)</option>
+                <option value="Fr">Freitag (Fr)</option>
+                <option value="Mo">Montag (Mo)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-[11px] font-semibold text-slate-600 mb-1">Am Wochenende (Zwischenreinigung):</label>
+              <select id="meetingDayDeWk" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                <option value="So">Sonntag (So)</option>
+                <option value="Sa">Samstag (Sa)</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4. Hauptreinigung -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-3.5 space-y-3">
+          <div class="font-bold text-slate-800 flex items-center gap-2">
+            <span>🧹 Hauptreinigung (14 Gruppen)</span>
+            <span class="text-[10px] bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded-full">Spalte H</span>
+          </div>
+          <div>
+            <label class="block text-[11px] font-semibold text-slate-600 mb-1">Zeitpunkt der Hauptreinigung:</label>
+            <select id="meetingDayMainLabel" class="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+              <option value="WE">Wochenende (WE)</option>
+              <option value="Sa">Samstag (Sa)</option>
+              <option value="So">Sonntag (So)</option>
+            </select>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="pt-3 border-t border-slate-100 flex justify-between items-center gap-2 shrink-0">
+        <button 
+          type="button" 
+          onclick="resetMeetingDaysToDefault()" 
+          class="px-3.5 py-2.5 text-slate-500 hover:text-slate-800 font-semibold text-xs transition min-h-[42px]"
+        >
+          Standard wiederherstellen
+        </button>
+
+        <div class="flex gap-2">
+          <button 
+            type="button" 
+            onclick="closeMeetingDaysModal()" 
+            class="px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition text-xs min-h-[42px]"
+          >
+            Abbrechen
+          </button>
+          <button 
+            type="button" 
+            onclick="saveMeetingDaysConfig()" 
+            class="px-4 py-2.5 bg-purple-600 hover:bg-purple-700 active:bg-purple-800 text-white rounded-xl font-bold shadow-md transition text-xs flex items-center gap-1.5 min-h-[42px]"
+          >
+            <i class="fa-solid fa-check"></i>
+            <span>Tage speichern & anwenden</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
   <!-- Footer -->
   <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400 mt-auto hidden sm:block">
     <p>Reinigungsplan Versammlung Marburg &bull; iOS & Android Ready</p>
@@ -1259,6 +1425,66 @@
     const MY_GROUP_KEY = 'reinigungsplan_my_group_v2';
     const CHECKLIST_KEY = 'reinigungsplan_checklist_state_v2';
     const GROUP_POOLS_KEY = 'reinigungsplan_custom_group_pools_v3';
+    const MEETING_DAYS_KEY = 'reinigungsplan_meeting_days_v2';
+
+    const DEFAULT_MEETING_DAYS = {
+      ru: { midweek: "Di", weekend: "So" },
+      uk: { midweek: "Mi", weekend: "So" },
+      de: { midweek: "Do", weekend: "So" },
+      main: { label: "WE" }
+    };
+
+    const DAY_NAMES = {
+      Di: { de: "Dienstag (Di)", ru: "Вторник (Вт)", uk: "Вівторок (Вт)", short: { de: "Di", ru: "Вт", uk: "Вт" } },
+      Mi: { de: "Mittwoch (Mi)", ru: "Среда (Ср)", uk: "Середа (Ср)", short: { de: "Mi", ru: "Ср", uk: "Ср" } },
+      Do: { de: "Donnerstag (Do)", ru: "Четверг (Чт)", uk: "Четвер (Чт)", short: { de: "Do", ru: "Чт", uk: "Чт" } },
+      Fr: { de: "Freitag (Fr)", ru: "Пятница (Пт)", uk: "П'ятниця (Пт)", short: { de: "Fr", ru: "Пт", uk: "Пт" } },
+      Mo: { de: "Montag (Mo)", ru: "Понедельник (Пн)", uk: "Понеділок (Пн)", short: { de: "Mo", ru: "Пн", uk: "Пн" } },
+      Sa: { de: "Samstag (Sa)", ru: "Суббота (Сб)", uk: "Субота (Сб)", short: { de: "Sa", ru: "Сб", uk: "Сб" } },
+      So: { de: "Sonntag (So)", ru: "Воскресенье (Вс)", uk: "Неділя (Нд)", short: { de: "So", ru: "Вс", uk: "Нд" } },
+      WE: { de: "Wochenende (WE)", ru: "Выходные", uk: "Вихідні", short: { de: "WE", ru: "Выходные", uk: "Вихідні" } }
+    };
+
+    function getMeetingDays() {
+      try {
+        const saved = localStorage.getItem(MEETING_DAYS_KEY);
+        if (saved) return { ...DEFAULT_MEETING_DAYS, ...JSON.parse(saved) };
+      } catch (e) {}
+      return { ...DEFAULT_MEETING_DAYS };
+    }
+
+    function getColumnTitle(type, lang = (typeof currentLang !== 'undefined' ? currentLang : 'de')) {
+      const days = getMeetingDays();
+      const getShort = (code) => (DAY_NAMES[code] && DAY_NAMES[code].short[lang]) || code;
+      
+      if (type === 'ru') {
+        const d1 = getShort(days.ru.midweek);
+        const d2 = getShort(days.ru.weekend);
+        if (lang === 'ru') return `${d1} и ${d2} (Русское)`;
+        if (lang === 'uk') return `${d1} і ${d2} (Російська)`;
+        return `${d1} & ${d2} (Russisch)`;
+      }
+      if (type === 'uk') {
+        const d1 = getShort(days.uk.midweek);
+        const d2 = getShort(days.uk.weekend);
+        if (lang === 'ru') return `${d1} и ${d2} (Украинское)`;
+        if (lang === 'uk') return `${d1} і ${d2} (Українська)`;
+        return `${d1} & ${d2} (Ukrainisch)`;
+      }
+      if (type === 'de') {
+        const d = getShort(days.de.weekend);
+        if (lang === 'ru') return `${d} (Немецкое)`;
+        if (lang === 'uk') return `${d} (Німецька)`;
+        return `${d} (Deutsch)`;
+      }
+      if (type === 'main') {
+        const lbl = getShort(days.main.label);
+        if (lang === 'ru') return `Ген. уборка (${lbl})`;
+        if (lang === 'uk') return `Ген. прибирання (${lbl})`;
+        return `Hauptreinigung (${lbl})`;
+      }
+      return '';
+    }
 
     // Standard-Gruppenpools
     const DEFAULT_GROUP_POOLS = {
@@ -1376,7 +1602,7 @@
         // Table & Cards
         thKwTime: "KW / Zeitraum",
         thRu: "Di & So (Russisch)",
-        thUk: "Mi & Do (Ukrainisch)",
+        thUk: "Mi & So (Ukrainisch)",
         thDe: "So (Deutsch)",
         thMain: "Hauptreinigung (WE)",
         thActions: "Aktionen",
@@ -1480,7 +1706,7 @@
         // Table & Cards
         thKwTime: "НК / Период",
         thRu: "Вт и Вс (Русское)",
-        thUk: "Ср и Чт (Украинское)",
+        thUk: "Ср и Вс (Украинское)",
         thDe: "Вс (Немецкое)",
         thMain: "Ген. уборка (Выходные)",
         thActions: "Действия",
@@ -1584,7 +1810,7 @@
         // Table & Cards
         thKwTime: "ТЖ / Період",
         thRu: "Вт і Нд (Російська)",
-        thUk: "Ср і Чт (Українська)",
+        thUk: "Ср і Нд (Українська)",
         thDe: "Нд (Німецька)",
         thMain: "Ген. прибирання (Вихідні)",
         thActions: "Дії",
@@ -1799,12 +2025,11 @@
       const thUk = document.getElementById('thUk');
       const thDe = document.getElementById('thDe');
       const thMain = document.getElementById('thMain');
-      const thAct = document.getElementById('thActions');
       if (thKw) thKw.textContent = t('thKwTime');
-      if (thRu) thRu.textContent = t('thRu');
-      if (thUk) thUk.textContent = t('thUk');
-      if (thDe) thDe.textContent = t('thDe');
-      if (thMain) thMain.textContent = t('thMain');
+      if (thRu) thRu.textContent = getColumnTitle('ru');
+      if (thUk) thUk.textContent = getColumnTitle('uk');
+      if (thDe) thDe.textContent = getColumnTitle('de');
+      if (thMain) thMain.textContent = '🧹 ' + getColumnTitle('main');
       if (thAct) thAct.textContent = t('thActions');
 
       // Bottom Nav
@@ -2020,26 +2245,31 @@
     }
 
     function buildShareMessage(item) {
+      const ruLbl = getColumnTitle('ru', currentLang);
+      const ukLbl = getColumnTitle('uk', currentLang);
+      const deLbl = getColumnTitle('de', currentLang);
+      const mainLbl = getColumnTitle('main', currentLang);
+
       if (currentLang === 'ru') {
         return `🧹 *График уборки — Собрание Марбург*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
-               `🇷🇺 *Вт и Вс (Русское):* ${item.tuesdaySundayRu || '—'}\n` +
-               `🇺🇦 *Ср и Чт (Украинское):* ${item.midweekUk || '—'}\n` +
-               `🇩🇪 *Вс (Немецкое):* ${item.sundayDe || '—'}\n` +
-               `✨ *Ген. уборка (Выходные):* ${item.weekendMain || '—'}\n\n` +
+               `🇷🇺 *${ruLbl}:* ${item.tuesdaySundayRu || '—'}\n` +
+               `🇺🇦 *${ukLbl}:* ${item.midweekUk || '—'}\n` +
+               `🇩🇪 *${deLbl}:* ${item.sundayDe || '—'}\n` +
+               `✨ *${mainLbl}:* ${item.weekendMain || '—'}\n\n` +
                `🔗 Онлайн-график: ${window.location.href}`;
       } else if (currentLang === 'uk') {
         return `🧹 *Графік прибирання — Збір Марбург*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
-               `🇷🇺 *Вт і Нд (Російська):* ${item.tuesdaySundayRu || '—'}\n` +
-               `🇺🇦 *Ср і Чт (Українська):* ${item.midweekUk || '—'}\n` +
-               `🇩🇪 *Нд (Німецька):* ${item.sundayDe || '—'}\n` +
-               `✨ *Ген. прибирання (Вихідні):* ${item.weekendMain || '—'}\n\n` +
+               `🇷🇺 *${ruLbl}:* ${item.tuesdaySundayRu || '—'}\n` +
+               `🇺🇦 *${ukLbl}:* ${item.midweekUk || '—'}\n` +
+               `🇩🇪 *${deLbl}:* ${item.sundayDe || '—'}\n` +
+               `✨ *${mainLbl}:* ${item.weekendMain || '—'}\n\n` +
                `🔗 Онлайн-графік: ${window.location.href}`;
       } else {
         return `🧹 *Reinigungsplan — Versammlung Marburg*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
-               `🇷🇺 *Di & So (Ru):* ${item.tuesdaySundayRu || '—'}\n` +
-               `🇺🇦 *Mi & Do (Uk):* ${item.midweekUk || '—'}\n` +
-               `🇩🇪 *So (De):* ${item.sundayDe || '—'}\n` +
-               `✨ *Hauptreinigung (WE):* ${item.weekendMain || '—'}\n\n` +
+               `🇷🇺 *${ruLbl}:* ${item.tuesdaySundayRu || '—'}\n` +
+               `🇺🇦 *${ukLbl}:* ${item.midweekUk || '—'}\n` +
+               `🇩🇪 *${deLbl}:* ${item.sundayDe || '—'}\n` +
+               `✨ *${mainLbl}:* ${item.weekendMain || '—'}\n\n` +
                `🔗 Zum Online-Plan: ${window.location.href}`;
       }
     }
@@ -2081,7 +2311,7 @@
 
       const currentYear = new Date().getFullYear();
       const summary = `Reinigungsdienst Saal Marburg (${item.kw})`;
-      const description = `Reinigungsplan Versammlung Marburg\\nKW: ${item.kw}\\nDi & So: ${item.tuesdaySundayRu || '—'}\\nMi & Do: ${item.midweekUk || '—'}\\nSo: ${item.sundayDe || '—'}\\nHauptreinigung: ${item.weekendMain || '—'}`;
+      const description = `Reinigungsplan Versammlung Marburg\\nKW: ${item.kw}\\n${getColumnTitle('ru', 'de')}: ${item.tuesdaySundayRu || '—'}\\n${getColumnTitle('uk', 'de')}: ${item.midweekUk || '—'}\\n${getColumnTitle('de', 'de')}: ${item.sundayDe || '—'}\\n${getColumnTitle('main', 'de')}: ${item.weekendMain || '—'}`;
 
       const icsContent = [
         'BEGIN:VCALENDAR',
@@ -2368,6 +2598,12 @@
             localStorage.setItem(CACHE_KEY, JSON.stringify(scheduleData));
             localStorage.setItem(CACHE_TIMESTAMP_KEY, now);
 
+            // Wochentage aus Google Sheets für alle Nutzer synchronisieren
+            if (result.settings && result.settings.meetingDays) {
+              localStorage.setItem(MEETING_DAYS_KEY, JSON.stringify(result.settings.meetingDays));
+              applyLanguage(currentLang);
+            }
+
             render(scheduleData);
             updatePersonalBanner();
             setSyncState('synced', now);
@@ -2504,20 +2740,20 @@
 
           <div class="grid grid-cols-1 gap-2 pt-2.5 text-xs">
             <div class="flex justify-between items-baseline py-0.5">
-              <span class="text-slate-500 font-medium">${t('thRu')}:</span>
+              <span class="text-slate-500 font-medium">${getColumnTitle('ru')}:</span>
               <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.tuesdaySundayRu)}</span>
             </div>
             <div class="flex justify-between items-baseline py-0.5">
-              <span class="text-slate-500 font-medium">${t('thUk')}:</span>
+              <span class="text-slate-500 font-medium">${getColumnTitle('uk')}:</span>
               <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.midweekUk)}</span>
             </div>
             <div class="flex justify-between items-baseline py-0.5">
-              <span class="text-slate-500 font-medium">${t('thDe')}:</span>
+              <span class="text-slate-500 font-medium">${getColumnTitle('de')}:</span>
               <span class="font-semibold text-slate-800 text-right">${formatCellContent(item.sundayDe)}</span>
             </div>
             <div class="flex justify-between items-baseline pt-2 border-t border-slate-100 text-slate-900">
               <span class="text-indigo-600 font-bold flex items-center gap-1">
-                <i class="fa-solid fa-sparkles text-xs"></i> ${t('thMain')}:
+                <i class="fa-solid fa-sparkles text-xs"></i> ${getColumnTitle('main')}:
               </span>
               <span class="font-black text-indigo-950 text-right">${formatCellContent(item.weekendMain)}</span>
             </div>
@@ -2993,8 +3229,111 @@
       showToast('Gruppenliste erfolgreich gespeichert!');
     }
 
+    // ---------------------- WOCHENTAGE VERWALTUNG (Meeting Days Manager) ----------------------
+    function openMeetingDaysModal() {
+      const days = getMeetingDays();
+      document.getElementById('meetingDayRuMid').value = (days.ru && days.ru.midweek) || 'Di';
+      document.getElementById('meetingDayRuWk').value = (days.ru && days.ru.weekend) || 'So';
+      document.getElementById('meetingDayUkMid').value = (days.uk && days.uk.midweek) || 'Mi';
+      document.getElementById('meetingDayUkWk').value = (days.uk && days.uk.weekend) || 'So';
+      document.getElementById('meetingDayDeMid').value = (days.de && days.de.midweek) || 'Do';
+      document.getElementById('meetingDayDeWk').value = (days.de && days.de.weekend) || 'So';
+      document.getElementById('meetingDayMainLabel').value = (days.main && days.main.label) || 'WE';
+      
+      document.getElementById('meetingDaysModal').classList.remove('hidden');
+    }
+
+    function closeMeetingDaysModal() {
+      document.getElementById('meetingDaysModal').classList.add('hidden');
+    }
+
+    async function saveMeetingDaysConfig() {
+      const cfg = {
+        ru: {
+          midweek: document.getElementById('meetingDayRuMid').value,
+          weekend: document.getElementById('meetingDayRuWk').value
+        },
+        uk: {
+          midweek: document.getElementById('meetingDayUkMid').value,
+          weekend: document.getElementById('meetingDayUkWk').value
+        },
+        de: {
+          midweek: document.getElementById('meetingDayDeMid').value,
+          weekend: document.getElementById('meetingDayDeWk').value
+        },
+        main: {
+          label: document.getElementById('meetingDayMainLabel').value
+        }
+      };
+
+      localStorage.setItem(MEETING_DAYS_KEY, JSON.stringify(cfg));
+      closeMeetingDaysModal();
+      
+      // Update all UI labels
+      applyLanguage(currentLang);
+      render(scheduleData);
+      renderAdminTable();
+      updatePersonalBanner();
+      showToast('Wochentage aktualisiert. Speichere in Google Sheets...');
+
+      // Synchronisation mit Google Sheets für alle Nutzer
+      try {
+        if (SCRIPT_URL && SCRIPT_URL !== 'DEINE_APPS_SCRIPT_WEB_APP_URL' && verifiedAdminPin) {
+          const res = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              pin: verifiedAdminPin,
+              action: 'save_settings',
+              settings: { meetingDays: cfg }
+            })
+          });
+          const resData = await res.json();
+          if (resData.status === 'success') {
+            showToast('✅ Wochentage erfolgreich in Google Sheets gespeichert!');
+          }
+        }
+      } catch (err) {
+        console.warn('Sync meeting days to sheets error:', err);
+      }
+    }
+
+    async function resetMeetingDaysToDefault() {
+      if (confirm('Möchtest du die Wochentage auf die Standardwerte zurücksetzen?')) {
+        localStorage.removeItem(MEETING_DAYS_KEY);
+        openMeetingDaysModal();
+        applyLanguage(currentLang);
+        render(scheduleData);
+        renderAdminTable();
+        showToast('Standard-Wochentage wiederhergestellt');
+
+        try {
+          if (SCRIPT_URL && SCRIPT_URL !== 'DEINE_APPS_SCRIPT_WEB_APP_URL' && verifiedAdminPin) {
+            await fetch(SCRIPT_URL, {
+              method: 'POST',
+              body: JSON.stringify({
+                pin: verifiedAdminPin,
+                action: 'save_settings',
+                settings: { meetingDays: DEFAULT_MEETING_DAYS }
+              })
+            });
+          }
+        } catch (e) {}
+      }
+    }
+
     function renderAdminTable() {
       updateAdminDatalists();
+      
+      // Dynamische Spaltenüberschriften im Admin-Bereich
+      const aRu = document.getElementById('adminThRu');
+      const aUk = document.getElementById('adminThUk');
+      const aDe = document.getElementById('adminThDe');
+      const aMain = document.getElementById('adminThMain');
+      if (aRu) aRu.textContent = getColumnTitle('ru');
+      if (aUk) aUk.textContent = getColumnTitle('uk');
+      if (aDe) aDe.textContent = getColumnTitle('de');
+      if (aMain) aMain.textContent = getColumnTitle('main');
+
       const tbody = document.getElementById('adminTableBody');
       tbody.innerHTML = '';
 
@@ -3822,7 +4161,7 @@
       if (userRole === 'ADMIN_RU_UK') {
         scopeSelect.innerHTML = `
           <option value="RU">🇷🇺 Russisch (Di & So)</option>
-          <option value="UK">🇺🇦 Ukrainisch (Mi & Do)</option>
+          <option value="UK">🇺🇦 Ukrainisch (Mi & So)</option>
         `;
       } else if (userRole === 'ADMIN_DE') {
         scopeSelect.innerHTML = `
@@ -3831,7 +4170,7 @@
       } else {
         scopeSelect.innerHTML = `
           <option value="RU">🇷🇺 Russisch (Di & So)</option>
-          <option value="UK">🇺🇦 Ukrainisch (Mi & Do)</option>
+          <option value="UK">🇺🇦 Ukrainisch (Mi & So)</option>
           <option value="DE">🇩🇪 Deutsch (So & WE Hauptreinigung)</option>
           <option value="ALL">🌐 Alle Gruppen (Gesamte Woche)</option>
         `;
