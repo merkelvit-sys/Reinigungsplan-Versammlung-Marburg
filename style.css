@@ -108,10 +108,15 @@ table {
 .min-w-\[170px\] { min-width: 170px; }
 .min-w-\[200px\] { min-width: 200px; }
 
-.min-h-\[36px\] { min-height: 36px; }
+.min-h-0 { min-height: 0px !important; }
+.min-h-\[36px\] { min-width: 36px; min-height: 36px; }
 .min-h-\[38px\] { min-height: 38px; }
 .min-h-\[40px\] { min-height: 40px; }
 .min-h-\[44px\] { min-height: 44px; }
+
+.h-\[90vh\] { height: 90vh; }
+.h-\[92vh\] { height: 92vh; }
+.h-\[94vh\] { height: 94vh; }
 
 .max-w-7xl { max-width: 80rem; }
 .max-w-6xl { max-width: 72rem; }
@@ -119,8 +124,10 @@ table {
 .max-w-lg { max-width: 32rem; }
 .max-w-md { max-width: 28rem; }
 .max-w-sm { max-width: 24rem; }
+.max-h-full { max-height: 100%; }
 .max-h-\[90vh\] { max-height: 90vh; }
 .max-h-\[92vh\] { max-height: 92vh; }
+.max-h-\[94vh\] { max-height: 94vh; }
 
 .flex { display: flex; }
 .inline-flex { display: inline-flex; }
@@ -446,8 +453,25 @@ table {
 
 /* Overflow & Transitions */
 .overflow-hidden { overflow: hidden; }
-.overflow-x-auto { overflow-x: auto; }
-.overflow-y-auto { overflow-y: auto; }
+.overflow-x-auto { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.overflow-y-auto { overflow-y: auto; -webkit-overflow-scrolling: touch; }
+.touch-scroll { -webkit-overflow-scrolling: touch; scroll-behavior: smooth; }
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 8px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 8px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 8px;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
 .transition { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
 .transition-colors { transition-property: color, background-color, border-color, text-decoration-color, fill, stroke; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
 .duration-150 { transition-duration: 150ms; }
