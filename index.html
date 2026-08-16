@@ -296,10 +296,29 @@
 
       <!-- Admin Modal Body: Interactive Editor -->
       <div class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
-        <div class="flex justify-between items-center">
+        <!-- Auto-Rotation Bar -->
+        <div class="bg-indigo-50/80 border border-indigo-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="flex items-center gap-2">
+            <i class="fa-solid fa-arrows-spin text-indigo-600 text-base"></i>
+            <div>
+              <span class="font-bold text-indigo-950">Automatische Round-Robin Rotation</span>
+              <p class="text-slate-500 text-[11px]">Generiert den Plan für alle 4 Sprach-/Dienstgruppen zyklisch</p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2">
+            <input type="number" id="autoRotStartKw" value="26" min="1" max="53" class="w-16 px-2 py-1 bg-white border rounded text-xs text-center" title="Start KW" placeholder="KW">
+            <input type="number" id="autoRotWeeks" value="28" min="1" max="53" class="w-16 px-2 py-1 bg-white border rounded text-xs text-center" title="Anzahl Wochen" placeholder="Wochen">
+            <button onclick="triggerAutoRotation()" class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 active:bg-indigo-800 text-white font-bold rounded-lg shadow-xs transition flex items-center gap-1.5">
+              <i class="fa-solid fa-wand-magic-sparkles"></i>
+              <span>Plan neu berechnen</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center pt-1">
           <p class="text-xs text-slate-500">Bearbeite die Einträge direkt in der Liste. Nach dem Speichern wird die Google Tabelle aktualisiert.</p>
           <button onclick="addNewAdminRow()" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-lg flex items-center gap-1.5 transition">
-            <i class="fa-solid fa-plus"></i> Woche hinzufügen
+            <i class="fa-solid fa-plus"></i> Zeile hinzufügen
           </button>
         </div>
 
@@ -781,6 +800,45 @@
       if (confirm('Diese Zeile wirklich löschen?')) {
         scheduleData.splice(index, 1);
         renderAdminTable();
+      }
+    }
+
+    async function triggerAutoRotation() {
+      const startKw = parseInt(document.getElementById('autoRotStartKw').value, 10) || 26;
+      const totalWeeks = parseInt(document.getElementById('autoRotWeeks').value, 10) || 28;
+      
+      if (!confirm(`Soll der Reinigungsplan für ${totalWeeks} Wochen ab KW ${startKw} mit der automatischen Rotation neu berechnet und gespeichert werden?`)) {
+        return;
+      }
+
+      const statusEl = document.getElementById('adminSaveStatus');
+      statusEl.textContent = 'Berechne automatische Rotation...';
+
+      try {
+        if (SCRIPT_URL && SCRIPT_URL !== 'DEINE_APPS_SCRIPT_WEB_APP_URL') {
+          const response = await fetch(SCRIPT_URL, {
+            method: 'POST',
+            body: JSON.stringify({
+              pin: verifiedAdminPin,
+              action: 'auto_rotate',
+              startKw: startKw,
+              totalWeeks: totalWeeks
+            })
+          });
+
+          const result = await response.json();
+          if (result.status === 'success') {
+            scheduleData = result.data;
+            localStorage.setItem(CACHE_KEY, JSON.stringify(scheduleData));
+            renderAdminTable();
+            render(scheduleData);
+            statusEl.textContent = `✅ ${result.message}`;
+          } else {
+            statusEl.textContent = `❌ Fehler: ${result.message}`;
+          }
+        }
+      } catch (err) {
+        statusEl.textContent = `❌ Fehler: ${err.message}`;
       }
     }
 
