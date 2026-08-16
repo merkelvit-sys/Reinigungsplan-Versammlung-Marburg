@@ -2194,7 +2194,7 @@
       if (!sessionStorage.getItem('pwa_banner_dismissed')) {
         pwaInstallBanner.classList.remove('hidden');
       }
-      pwaTopInstallBtn.classList.remove('hidden');
+      if (pwaTopInstallBtn) pwaTopInstallBtn.classList.remove('hidden');
     });
 
     async function triggerPwaInstall() {
@@ -2203,13 +2203,13 @@
       const { outcome } = await deferredPrompt.userChoice;
       if (outcome === 'accepted') {
         pwaInstallBanner.classList.add('hidden');
-        pwaTopInstallBtn.classList.add('hidden');
+        if (pwaTopInstallBtn) pwaTopInstallBtn.classList.add('hidden');
       }
       deferredPrompt = null;
     }
 
     pwaBannerInstallBtn.addEventListener('click', triggerPwaInstall);
-    pwaTopInstallBtn.addEventListener('click', triggerPwaInstall);
+    if (pwaTopInstallBtn) pwaTopInstallBtn.addEventListener('click', triggerPwaInstall);
     pwaBannerCloseBtn.addEventListener('click', () => {
       pwaInstallBanner.classList.add('hidden');
       sessionStorage.setItem('pwa_banner_dismissed', 'true');
