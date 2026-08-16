@@ -62,61 +62,53 @@
   <div id="topStickyContainer" class="sticky top-0 z-40 bg-slate-900 shadow-md">
     <!-- Header -->
     <header class="bg-gradient-to-r from-indigo-700 via-indigo-800 to-slate-900 text-white">
-    <div class="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-2.5 sm:gap-4">
-      <div class="flex items-center justify-between w-full sm:w-auto">
-        <div class="flex items-center gap-3">
-          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/20 shrink-0">
-            <i class="fa-solid fa-broom text-indigo-200 text-base sm:text-lg"></i>
-          </div>
-          <div>
-            <h1 class="text-lg sm:text-2xl font-black tracking-tight flex items-center gap-2">
-              <span id="appTitleText">Reinigungsplan</span>
-              <span id="currentKWBadge" class="hidden text-[11px] sm:text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-medium"></span>
-            </h1>
-            <p class="text-indigo-200 text-xs sm:text-sm font-medium flex flex-wrap items-center gap-x-2 gap-y-0.5">
-              <span id="appSubtitleText">Versammlung Marburg</span>
-              <span class="text-indigo-400/80">•</span>
-              <span id="liveTodayDateText" class="text-indigo-100 font-semibold"></span>
-            </p>
-          </div>
+    <div class="max-w-6xl mx-auto px-3 sm:px-4 py-2 sm:py-4 flex items-center justify-between gap-2">
+      <!-- Logo + Titel (kompakt auf Mobil) -->
+      <div class="flex items-center gap-2 min-w-0">
+        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/20 shrink-0">
+          <i class="fa-solid fa-broom text-indigo-200 text-sm sm:text-lg"></i>
         </div>
-
-        <!-- Header Actions (Mobile) -->
-        <div class="flex items-center gap-1.5 sm:hidden">
-          <!-- Mobile Language Switcher -->
-          <div class="flex items-center bg-white/10 p-0.5 rounded-lg border border-white/20 text-[10px] font-bold">
-            <button onclick="setLanguage('de')" id="mobLangBtnDe" class="px-1.5 py-1 rounded transition text-white">🇩🇪</button>
-            <button onclick="setLanguage('ru')" id="mobLangBtnRu" class="px-1.5 py-1 rounded transition text-indigo-200">🇷🇺</button>
-            <button onclick="setLanguage('uk')" id="mobLangBtnUk" class="px-1.5 py-1 rounded transition text-indigo-200">🇺🇦</button>
-          </div>
-
-          <button 
-            id="pwaTopInstallBtn" 
-            class="hidden px-2 py-1 bg-white/15 active:bg-white/30 text-white text-xs font-semibold rounded-lg border border-white/20 flex items-center gap-1 transition"
-          >
-            <i class="fa-solid fa-download text-[10px]"></i>
-            <span data-i18n="pwaTopBtn">App</span>
-          </button>
-          <button 
-            onclick="openChecklistModal()" 
-            class="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center bg-white/10 active:bg-white/20 text-indigo-200 rounded-lg text-xs" 
-            title="Checkliste"
-          >
-            <i class="fa-solid fa-list-check"></i>
-          </button>
-          <button 
-            onclick="openPinModal()" 
-            class="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center bg-white/10 active:bg-white/20 text-indigo-200 rounded-lg text-xs" 
-            title="Admin-Bereich"
-          >
-            <i class="fa-solid fa-lock"></i>
-          </button>
+        <div class="min-w-0 leading-none">
+          <h1 class="text-sm sm:text-2xl font-black tracking-tight flex items-center gap-2 truncate">
+            <span id="appTitleText">Reinigungsplan</span>
+            <span id="currentKWBadge" class="hidden text-[10px] sm:text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-medium"></span>
+          </h1>
+          <p class="hidden sm:flex text-indigo-200 text-xs sm:text-sm font-medium items-center gap-x-2 mt-0.5">
+            <span id="appSubtitleText">Versammlung Marburg</span>
+            <span class="text-indigo-400/80">•</span>
+            <span id="liveTodayDateText" class="text-indigo-100 font-semibold"></span>
+          </p>
         </div>
       </div>
 
-      <!-- Live Search & Header Buttons -->
-      <div class="w-full sm:w-auto flex items-center gap-2">
-        <div class="w-full sm:w-72 relative">
+      <!-- Rechte Steuerung -->
+      <div class="flex items-center gap-1 sm:gap-2 flex-shrink-0">
+        <!-- Mobil: Suche aufklappen -->
+        <button onclick="toggleMobileSearch()" class="sm:hidden p-2 -mr-1 text-indigo-200 hover:text-white active:bg-white/10 rounded-lg" title="Suchen">
+          <i class="fa-solid fa-magnifying-glass text-sm"></i>
+        </button>
+        <!-- Mobil: Sprache (Popover) -->
+        <div class="relative sm:hidden">
+          <button onclick="toggleLangMenu()" class="p-2 text-indigo-200 hover:text-white active:bg-white/10 rounded-lg" title="Sprache">
+            <i class="fa-solid fa-globe text-sm"></i>
+          </button>
+          <div id="mobileLangMenu" class="hidden absolute right-0 top-full mt-1 z-50 bg-white rounded-xl shadow-xl border border-slate-200 p-1 flex gap-1">
+            <button onclick="setLanguage('de')" class="px-2 py-1.5 rounded-lg text-[11px] font-bold hover:bg-slate-100">🇩🇪</button>
+            <button onclick="setLanguage('ru')" class="px-2 py-1.5 rounded-lg text-[11px] font-bold hover:bg-slate-100">🇷🇺</button>
+            <button onclick="setLanguage('uk')" class="px-2 py-1.5 rounded-lg text-[11px] font-bold hover:bg-slate-100">🇺🇦</button>
+          </div>
+        </div>
+        <!-- Mobil: Admin -->
+        <button onclick="openPinModal()" class="sm:hidden p-2 text-indigo-200 hover:text-white active:bg-white/10 rounded-lg" title="Admin">
+          <i class="fa-solid fa-lock text-sm"></i>
+        </button>
+        <!-- Mobil: Drucken -->
+        <button onclick="window.print()" class="sm:hidden p-2 text-indigo-200 hover:text-white active:bg-white/10 rounded-lg" title="Drucken">
+          <i class="fa-solid fa-print text-sm"></i>
+        </button>
+
+        <!-- Desktop: Live-Suche -->
+        <div class="hidden sm:block w-64 relative">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <i class="fa-solid fa-magnifying-glass text-sm"></i>
           </div>
@@ -139,13 +131,14 @@
           </button>
         </div>
 
-        <!-- Desktop Language Switcher -->
+        <!-- Desktop: Sprachumschalter -->
         <div class="hidden sm:flex items-center bg-white/10 p-0.5 rounded-xl border border-white/20 text-xs font-bold shrink-0">
           <button onclick="setLanguage('de')" id="langBtnDe" class="px-2 py-1 rounded-lg transition text-white">🇩🇪 DE</button>
           <button onclick="setLanguage('ru')" id="langBtnRu" class="px-2 py-1 rounded-lg transition text-indigo-200 hover:text-white">🇷🇺 RU</button>
           <button onclick="setLanguage('uk')" id="langBtnUk" class="px-2 py-1 rounded-lg transition text-indigo-200 hover:text-white">🇺🇦 UK</button>
         </div>
 
+        <!-- Desktop: Checkliste + Admin -->
         <button 
           onclick="openChecklistModal()" 
           class="hidden sm:flex p-2.5 bg-white/10 hover:bg-white/20 text-indigo-200 hover:text-white rounded-xl text-sm transition shrink-0" 
@@ -153,7 +146,6 @@
         >
           <i class="fa-solid fa-list-check"></i>
         </button>
-
         <button 
           onclick="openPinModal()" 
           class="hidden sm:flex p-2.5 bg-white/10 hover:bg-white/20 text-indigo-200 hover:text-white rounded-xl text-sm transition shrink-0" 
@@ -162,6 +154,32 @@
           <i class="fa-solid fa-lock"></i>
         </button>
       </div>
+    </div>
+
+    <!-- Aufklappbare mobile Suche -->
+    <div id="mobileSearchPanel" class="hidden sm:hidden px-3 pb-2 pt-1 border-t border-indigo-600 flex items-center gap-2">
+      <div class="relative flex-1">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
+          <i class="fa-solid fa-magnifying-glass text-sm"></i>
+        </div>
+        <input 
+          type="search" 
+          id="mobileSearchInput" 
+          placeholder="Name, Gruppe, KW..." 
+          class="w-full pl-9 pr-9 py-2 rounded-xl text-slate-900 bg-white placeholder-slate-400 text-sm focus:outline-none shadow-inner"
+          autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        >
+        <button 
+          id="mobileClearBtn" 
+          class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 min-h-[44px] min-w-[44px] justify-center"
+          title="Suche zurücksetzen"
+        >
+          <i class="fa-solid fa-circle-xmark text-sm"></i>
+        </button>
+      </div>
+      <button onclick="toggleMobileSearch()" class="p-2 text-indigo-200 hover:text-white" title="Schließen">
+        <i class="fa-solid fa-times text-sm"></i>
+      </button>
     </div>
   </header>
 
@@ -229,31 +247,39 @@
     </div>
   </section>
 
-  <!-- Filter Chips Bar -->
-  <section id="filterChipsBar" class="bg-white border-b border-slate-200/80 shadow-xs">
-    <div class="max-w-6xl mx-auto px-4 py-2 flex items-center gap-1.5 overflow-x-auto touch-scroll no-scrollbar text-xs">
-      <button onclick="setFilterChip('ALL')" id="chip-ALL" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-bold bg-indigo-600 text-white shadow-xs shrink-0 transition flex items-center justify-center">
-        <span id="chipAllText">Alle Wochen</span>
-      </button>
-      <button onclick="setFilterChip('MINE')" id="chip-MINE" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1">
-        <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
-        <span id="chipMineText">Meine Einsätze</span>
-      </button>
-      <button onclick="setFilterChip('RU')" id="chip-RU" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
-        <span id="chipRuText">🇷🇺 Russisch</span>
-      </button>
-      <button onclick="setFilterChip('UK')" id="chip-UK" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
-        <span id="chipUkText">🇺🇦 Ukrainisch</span>
-      </button>
-      <button onclick="setFilterChip('DE')" id="chip-DE" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
-        <span id="chipDeText">🇩🇪 Deutsch</span>
-      </button>
-      <button onclick="setFilterChip('KONGRESS')" id="chip-KONGRESS" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1">
-        <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
-        <span id="chipKongressText">Nur Kongresse</span>
-      </button>
-    </div>
-  </section>
+    <!-- Filter Chips Bar (kompakt, horizontal scrollbar) -->
+    <section id="filterChipsBar" class="bg-white border-b border-slate-200/80 shadow-xs">
+      <div class="max-w-6xl mx-auto px-3 sm:px-4 py-1.5 flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap text-[11px]">
+        <div class="flex items-center gap-1.5 flex-shrink-0" id="filterChips">
+          <button onclick="setFilterChip('ALL')" id="chip-ALL" class="chip-btn px-2.5 py-0.5 rounded-md font-bold bg-indigo-600 text-white shadow-xs shrink-0 transition flex items-center justify-center">
+            <span id="chipAllText">Alle</span>
+          </button>
+          <button onclick="setFilterChip('MINE')" id="chip-MINE" class="chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
+            <span id="chipMineText">Meine</span>
+          </button>
+          <button onclick="setFilterChip('RU')" id="chip-RU" class="chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
+            <span id="chipRuText">🇷🇺 RU</span>
+          </button>
+          <button onclick="setFilterChip('UK')" id="chip-UK" class="chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
+            <span id="chipUkText">🇺🇦 UK</span>
+          </button>
+          <button onclick="setFilterChip('DE')" id="chip-DE" class="chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
+            <span id="chipDeText">🇩🇪 DE</span>
+          </button>
+          <button onclick="setFilterChip('KONGRESS')" id="chip-KONGRESS" class="chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1">
+            <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
+            <span id="chipKongressText">Kongresse</span>
+          </button>
+        </div>
+
+        <!-- Sync-Indikator -->
+        <div class="flex items-center gap-1.5 flex-shrink-0 text-slate-500 ml-auto">
+          <span class="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse" id="syncStatusDotM"></span>
+          <span id="syncStatusTextM" class="text-[10px]">Synchronisiere...</span>
+        </div>
+      </div>
+    </section>
 </div>
 
   <!-- Control & Stats Bar (Desktop) -->
@@ -2389,12 +2415,12 @@
     function setFilterChip(chip) {
       activeFilterChip = chip;
       document.querySelectorAll('.chip-btn').forEach(btn => {
-        btn.className = 'chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1';
+        btn.className = 'chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1';
       });
 
       const activeBtn = document.getElementById(`chip-${chip}`);
       if (activeBtn) {
-        activeBtn.className = 'chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-bold bg-indigo-600 text-white shadow-xs shrink-0 transition flex items-center justify-center gap-1';
+        activeBtn.className = 'chip-btn px-2.5 py-0.5 rounded-md font-bold bg-indigo-600 text-white shadow-xs shrink-0 transition flex items-center justify-center gap-1';
       }
 
       applyAllFilters();
@@ -2639,18 +2665,22 @@
     }
 
     function setSyncState(state, timeStr = '') {
+      const apply = (dotCls, txt) => {
+        if (syncStatusDot) syncStatusDot.className = 'w-2 h-2 rounded-full ' + dotCls;
+        if (syncStatusText) syncStatusText.textContent = txt;
+        const dotM = document.getElementById('syncStatusDotM');
+        const txtM = document.getElementById('syncStatusTextM');
+        if (dotM) dotM.className = 'w-1.5 h-1.5 rounded-full ' + dotCls;
+        if (txtM) txtM.textContent = txt;
+      };
       if (state === 'loading') {
-        syncStatusDot.className = 'w-2 h-2 rounded-full bg-amber-400 animate-pulse';
-        syncStatusText.textContent = t('syncStatusLoading');
+        apply('bg-amber-400 animate-pulse', t('syncStatusLoading'));
       } else if (state === 'synced') {
-        syncStatusDot.className = 'w-2 h-2 rounded-full bg-emerald-500';
-        syncStatusText.textContent = t('syncStatusSynced', { time: timeStr });
+        apply('bg-emerald-500', t('syncStatusSynced', { time: timeStr }));
       } else if (state === 'cached') {
-        syncStatusDot.className = 'w-2 h-2 rounded-full bg-indigo-400';
-        syncStatusText.textContent = t('syncStatusCached', { time: timeStr || 'offline' });
+        apply('bg-indigo-400', t('syncStatusCached', { time: timeStr || 'offline' }));
       } else if (state === 'error') {
-        syncStatusDot.className = 'w-2 h-2 rounded-full bg-rose-500';
-        syncStatusText.textContent = t('syncStatusError');
+        apply('bg-rose-500', t('syncStatusError'));
       }
     }
 
@@ -2829,6 +2859,55 @@
     }
 
     clearSearchBtn.addEventListener('click', resetSearch);
+
+    // Mobile Suche (Overlay) + Sprach-Popover
+    const mobileSearchPanel = document.getElementById('mobileSearchPanel');
+    const mobileSearchInput = document.getElementById('mobileSearchInput');
+    const mobileClearBtn = document.getElementById('mobileClearBtn');
+
+    window.toggleMobileSearch = function() {
+      if (!mobileSearchPanel) return;
+      const willShow = mobileSearchPanel.classList.contains('hidden');
+      mobileSearchPanel.classList.toggle('hidden');
+      if (willShow && mobileSearchInput) {
+        mobileSearchInput.value = searchInput ? searchInput.value : '';
+        if (mobileClearBtn) mobileClearBtn.classList.toggle('hidden', mobileSearchInput.value.trim().length === 0);
+        mobileSearchInput.focus();
+      }
+    };
+
+    window.toggleLangMenu = function() {
+      const m = document.getElementById('mobileLangMenu');
+      if (m) m.classList.toggle('hidden');
+    };
+
+    if (mobileSearchInput) {
+      mobileSearchInput.addEventListener('input', (e) => {
+        if (searchInput) {
+          searchInput.value = e.target.value;
+          searchInput.dispatchEvent(new Event('input'));
+        }
+        if (mobileClearBtn) mobileClearBtn.classList.toggle('hidden', e.target.value.trim().length === 0);
+      });
+    }
+
+    if (mobileClearBtn) {
+      mobileClearBtn.addEventListener('click', () => {
+        if (mobileSearchInput) mobileSearchInput.value = '';
+        mobileClearBtn.classList.add('hidden');
+        resetSearch();
+      });
+    }
+
+    document.addEventListener('click', (e) => {
+      const menu = document.getElementById('mobileLangMenu');
+      if (menu && !menu.classList.contains('hidden') &&
+          !e.target.closest('#mobileLangMenu') &&
+          !e.target.closest('[onclick="toggleLangMenu()"]')) {
+        menu.classList.add('hidden');
+      }
+    });
+
     function refreshData() { loadSchedule(true); }
 
     // Admin & PIN Logic
