@@ -358,14 +358,14 @@
     <div id="tableContainer" class="hidden overflow-hidden bg-white shadow-sm border border-slate-200/80 rounded-2xl">
       <div class="overflow-x-auto">
         <table class="w-full text-left text-sm border-collapse">
-          <thead class="bg-slate-50/80 border-b border-slate-200 text-slate-600 uppercase font-semibold text-xs tracking-wider">
+          <thead class="sticky top-0 z-10 bg-slate-100/95 backdrop-blur-xs border-b border-slate-200 text-slate-700 uppercase font-bold text-xs tracking-wider shadow-xs">
             <tr>
-              <th id="thKw" class="p-3.5 pl-4 w-36">KW / Zeitraum</th>
-              <th id="thRu" class="p-3.5">Di & So (Russisch)</th>
-              <th id="thUk" class="p-3.5">Mi & Do (Ukrainisch)</th>
-              <th id="thDe" class="p-3.5">So (Deutsch)</th>
-              <th id="thMain" class="p-3.5 bg-slate-100/50">Hauptreinigung (WE)</th>
-              <th id="thActions" class="p-3.5 pr-4 w-20 text-center no-print">Aktionen</th>
+              <th id="thKw" class="p-3.5 pl-4 w-36 bg-slate-100/95">KW / Zeitraum</th>
+              <th id="thRu" class="p-3.5 bg-slate-100/95">Di & So (Russisch)</th>
+              <th id="thUk" class="p-3.5 bg-slate-100/95">Mi & Do (Ukrainisch)</th>
+              <th id="thDe" class="p-3.5 bg-slate-100/95">So (Deutsch)</th>
+              <th id="thMain" class="p-3.5 bg-indigo-50/90 text-indigo-950 font-black border-l border-r border-indigo-200/60">🧹 Hauptreinigung (WE)</th>
+              <th id="thActions" class="p-3.5 pr-4 w-20 text-center bg-slate-100/95 no-print">Aktionen</th>
             </tr>
           </thead>
           <tbody id="planTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
@@ -1254,8 +1254,8 @@
      * Konfiguration:
      */
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzVTTsOtwkodbjB0P9UsBSbNsepUDg4R2x8D3oOfu4gphuhwRbGZCd0GMLjVILPEl7TPg/exec';
-    const CACHE_KEY = 'reinigungsplan_marburg_cache_v2';
-    const CACHE_TIMESTAMP_KEY = 'reinigungsplan_marburg_timestamp_v2';
+    const CACHE_KEY = 'reinigungsplan_marburg_cache_v3';
+    const CACHE_TIMESTAMP_KEY = 'reinigungsplan_marburg_timestamp_v3';
     const MY_GROUP_KEY = 'reinigungsplan_my_group_v2';
     const CHECKLIST_KEY = 'reinigungsplan_checklist_state_v2';
     const GROUP_POOLS_KEY = 'reinigungsplan_custom_group_pools_v3';

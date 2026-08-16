@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reinigungsplan-marburg-v7';
+const CACHE_NAME = 'reinigungsplan-marburg-v8';
 const STATIC_ASSETS = [
   './',
   './index.html',
