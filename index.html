@@ -1258,7 +1258,7 @@
     const CACHE_TIMESTAMP_KEY = 'reinigungsplan_marburg_timestamp_v2';
     const MY_GROUP_KEY = 'reinigungsplan_my_group_v2';
     const CHECKLIST_KEY = 'reinigungsplan_checklist_state_v2';
-    const GROUP_POOLS_KEY = 'reinigungsplan_custom_group_pools_v2';
+    const GROUP_POOLS_KEY = 'reinigungsplan_custom_group_pools_v3';
 
     // Standard-Gruppenpools
     const DEFAULT_GROUP_POOLS = {
@@ -1321,7 +1321,7 @@
             ru: Array.isArray(parsed.ru) ? parsed.ru : [...DEFAULT_GROUP_POOLS.ru],
             uk: Array.isArray(parsed.uk) ? parsed.uk : [...DEFAULT_GROUP_POOLS.uk],
             de: Array.isArray(parsed.de) ? parsed.de : [...DEFAULT_GROUP_POOLS.de],
-            main: Array.isArray(parsed.main) ? parsed.main : [...(parsed.de || DEFAULT_GROUP_POOLS.main)]
+            main: Array.isArray(parsed.main) && parsed.main.length > 7 ? parsed.main : [...DEFAULT_GROUP_POOLS.main]
           };
         }
       } catch (e) {}
@@ -3229,7 +3229,7 @@
             tuesdaySundayRu: activeGroupPools.ru || DEFAULT_GROUP_POOLS.ru,
             midweekUk: activeGroupPools.uk || DEFAULT_GROUP_POOLS.uk,
             sundayDe: activeGroupPools.de || DEFAULT_GROUP_POOLS.de,
-            weekendMain: activeGroupPools.main || activeGroupPools.de || DEFAULT_GROUP_POOLS.main
+            weekendMain: activeGroupPools.main || DEFAULT_GROUP_POOLS.main
           }
         };
         const { schedule } = generateRotationScheduleLocally(config);
@@ -3494,9 +3494,15 @@
           tuesdaySundayRu: activeGroupPools.ru || DEFAULT_GROUP_POOLS.ru,
           midweekUk: activeGroupPools.uk || DEFAULT_GROUP_POOLS.uk,
           sundayDe: activeGroupPools.de || DEFAULT_GROUP_POOLS.de,
-          weekendMain: activeGroupPools.main || activeGroupPools.de || DEFAULT_GROUP_POOLS.main
+          weekendMain: activeGroupPools.main || DEFAULT_GROUP_POOLS.main
         }
       };
+    }
+
+    function isGermanGroup(name) {
+      if (!name) return false;
+      const n = String(name).trim();
+      return /^[1-7]\s|Eucker|Krause|Salzbauer|Faupel|Scherwitzl|Beck/i.test(n);
     }
 
     function generateRotationScheduleLocally(config) {
@@ -3505,7 +3511,7 @@
       const ruPool = (customPools.tuesdaySundayRu && customPools.tuesdaySundayRu.length) ? customPools.tuesdaySundayRu : DEFAULT_GROUP_POOLS.ru;
       const ukPool = (customPools.midweekUk && customPools.midweekUk.length) ? customPools.midweekUk : DEFAULT_GROUP_POOLS.uk;
       const dePool = (customPools.sundayDe && customPools.sundayDe.length) ? customPools.sundayDe : DEFAULT_GROUP_POOLS.de;
-      const mainPool = (customPools.weekendMain && customPools.weekendMain.length) ? customPools.weekendMain : (customPools.sundayDe || DEFAULT_GROUP_POOLS.main);
+      const mainPool = (customPools.weekendMain && customPools.weekendMain.length) ? customPools.weekendMain : DEFAULT_GROUP_POOLS.main;
 
       let ruQueueIndex = 0;
       let ukQueueIndex = 0;
@@ -3570,19 +3576,40 @@
         if (scope === 'DE' || scope === 'ALL') {
           if (isDeEvent) {
             deAssignee = existing.sundayDe;
-            mainAssignee = existing.weekendMain || existing.sundayDe;
-            if (!fairQueue) {
-              deQueueIndex++;
-              mainQueueIndex++;
-            }
+            if (!fairQueue) deQueueIndex++;
           } else {
             deAssignee = dePool[deQueueIndex % dePool.length];
             deQueueIndex++;
+          }
+          if (deAssignee) shiftCounts[deAssignee] = (shiftCounts[deAssignee] || 0) + 1;
+
+          // Hauptreinigung am Wochenende
+          if (existing.weekendMain && (existing.weekendMain.toLowerCase().includes('kongress') || existing.weekendMain.toLowerCase().includes('kreisaufseher'))) {
+            mainAssignee = existing.weekendMain;
+            if (!fairQueue) mainQueueIndex++;
+          } else if (isDeEvent) {
+            // Wenn deutsche Versammlung Kongress hat: Deutsche Gruppen sind abwesend -> Hauptreinigung automatisch RU oder UK Gruppe!
+            let attempts = 0;
+            while (attempts < mainPool.length && isGermanGroup(mainPool[mainQueueIndex % mainPool.length])) {
+              mainQueueIndex++;
+              attempts++;
+            }
+            mainAssignee = mainPool[mainQueueIndex % mainPool.length];
+            mainQueueIndex++;
+          } else if (isRuEvent) {
+            // Wenn russische Versammlung Kongress hat: Russische Gruppen sind abwesend -> Hauptreinigung automatisch deutsche Gruppe!
+            let attempts = 0;
+            while (attempts < mainPool.length && !isGermanGroup(mainPool[mainQueueIndex % mainPool.length])) {
+              mainQueueIndex++;
+              attempts++;
+            }
+            mainAssignee = mainPool[mainQueueIndex % mainPool.length];
+            mainQueueIndex++;
+          } else {
             mainAssignee = mainPool[mainQueueIndex % mainPool.length];
             mainQueueIndex++;
           }
-          if (deAssignee) shiftCounts[deAssignee] = (shiftCounts[deAssignee] || 0) + 1;
-          if (mainAssignee && mainAssignee !== deAssignee) shiftCounts[mainAssignee] = (shiftCounts[mainAssignee] || 0) + 1;
+          if (mainAssignee) shiftCounts[mainAssignee] = (shiftCounts[mainAssignee] || 0) + 1;
         }
 
         resultSchedule.push({
