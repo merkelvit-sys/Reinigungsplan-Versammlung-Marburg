@@ -43,8 +43,8 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Ignore cross-origin requests (CDNs, Google Apps Script API, fonts)
-  if (url.origin !== self.location.origin) {
+  // Ignore cross-origin requests (CDNs, Google Apps Script API, fonts) and OneSignal workers
+  if (url.origin !== self.location.origin || url.pathname.includes('OneSignal') || url.pathname.includes('onesignal')) {
     return;
   }
 
