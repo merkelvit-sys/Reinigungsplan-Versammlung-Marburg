@@ -1,4 +1,7 @@
-const CACHE_NAME = 'reinigungsplan-marburg-v11';
+// Unified Service Worker for Reinigungsplan Marburg (PWA + OneSignal Web Push)
+importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
+
+const CACHE_NAME = 'reinigungsplan-marburg-v12';
 const STATIC_ASSETS = [
   './',
   './index.html',
