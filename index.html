@@ -2,7 +2,8 @@
 <html lang="de" class="h-full bg-slate-50">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- Mobile Viewport with Viewport-Fit for iPhone Notch / Dynamic Island -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <meta name="theme-color" content="#4338ca">
   <meta name="description" content="Aktueller Reinigungsplan für die Versammlung Marburg">
   <title>Reinigungsplan – Versammlung Marburg</title>
@@ -15,6 +16,7 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="Reinigungsplan">
+  <meta name="format-detection" content="telephone=no">
 
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -22,14 +24,43 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
   <style>
-    html { scroll-behavior: smooth; }
+    /* Cross-Platform Mobile Resets */
+    html {
+      scroll-behavior: smooth;
+      -webkit-text-size-adjust: 100%;
+      touch-action: manipulation;
+    }
+
     body {
       padding-top: env(safe-area-inset-top);
       padding-bottom: env(safe-area-inset-bottom);
+      padding-left: env(safe-area-inset-left);
+      padding-right: env(safe-area-inset-right);
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
     }
+
+    /* Allow selection inside table cells & inputs */
+    input, textarea, table, #checklistModal, #cardsContainer {
+      user-select: text;
+      -webkit-user-select: text;
+    }
+
+    /* Prevent iOS auto-zoom on input focus */
+    input, select, textarea {
+      font-size: 16px !important;
+    }
+    @media (min-width: 640px) {
+      input, select, textarea {
+        font-size: 0.875rem !important; /* 14px on desktop */
+      }
+    }
+
+    /* Print Optimization */
     @media print {
-      body { background-color: #ffffff !important; color: #000000 !important; }
-      header, #controlsSection, #jumpToCurrentBtn, #statusToast, #pwaInstallBanner, #adminTriggerBtn, #adminModal, #pinModal, #congressModal, .no-print {
+      body { background-color: #ffffff !important; color: #000000 !important; padding: 0 !important; }
+      header, #controlsSection, #personalBanner, #filterChipsBar, #jumpToCurrentBtn, #statusToast, #pwaInstallBanner, #adminTriggerBtn, #adminModal, #pinModal, #congressModal, #checklistModal, #groupSelectModal, #mobileBottomBar, .no-print {
         display: none !important;
       }
       #tableContainer { display: block !important; box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
@@ -37,6 +68,7 @@
       tr { page-break-inside: avoid; }
       .current-week-row { background-color: #f1f5f9 !important; }
     }
+
     .fade-in {
       animation: fadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
@@ -44,73 +76,99 @@
       from { opacity: 0; transform: translateY(4px); }
       to { opacity: 1; transform: translateY(0); }
     }
+
+    /* Touch scrolling physics for iOS/Android */
+    .touch-scroll {
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior-x: contain;
+    }
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
   </style>
 </head>
-<body class="min-h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+<body class="min-h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white pb-20 sm:pb-0">
 
   <!-- Toast Notification -->
-  <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white text-xs px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-xs flex items-center gap-2 fade-in">
+  <div id="toast" class="hidden fixed bottom-20 sm:bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/95 text-white text-xs px-4 py-2.5 rounded-2xl shadow-2xl backdrop-blur-xs flex items-center gap-2 fade-in border border-white/10">
     <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
     <span id="toastMessage">In die Zwischenablage kopiert!</span>
   </div>
 
   <!-- Header -->
   <header class="bg-gradient-to-r from-indigo-700 via-indigo-800 to-slate-900 text-white shadow-md sticky top-0 z-40">
-    <div class="max-w-6xl mx-auto px-4 py-3.5 sm:py-5 flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+    <div class="max-w-6xl mx-auto px-4 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-center gap-2.5 sm:gap-4">
       <div class="flex items-center justify-between w-full sm:w-auto">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/20 shrink-0">
-            <i class="fa-solid fa-broom text-indigo-200 text-lg"></i>
+          <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/10 flex items-center justify-center backdrop-blur-sm border border-white/20 shrink-0">
+            <i class="fa-solid fa-broom text-indigo-200 text-base sm:text-lg"></i>
           </div>
           <div>
             <h1 class="text-lg sm:text-2xl font-black tracking-tight flex items-center gap-2">
               Reinigungsplan
-              <span id="currentKWBadge" class="hidden text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-medium"></span>
+              <span id="currentKWBadge" class="hidden text-[11px] sm:text-xs bg-emerald-500/20 text-emerald-300 border border-emerald-400/30 px-2 py-0.5 rounded-full font-medium"></span>
             </h1>
             <p class="text-indigo-200 text-xs sm:text-sm font-medium">Versammlung Marburg</p>
           </div>
         </div>
 
         <!-- Header Actions (Mobile) -->
-        <div class="flex items-center gap-2 sm:hidden">
+        <div class="flex items-center gap-1.5 sm:hidden">
           <button 
             id="pwaTopInstallBtn" 
-            class="hidden px-2.5 py-1.5 bg-white/15 active:bg-white/30 text-white text-xs font-semibold rounded-lg border border-white/20 flex items-center gap-1.5 transition"
+            class="hidden px-2.5 py-1 bg-white/15 active:bg-white/30 text-white text-xs font-semibold rounded-lg border border-white/20 flex items-center gap-1 transition"
           >
-            <i class="fa-solid fa-download text-xs"></i>
+            <i class="fa-solid fa-download text-[11px]"></i>
             <span>App</span>
           </button>
           <button 
+            onclick="openChecklistModal()" 
+            class="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center bg-white/10 active:bg-white/20 text-indigo-200 rounded-lg text-xs" 
+            title="Checkliste"
+          >
+            <i class="fa-solid fa-list-check"></i>
+          </button>
+          <button 
             onclick="openPinModal()" 
-            class="p-2 bg-white/10 active:bg-white/20 text-indigo-200 rounded-lg text-xs" 
+            class="p-2 min-w-[36px] min-h-[36px] flex items-center justify-center bg-white/10 active:bg-white/20 text-indigo-200 rounded-lg text-xs" 
             title="Admin-Bereich"
           >
-            <i class="fa-solid fa-lock text-xs"></i>
+            <i class="fa-solid fa-lock"></i>
           </button>
         </div>
       </div>
 
-      <!-- Live Search & Desktop Admin Button -->
+      <!-- Live Search & Header Buttons -->
       <div class="w-full sm:w-auto flex items-center gap-2">
         <div class="w-full sm:w-80 relative">
           <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <i class="fa-solid fa-magnifying-glass text-sm"></i>
           </div>
           <input 
-            type="text" 
+            type="search" 
             id="searchInput" 
             placeholder="Suchen nach Name, KW oder Gruppe..." 
             class="w-full pl-9 pr-9 py-2 rounded-xl text-slate-900 bg-white/95 placeholder-slate-400 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-400 shadow-inner transition"
             autocomplete="off"
+            autocorrect="off"
+            autocapitalize="off"
+            spellcheck="false"
           >
           <button 
             id="clearSearchBtn" 
-            class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none"
+            class="hidden absolute inset-y-0 right-0 pr-3 flex items-center text-slate-400 hover:text-slate-600 focus:outline-none min-h-[44px] min-w-[44px] justify-center"
             title="Suche zurücksetzen"
           >
             <i class="fa-solid fa-circle-xmark text-sm"></i>
           </button>
         </div>
+
+        <button 
+          onclick="openChecklistModal()" 
+          class="hidden sm:flex p-2.5 bg-white/10 hover:bg-white/20 text-indigo-200 hover:text-white rounded-xl text-sm transition shrink-0" 
+          title="Reinigung-Checkliste"
+        >
+          <i class="fa-solid fa-list-check"></i>
+        </button>
 
         <button 
           onclick="openPinModal()" 
@@ -130,19 +188,19 @@
         <img src="icon.svg" alt="App Icon" class="w-7 h-7 rounded-lg shadow-sm border border-white/20">
         <div>
           <p class="font-bold">Als App zum Startbildschirm hinzufügen</p>
-          <p class="text-indigo-200 text-[11px]">Schneller Zugriff & offline verfügbar</p>
+          <p class="text-indigo-200 text-[11px]">Schneller Zugriff ohne Browser-Leiste</p>
         </div>
       </div>
       <div class="flex items-center gap-2 shrink-0">
         <button 
           id="pwaBannerInstallBtn"
-          class="px-3 py-1.5 bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600 text-white font-bold rounded-lg transition text-xs"
+          class="px-3 py-1.5 min-h-[36px] bg-indigo-500 hover:bg-indigo-400 active:bg-indigo-600 text-white font-bold rounded-lg transition text-xs flex items-center justify-center"
         >
           Installieren
         </button>
         <button 
           id="pwaBannerCloseBtn"
-          class="p-1.5 text-indigo-300 hover:text-white"
+          class="p-2 text-indigo-300 hover:text-white min-h-[36px] min-w-[36px] flex items-center justify-center"
           title="Schließen"
         >
           <i class="fa-solid fa-xmark text-sm"></i>
@@ -151,9 +209,67 @@
     </div>
   </div>
 
-  <!-- Control & Stats Bar -->
-  <section id="controlsSection" class="bg-white border-b border-slate-200/80 shadow-xs">
-    <div class="max-w-6xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+  <!-- Smart Personal Banner ("Meine Gruppe" Countdown) -->
+  <section id="personalBanner" class="hidden bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white shadow-inner border-b border-indigo-500/50">
+    <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs">
+      <div class="flex items-center gap-3">
+        <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-white shrink-0">
+          <i class="fa-solid fa-bell text-sm"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="font-semibold text-indigo-200">Mein Bereich:</span>
+            <span id="userGroupName" class="font-bold bg-white/15 px-2 py-0.5 rounded-md text-white"></span>
+          </div>
+          <p id="nextShiftInfo" class="text-xs text-white/95 mt-0.5 font-medium"></p>
+        </div>
+      </div>
+
+      <div class="flex items-center gap-2 self-end sm:self-center">
+        <button 
+          onclick="openGroupSelectModal()" 
+          class="px-2.5 py-1.5 min-h-[36px] bg-white/15 hover:bg-white/25 active:bg-white/30 text-white rounded-lg text-xs font-semibold transition flex items-center gap-1"
+        >
+          <i class="fa-solid fa-pen-to-square text-[10px]"></i> Gruppe ändern
+        </button>
+        <button 
+          id="myShiftIcsBtn"
+          onclick="downloadMyShiftIcs()" 
+          class="hidden px-2.5 py-1.5 min-h-[36px] bg-emerald-500 hover:bg-emerald-600 active:bg-emerald-700 text-white font-bold rounded-lg text-xs transition flex items-center gap-1 shadow-xs"
+        >
+          <i class="fa-solid fa-calendar-plus text-[10px]"></i> In Kalender
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Filter Chips Bar -->
+  <section id="filterChipsBar" class="bg-white border-b border-slate-200/80 sticky top-[56px] sm:top-[68px] z-30 shadow-xs">
+    <div class="max-w-6xl mx-auto px-4 py-2 flex items-center gap-1.5 overflow-x-auto touch-scroll no-scrollbar text-xs">
+      <button onclick="setFilterChip('ALL')" id="chip-ALL" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-bold bg-indigo-600 text-white shadow-xs shrink-0 transition flex items-center justify-center">
+        Alle Wochen
+      </button>
+      <button onclick="setFilterChip('MINE')" id="chip-MINE" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1">
+        <i class="fa-solid fa-star text-amber-500 text-[10px]"></i> Meine Einsätze
+      </button>
+      <button onclick="setFilterChip('RU')" id="chip-RU" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
+        🇷🇺 Russisch
+      </button>
+      <button onclick="setFilterChip('UK')" id="chip-UK" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
+        🇺🇦 Ukrainisch
+      </button>
+      <button onclick="setFilterChip('DE')" id="chip-DE" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
+        🇩🇪 Deutsch
+      </button>
+      <button onclick="setFilterChip('KONGRESS')" id="chip-KONGRESS" class="chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1">
+        <i class="fa-solid fa-star text-amber-500 text-[10px]"></i> Nur Kongresse
+      </button>
+    </div>
+  </section>
+
+  <!-- Control & Stats Bar (Desktop) -->
+  <section id="controlsSection" class="bg-slate-50 border-b border-slate-200/60 hidden sm:block">
+    <div class="max-w-6xl mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
       <div class="flex items-center gap-3">
         <span id="syncStatus" class="flex items-center gap-1.5 font-medium">
           <span class="w-2 h-2 rounded-full bg-slate-300 animate-pulse" id="syncStatusDot"></span>
@@ -171,6 +287,15 @@
         >
           <i class="fa-solid fa-location-crosshairs text-xs"></i>
           <span>Aktuelle Woche</span>
+        </button>
+
+        <button 
+          onclick="openGroupSelectModal()" 
+          title="Eigene Gruppe auswählen"
+          class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 font-semibold rounded-lg border border-slate-200 shadow-xs transition flex items-center gap-1.5"
+        >
+          <i class="fa-solid fa-user-tag text-indigo-600 text-xs"></i>
+          <span id="groupBtnLabel">Gruppe wählen</span>
         </button>
 
         <button 
@@ -202,7 +327,7 @@
   </section>
 
   <!-- Main Content Area -->
-  <main class="max-w-6xl mx-auto p-4 sm:p-6 flex-1 w-full">
+  <main class="max-w-6xl mx-auto p-3.5 sm:p-6 flex-1 w-full">
 
     <!-- Loading Spinner -->
     <div id="loader" class="text-center py-20 flex flex-col items-center justify-center">
@@ -215,16 +340,16 @@
       <i class="fa-solid fa-triangle-exclamation text-3xl text-rose-500 mb-2"></i>
       <h3 class="font-bold text-base">Fehler beim Laden der Daten</h3>
       <p id="errorMessage" class="text-xs text-rose-600 mt-1 mb-4">Die Verbindung zur Tabelle konnte nicht hergestellt werden.</p>
-      <button onclick="loadSchedule(true)" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow transition">
+      <button onclick="loadSchedule(true)" class="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold rounded-xl shadow transition min-h-[44px]">
         Erneut versuchen
       </button>
     </div>
 
     <!-- Empty Search Results State -->
-    <div id="noResultsBox" class="hidden bg-slate-100 border border-slate-200 rounded-2xl p-10 text-center my-6 text-slate-500">
+    <div id="noResultsBox" class="hidden bg-slate-100 border border-slate-200 rounded-2xl p-8 sm:p-10 text-center my-6 text-slate-500">
       <i class="fa-solid fa-magnifying-glass text-3xl mb-2 text-slate-400"></i>
-      <p class="font-medium text-sm">Keine Einträge für diese Suchanfrage gefunden</p>
-      <button onclick="resetSearch()" class="mt-3 text-xs text-indigo-600 hover:underline font-semibold">
+      <p class="font-medium text-sm">Keine Einträge für diesen Filter gefunden</p>
+      <button onclick="resetSearch()" class="mt-3 text-xs text-indigo-600 hover:underline font-semibold min-h-[44px] flex items-center justify-center mx-auto">
         Filter zurücksetzen
       </button>
     </div>
@@ -240,7 +365,7 @@
               <th class="p-3.5">Mi & Do <span class="text-slate-400 font-normal">(Ukrainisch)</span></th>
               <th class="p-3.5">So <span class="text-slate-400 font-normal">(Deutsch)</span></th>
               <th class="p-3.5 bg-slate-100/50">Hauptreinigung <span class="text-slate-400 font-normal">(WE)</span></th>
-              <th class="p-3.5 pr-4 w-12 text-center no-print">Teilen</th>
+              <th class="p-3.5 pr-4 w-20 text-center no-print">Aktionen</th>
             </tr>
           </thead>
           <tbody id="planTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
@@ -249,32 +374,221 @@
     </div>
 
     <!-- Mobile View: Cards -->
-    <div id="cardsContainer" class="hidden sm:hidden flex flex-col gap-3.5"></div>
+    <div id="cardsContainer" class="hidden sm:hidden flex flex-col gap-3"></div>
   </main>
+
+  <!-- Mobile Bottom Sticky Navigation Bar (Native App Style) -->
+  <nav id="mobileBottomBar" class="sm:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-slate-200/80 px-4 py-2 flex items-center justify-around shadow-lg no-print">
+    <button onclick="scrollToCurrentWeek()" class="flex flex-col items-center gap-0.5 text-indigo-700 active:text-indigo-900 min-w-[56px]">
+      <i class="fa-solid fa-location-crosshairs text-base"></i>
+      <span class="text-[10px] font-bold">Aktuell</span>
+    </button>
+    <button onclick="openGroupSelectModal()" class="flex flex-col items-center gap-0.5 text-slate-600 active:text-indigo-600 min-w-[56px]">
+      <i class="fa-solid fa-user-tag text-base"></i>
+      <span class="text-[10px] font-semibold">Gruppe</span>
+    </button>
+    <button onclick="shareCurrentWeek()" class="flex flex-col items-center gap-0.5 text-emerald-600 active:text-emerald-800 min-w-[56px]">
+      <i class="fa-solid fa-share-nodes text-base"></i>
+      <span class="text-[10px] font-semibold">Teilen</span>
+    </button>
+    <button onclick="openChecklistModal()" class="flex flex-col items-center gap-0.5 text-slate-600 active:text-indigo-600 min-w-[56px]">
+      <i class="fa-solid fa-list-check text-base"></i>
+      <span class="text-[10px] font-semibold">Checkliste</span>
+    </button>
+    <button onclick="refreshData()" class="flex flex-col items-center gap-0.5 text-slate-500 active:text-slate-800 min-w-[56px]">
+      <i class="fa-solid fa-arrows-rotate text-base"></i>
+      <span class="text-[10px] font-semibold">Aktualisieren</span>
+    </button>
+  </nav>
+
+  <!-- Group Select Modal -->
+  <div id="groupSelectModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-sm w-full p-6 fade-in">
+      <div class="flex justify-between items-center mb-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center">
+            <i class="fa-solid fa-user-check text-sm"></i>
+          </div>
+          <h3 class="font-bold text-slate-800 text-base">Meine Gruppe wählen</h3>
+        </div>
+        <button onclick="closeGroupSelectModal()" class="p-2 text-slate-400 hover:text-slate-600 min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-slate-500 mb-4">Wähle deinen Namen oder deine Gruppe für den Countdown und persönliche Filter.</p>
+
+      <div class="space-y-3">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 mb-1">Aus Liste auswählen:</label>
+          <select id="groupDropdownSelect" class="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 text-xs font-semibold text-slate-800 min-h-[44px]"></select>
+        </div>
+
+        <div class="relative flex py-1 items-center">
+          <div class="flex-grow border-t border-slate-200"></div>
+          <span class="flex-shrink mx-2 text-slate-400 text-[10px] uppercase font-bold">Oder manuell</span>
+          <div class="flex-grow border-t border-slate-200"></div>
+        </div>
+
+        <div>
+          <input 
+            type="text" 
+            id="groupCustomInput" 
+            placeholder="Z.B. Marburg 1 oder Faupel" 
+            class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 text-xs font-medium text-slate-900 min-h-[44px]"
+          >
+        </div>
+      </div>
+
+      <div class="flex justify-end gap-2 pt-4 border-t border-slate-100 mt-4">
+        <button onclick="clearMyGroup()" class="px-3 py-2 text-slate-400 hover:text-rose-600 text-xs font-semibold mr-auto min-h-[44px]">
+          Zurücksetzen
+        </button>
+        <button onclick="saveMyGroupSelection()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-xs min-h-[44px] flex items-center justify-center">
+          Speichern
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cleaning Checklist Modal -->
+  <div id="checklistModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-lg w-full max-h-[90vh] flex flex-col fade-in overflow-hidden">
+      <div class="bg-gradient-to-r from-indigo-700 to-indigo-900 text-white px-6 py-4 flex justify-between items-center shrink-0">
+        <div class="flex items-center gap-2.5">
+          <i class="fa-solid fa-list-check text-indigo-300"></i>
+          <div>
+            <h3 class="font-bold text-base">Reinigung-Checkliste</h3>
+            <p class="text-indigo-200 text-xs">Aufgabenplan für den Saal</p>
+          </div>
+        </div>
+        <button onclick="closeChecklistModal()" class="text-indigo-200 hover:text-white p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div class="p-5 overflow-y-auto touch-scroll flex-1 space-y-4 text-xs">
+        
+        <!-- Bereich 1: Hauptsaal -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+          <div class="flex items-center gap-2 font-bold text-indigo-950 border-b border-slate-200 pb-1.5">
+            <i class="fa-solid fa-chair text-indigo-600"></i>
+            <span>1. Hauptsaal & Bühne</span>
+          </div>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_saal_1" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Teppichboden gründlich saugen</span>
+          </label>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_saal_2" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Bühne, Rednerpult und Mikrofonständer abstauben</span>
+          </label>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_saal_3" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Stühle ausrichten und Müll unter den Sitzen prüfen</span>
+          </label>
+        </div>
+
+        <!-- Bereich 2: Sanitäre Anlagen -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+          <div class="flex items-center gap-2 font-bold text-indigo-950 border-b border-slate-200 pb-1.5">
+            <i class="fa-solid fa-restroom text-indigo-600"></i>
+            <span>2. Sanitäre Anlagen (Toiletten)</span>
+          </div>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_wc_1" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Waschbecken, Armaturen und Spiegel reinigen</span>
+          </label>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_wc_2" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Toilettenbecken und Brillen desinfizieren & säubern</span>
+          </label>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_wc_3" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Flüssigseife, Papierhandtücher und Toilettenpapier auffüllen</span>
+          </label>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_wc_4" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Fußböden nass wischen</span>
+          </label>
+        </div>
+
+        <!-- Bereich 3: Foyer & Eingang -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+          <div class="flex items-center gap-2 font-bold text-indigo-950 border-b border-slate-200 pb-1.5">
+            <i class="fa-solid fa-door-open text-indigo-600"></i>
+            <span>3. Foyer, Garderobe & Eingang</span>
+          </div>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_foyer_1" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Eingangsbereich & Fußmatten fegen / saugen</span>
+          </label>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_foyer_2" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Glastüren und Griffspuren reinigen</span>
+          </label>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_foyer_3" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Boden im Foyer feucht wischen</span>
+          </label>
+        </div>
+
+        <!-- Bereich 4: Müll & Abschluss -->
+        <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2.5">
+          <div class="flex items-center gap-2 font-bold text-indigo-950 border-b border-slate-200 pb-1.5">
+            <i class="fa-solid fa-trash-can text-indigo-600"></i>
+            <span>4. Müllentsorgung & Abschluss</span>
+          </div>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_end_1" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Alle Mülleimer leeren und neue Beutel einsetzen</span>
+          </label>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_end_2" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Müllsäcke in die Außentonnen bringen</span>
+          </label>
+          <label class="flex items-start gap-2 cursor-pointer select-none py-1">
+            <input type="checkbox" data-task="task_end_3" onchange="toggleTaskState(this)" class="mt-0.5 w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500">
+            <span class="text-slate-700 leading-snug">Fenster kontrollieren, Licht ausschalten und abschließen</span>
+          </label>
+        </div>
+      </div>
+
+      <div class="bg-slate-50 border-t border-slate-200 px-6 py-3.5 flex justify-between items-center shrink-0">
+        <button onclick="resetChecklist()" class="text-xs text-rose-600 hover:text-rose-800 font-semibold flex items-center gap-1 min-h-[44px]">
+          <i class="fa-solid fa-rotate-left"></i> Häkchen zurücksetzen
+        </button>
+        <button onclick="closeChecklistModal()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition shadow-xs min-h-[44px] flex items-center justify-center">
+          Fertig
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- PIN Modal -->
   <div id="pinModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-    <div class="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 text-center fade-in">
+    <div class="bg-white rounded-3xl shadow-xl max-w-sm w-full p-6 text-center fade-in">
       <div class="w-12 h-12 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center mx-auto mb-3">
         <i class="fa-solid fa-key text-xl"></i>
       </div>
       <h3 class="font-bold text-slate-800 text-lg">Admin-PIN eingeben</h3>
-      <p class="text-xs text-slate-500 mt-1 mb-4">Zugangsschlüssel für deinen Bereich (Super: 7788, RU/UK: 1122, DE: 3344).</p>
+      <p class="text-xs text-slate-500 mt-1 mb-4">Zugangsschlüssel (Super: 7788, RU/UK: 1122, DE: 3344).</p>
       
       <input 
         type="password" 
         id="pinInput" 
         maxlength="8" 
+        inputmode="numeric"
         placeholder="PIN eingeben" 
-        class="w-full text-center text-xl tracking-widest font-mono py-2.5 border border-slate-300 rounded-xl mb-4 focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+        class="w-full text-center text-xl tracking-widest font-mono py-2.5 border border-slate-300 rounded-xl mb-4 focus:ring-2 focus:ring-indigo-500 focus:outline-none min-h-[44px]"
       >
       <div id="pinError" class="hidden text-xs text-rose-600 font-medium mb-3">Ungültiger PIN-Code!</div>
 
       <div class="flex gap-2">
-        <button onclick="closePinModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition">
+        <button onclick="closePinModal()" class="w-1/2 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-xl text-xs transition min-h-[44px] flex items-center justify-center">
           Abbrechen
         </button>
-        <button onclick="submitPin()" class="w-1/2 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition">
+        <button onclick="submitPin()" class="w-1/2 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition min-h-[44px] flex items-center justify-center">
           Entsperren
         </button>
       </div>
@@ -283,7 +597,7 @@
 
   <!-- Admin Editor Modal -->
   <div id="adminModal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4">
-    <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col fade-in overflow-hidden">
+    <div class="bg-white rounded-3xl shadow-2xl max-w-5xl w-full max-h-[92vh] flex flex-col fade-in overflow-hidden">
       
       <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shrink-0">
         <div class="flex items-center gap-2.5">
@@ -295,19 +609,19 @@
             </h2>
           </div>
         </div>
-        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white text-lg">
+        <button onclick="closeAdminModal()" class="text-slate-400 hover:text-white text-lg p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <div class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
+      <div class="p-4 sm:p-6 overflow-y-auto touch-scroll flex-1 space-y-4">
         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div class="flex flex-wrap items-center gap-2">
-            <button onclick="openCongressModal()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs">
+            <button onclick="openCongressModal()" class="px-3.5 py-2 min-h-[38px] bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs">
               <i class="fa-solid fa-star"></i>
               <span>+ Kongress / Event</span>
             </button>
-            <button onclick="addNewAdminRow()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-xl text-xs transition flex items-center gap-1.5">
+            <button onclick="addNewAdminRow()" class="px-3.5 py-2 min-h-[38px] bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-800 font-semibold rounded-xl text-xs transition flex items-center gap-1.5">
               <i class="fa-solid fa-plus"></i>
               <span>Zeile hinzufügen</span>
             </button>
@@ -315,19 +629,19 @@
 
           <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <span class="text-xs text-slate-500 font-medium hidden lg:inline">Auto-Rotation:</span>
-            <button id="rotRuUkBtn" onclick="triggerAutoRotation('RU_UK')" class="hidden px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold rounded-xl text-xs transition flex items-center gap-1">
-              🇷🇺/🇺🇦 Nur RU/UK rotieren
+            <button id="rotRuUkBtn" onclick="triggerAutoRotation('RU_UK')" class="hidden px-3 py-1.5 min-h-[36px] bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold rounded-xl text-xs transition flex items-center gap-1">
+              🇷🇺/🇺🇦 Nur RU/UK
             </button>
-            <button id="rotDeBtn" onclick="triggerAutoRotation('DE')" class="hidden px-3 py-1.5 bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold rounded-xl text-xs transition flex items-center gap-1">
-              🇩🇪 Nur Deutsch rotieren
+            <button id="rotDeBtn" onclick="triggerAutoRotation('DE')" class="hidden px-3 py-1.5 min-h-[36px] bg-emerald-100 hover:bg-emerald-200 text-emerald-800 font-bold rounded-xl text-xs transition flex items-center gap-1">
+              🇩🇪 Nur Deutsch
             </button>
-            <button id="rotAllBtn" onclick="triggerAutoRotation('ALL')" class="hidden px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-xs">
+            <button id="rotAllBtn" onclick="triggerAutoRotation('ALL')" class="hidden px-3 py-1.5 min-h-[36px] bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1 shadow-xs">
               🌐 Alles rotieren
             </button>
           </div>
         </div>
 
-        <div class="border border-slate-200 rounded-xl overflow-x-auto">
+        <div class="border border-slate-200 rounded-xl overflow-x-auto touch-scroll">
           <table class="w-full text-xs text-left">
             <thead class="bg-slate-100 text-slate-700 font-semibold uppercase">
               <tr>
@@ -349,10 +663,10 @@
       <div class="bg-slate-50 border-t border-slate-200 px-6 py-3.5 flex justify-between items-center shrink-0">
         <span id="adminSaveStatus" class="text-xs text-slate-500 font-medium"></span>
         <div class="flex gap-2">
-          <button onclick="closeAdminModal()" class="px-4 py-2 bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-xl text-xs transition">
+          <button onclick="closeAdminModal()" class="px-4 py-2 min-h-[40px] bg-slate-200 hover:bg-slate-300 text-slate-700 font-semibold rounded-xl text-xs transition">
             Schließen
           </button>
-          <button id="saveBatchBtn" onclick="saveAdminChanges()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition flex items-center gap-1.5">
+          <button id="saveBatchBtn" onclick="saveAdminChanges()" class="px-4 py-2 min-h-[40px] bg-indigo-600 hover:bg-indigo-700 text-white font-semibold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs">
             <i class="fa-solid fa-cloud-arrow-up"></i>
             <span>In Google Sheets speichern</span>
           </button>
@@ -368,7 +682,7 @@
         <h3 class="text-sm font-bold text-slate-800 flex items-center gap-2">
           <i class="fa-solid fa-calendar-star text-indigo-600"></i> Kongress / Event hinzufügen
         </h3>
-        <button onclick="closeCongressModal()" class="text-slate-400 hover:text-slate-600">
+        <button onclick="closeCongressModal()" class="text-slate-400 hover:text-slate-600 p-2 min-h-[44px] min-w-[44px] flex items-center justify-center">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
@@ -376,17 +690,17 @@
       <form id="congressForm" onsubmit="handleSaveCongress(event)" class="space-y-3.5 text-xs">
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Betroffene Kalenderwoche (KW)</label>
-          <select id="congressKwSelect" required class="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800"></select>
+          <select id="congressKwSelect" required class="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800 min-h-[44px]"></select>
         </div>
 
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Sprachgruppe / Bereich</label>
-          <select id="congressScope" required class="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800"></select>
+          <select id="congressScope" required class="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:ring-2 focus:ring-indigo-500 font-semibold text-slate-800 min-h-[44px]"></select>
         </div>
 
         <div>
           <label class="block font-semibold text-slate-700 mb-1">Art des Ereignisses</label>
-          <select id="congressPreset" onchange="applyCongressPreset(this.value)" class="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:ring-1 focus:ring-indigo-500 mb-2 text-slate-700">
+          <select id="congressPreset" onchange="applyCongressPreset(this.value)" class="w-full p-2.5 border border-slate-300 rounded-xl bg-white focus:ring-1 focus:ring-indigo-500 mb-2 text-slate-700 min-h-[44px]">
             <option value="">-- Vorlage wählen oder manuell eingeben --</option>
             <option value="Regionalkongress">Regionalkongress</option>
             <option value="Kreiskongress">Kreiskongress</option>
@@ -398,15 +712,15 @@
             id="congressTitleInput" 
             placeholder="Z.B. Regionalkongress russisch" 
             required 
-            class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 font-medium text-slate-900"
+            class="w-full p-2.5 border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 font-medium text-slate-900 min-h-[44px]"
           >
         </div>
 
         <div class="flex justify-end gap-2 pt-3 border-t border-slate-100 mt-4">
-          <button type="button" onclick="closeCongressModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition">
+          <button type="button" onclick="closeCongressModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold transition min-h-[44px]">
             Abbrechen
           </button>
-          <button type="submit" id="saveCongressSubmitBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md flex items-center gap-1.5 transition">
+          <button type="submit" id="saveCongressSubmitBtn" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md flex items-center gap-1.5 transition min-h-[44px]">
             <i class="fa-solid fa-save"></i>
             <span>Ereignis eintragen</span>
           </button>
@@ -416,8 +730,8 @@
   </div>
 
   <!-- Footer -->
-  <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400 mt-auto">
-    <p>Reinigungsplan Versammlung Marburg &bull; Multi-Tenant & WhatsApp/Telegram Sharing unterstützt</p>
+  <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400 mt-auto hidden sm:block">
+    <p>Reinigungsplan Versammlung Marburg &bull; iOS & Android Ready</p>
   </footer>
 
   <!-- Application Logic -->
@@ -428,12 +742,16 @@
     const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbzVTTsOtwkodbjB0P9UsBSbNsepUDg4R2x8D3oOfu4gphuhwRbGZCd0GMLjVILPEl7TPg/exec';
     const CACHE_KEY = 'reinigungsplan_marburg_cache_v2';
     const CACHE_TIMESTAMP_KEY = 'reinigungsplan_marburg_timestamp_v2';
+    const MY_GROUP_KEY = 'reinigungsplan_my_group_v2';
+    const CHECKLIST_KEY = 'reinigungsplan_checklist_state_v2';
 
     let scheduleData = [];
     let currentCalculatedKW = getISOWeekNumber(new Date());
     let deferredPrompt = null;
     let verifiedAdminPin = null;
     let userRole = null; // 'SUPER_ADMIN' | 'ADMIN_RU_UK' | 'ADMIN_DE'
+    let activeFilterChip = 'ALL';
+    let mySavedGroup = localStorage.getItem(MY_GROUP_KEY) || '';
 
     // DOM Elements
     const tableContainer = document.getElementById('tableContainer');
@@ -455,6 +773,11 @@
     const pwaBannerInstallBtn = document.getElementById('pwaBannerInstallBtn');
     const pwaBannerCloseBtn = document.getElementById('pwaBannerCloseBtn');
     const pwaTopInstallBtn = document.getElementById('pwaTopInstallBtn');
+    const personalBanner = document.getElementById('personalBanner');
+    const userGroupName = document.getElementById('userGroupName');
+    const nextShiftInfo = document.getElementById('nextShiftInfo');
+    const groupBtnLabel = document.getElementById('groupBtnLabel');
+    const myShiftIcsBtn = document.getElementById('myShiftIcsBtn');
 
     // Service Worker Registration
     if ('serviceWorker' in navigator) {
@@ -517,9 +840,6 @@
         .replace(/'/g, '&#039;');
     }
 
-    /**
-     * Toast Feedback Notification
-     */
     let toastTimeout;
     function showToast(msg, icon = 'fa-circle-check', isError = false) {
       clearTimeout(toastTimeout);
@@ -536,9 +856,6 @@
       }, 2500);
     }
 
-    /**
-     * Semantisches Badge-Rendering für Kongresse und Sonderereignisse
-     */
     function formatCellContent(val) {
       if (!val || String(val).trim() === '') {
         return '<span class="text-slate-300">—</span>';
@@ -567,9 +884,6 @@
       return escapeHtml(text);
     }
 
-    /**
-     * Formatierte WhatsApp/Telegram Textnachricht für eine Kalenderwoche generieren
-     */
     function buildShareMessage(item) {
       return `🧹 *Reinigungsplan Versammlung Marburg*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
              `🇷🇺 *Di & So (Ru):* ${item.tuesdaySundayRu || '—'}\n` +
@@ -579,9 +893,6 @@
              `🔗 Zum Online-Plan: ${window.location.href}`;
     }
 
-    /**
-     * Woche über Native Web Share API oder Clipboard teilen
-     */
     async function shareWeekItem(kwNumber) {
       const item = scheduleData.find(d => d.kwNumber === kwNumber || d.kw === `KW ${kwNumber}` || String(d.kw).includes(String(kwNumber)));
       if (!item) return;
@@ -596,15 +907,11 @@
           });
           return;
         } catch (err) {
-          if (err.name !== 'AbortError') {
-            console.warn('Share fehlgeschlagen, nutze Zwischenablage:', err);
-          } else {
-            return;
-          }
+          if (err.name !== 'AbortError') console.warn(err);
+          else return;
         }
       }
 
-      // Fallback in die Zwischenablage
       try {
         await navigator.clipboard.writeText(text);
         showToast(`Text für ${item.kw} in Zwischenablage kopiert!`);
@@ -617,6 +924,230 @@
       shareWeekItem(currentCalculatedKW);
     }
 
+    function downloadIcsForWeek(kwNumber) {
+      const item = scheduleData.find(d => d.kwNumber === kwNumber || d.kw === `KW ${kwNumber}` || String(d.kw).includes(String(kwNumber)));
+      if (!item) return;
+
+      const currentYear = new Date().getFullYear();
+      const summary = `Reinigungsdienst Saal Marburg (${item.kw})`;
+      const description = `Reinigungsplan Versammlung Marburg\\nKW: ${item.kw}\\nDi & So: ${item.tuesdaySundayRu || '—'}\\nMi & Do: ${item.midweekUk || '—'}\\nSo: ${item.sundayDe || '—'}\\nHauptreinigung: ${item.weekendMain || '—'}`;
+
+      const icsContent = [
+        'BEGIN:VCALENDAR',
+        'VERSION:2.0',
+        'PRODID:-//Versammlung Marburg//Reinigungsplan//DE',
+        'CALSCALE:GREGORIAN',
+        'BEGIN:VEVENT',
+        `UID:reinigung-marburg-${item.kwNumber || kwNumber}-${currentYear}@marburg.org`,
+        `DTSTAMP:${new Date().toISOString().replace(/[-:]/g, '').split('.')[0]}Z`,
+        `SUMMARY:${summary}`,
+        `DESCRIPTION:${description}`,
+        'STATUS:CONFIRMED',
+        'END:VEVENT',
+        'END:VCALENDAR'
+      ].join('\r\n');
+
+      const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = window.URL.createObjectURL(blob);
+      link.setAttribute('download', `Reinigungsplan_${item.kw.replace(/\s+/g, '_')}.ics`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      showToast(`Kalenderdatei für ${item.kw} heruntergeladen!`);
+    }
+
+    function applyAllFilters() {
+      const query = searchInput.value.trim().toLowerCase();
+      
+      let filtered = scheduleData.filter(item => {
+        if (query) {
+          const matchesQuery = Object.values(item).some(val => 
+            val !== null && val !== undefined && String(val).toLowerCase().includes(query)
+          );
+          if (!matchesQuery) return false;
+        }
+
+        if (activeFilterChip === 'MINE') {
+          if (!mySavedGroup) return true;
+          const groupQuery = mySavedGroup.toLowerCase();
+          return Object.values(item).some(val => 
+            val !== null && val !== undefined && String(val).toLowerCase().includes(groupQuery)
+          );
+        } else if (activeFilterChip === 'RU') {
+          return item.tuesdaySundayRu && !item.tuesdaySundayRu.toLowerCase().includes('kongress');
+        } else if (activeFilterChip === 'UK') {
+          return item.midweekUk && item.midweekUk !== 'Keine' && item.midweekUk !== '';
+        } else if (activeFilterChip === 'DE') {
+          return item.sundayDe || item.weekendMain;
+        } else if (activeFilterChip === 'KONGRESS') {
+          const rowStr = JSON.stringify(item).toLowerCase();
+          return rowStr.includes('kongress') || rowStr.includes('kreisaufseher');
+        }
+
+        return true;
+      });
+
+      render(filtered);
+    }
+
+    function setFilterChip(chip) {
+      activeFilterChip = chip;
+      document.querySelectorAll('.chip-btn').forEach(btn => {
+        btn.className = 'chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1';
+      });
+
+      const activeBtn = document.getElementById(`chip-${chip}`);
+      if (activeBtn) {
+        activeBtn.className = 'chip-btn px-3.5 py-1.5 min-h-[36px] rounded-full font-bold bg-indigo-600 text-white shadow-xs shrink-0 transition flex items-center justify-center gap-1';
+      }
+
+      applyAllFilters();
+    }
+
+    let myNextShiftKw = null;
+    function updatePersonalBanner() {
+      if (!mySavedGroup) {
+        personalBanner.classList.add('hidden');
+        groupBtnLabel.textContent = 'Gruppe wählen';
+        return;
+      }
+
+      groupBtnLabel.textContent = mySavedGroup;
+      userGroupName.textContent = mySavedGroup;
+
+      const groupQuery = mySavedGroup.toLowerCase();
+      const nextShift = scheduleData.find(item => {
+        const isUpcoming = (item.kwNumber >= currentCalculatedKW);
+        if (!isUpcoming) return false;
+        return Object.values(item).some(val => 
+          val !== null && val !== undefined && String(val).toLowerCase().includes(groupQuery)
+        );
+      });
+
+      if (nextShift) {
+        myNextShiftKw = nextShift.kwNumber;
+        const diffWeeks = nextShift.kwNumber - currentCalculatedKW;
+        let timeLabel = '';
+        if (diffWeeks === 0) {
+          timeLabel = '🔥 <span class="text-amber-300 font-bold">Diese Woche im Dienst!</span>';
+        } else if (diffWeeks === 1) {
+          timeLabel = '⚡ <span class="text-emerald-300 font-bold">Nächste Woche</span>';
+        } else {
+          timeLabel = `in ${diffWeeks} Wochen`;
+        }
+
+        nextShiftInfo.innerHTML = `Nächster Einsatz: <b>${nextShift.kw}</b> (${nextShift.fromDate} – ${nextShift.toDate}) &bull; ${timeLabel}`;
+        myShiftIcsBtn.classList.remove('hidden');
+      } else {
+        nextShiftInfo.textContent = 'Aktuell keine anstehenden Einsätze im hinterlegten Plan gefunden.';
+        myShiftIcsBtn.classList.add('hidden');
+      }
+
+      personalBanner.classList.remove('hidden');
+    }
+
+    function downloadMyShiftIcs() {
+      if (myNextShiftKw) downloadIcsForWeek(myNextShiftKw);
+    }
+
+    function openGroupSelectModal() {
+      const select = document.getElementById('groupDropdownSelect');
+      select.innerHTML = '<option value="">-- Name oder Gruppe wählen --</option>';
+
+      const uniqueNames = new Set();
+      scheduleData.forEach(item => {
+        [item.tuesdaySundayRu, item.midweekUk, item.sundayDe, item.weekendMain].forEach(name => {
+          if (name && !name.toLowerCase().includes('kongress') && !name.toLowerCase().includes('kreisaufseher') && name !== 'Keine' && name !== 'Ortsbedürfnisse') {
+            uniqueNames.add(name.trim());
+          }
+        });
+      });
+
+      Array.from(uniqueNames).sort().forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        if (name === mySavedGroup) opt.selected = true;
+        select.appendChild(opt);
+      });
+
+      document.getElementById('groupCustomInput').value = mySavedGroup;
+      document.getElementById('groupSelectModal').classList.remove('hidden');
+    }
+
+    function closeGroupSelectModal() {
+      document.getElementById('groupSelectModal').classList.add('hidden');
+    }
+
+    function saveMyGroupSelection() {
+      const custom = document.getElementById('groupCustomInput').value.trim();
+      const dropdown = document.getElementById('groupDropdownSelect').value.trim();
+      const chosen = custom || dropdown;
+
+      if (chosen) {
+        mySavedGroup = chosen;
+        localStorage.setItem(MY_GROUP_KEY, chosen);
+        showToast(`Gruppe "${chosen}" gespeichert!`);
+      } else {
+        clearMyGroup();
+      }
+
+      closeGroupSelectModal();
+      updatePersonalBanner();
+      applyAllFilters();
+    }
+
+    function clearMyGroup() {
+      mySavedGroup = '';
+      localStorage.removeItem(MY_GROUP_KEY);
+      closeGroupSelectModal();
+      updatePersonalBanner();
+      applyAllFilters();
+      showToast('Gruppe zurückgesetzt');
+    }
+
+    function openChecklistModal() {
+      loadChecklistState();
+      document.getElementById('checklistModal').classList.remove('hidden');
+    }
+
+    function closeChecklistModal() {
+      document.getElementById('checklistModal').classList.add('hidden');
+    }
+
+    function toggleTaskState(cb) {
+      const taskId = cb.getAttribute('data-task');
+      const state = getSavedChecklistState();
+      state[taskId] = cb.checked;
+      localStorage.setItem(CHECKLIST_KEY, JSON.stringify(state));
+    }
+
+    function getSavedChecklistState() {
+      try {
+        return JSON.parse(localStorage.getItem(CHECKLIST_KEY)) || {};
+      } catch (e) {
+        return {};
+      }
+    }
+
+    function loadChecklistState() {
+      const state = getSavedChecklistState();
+      document.querySelectorAll('#checklistModal input[type="checkbox"]').forEach(cb => {
+        const taskId = cb.getAttribute('data-task');
+        cb.checked = !!state[taskId];
+      });
+    }
+
+    function resetChecklist() {
+      if (confirm('Alle Häkchen in der Checkliste zurücksetzen?')) {
+        localStorage.removeItem(CHECKLIST_KEY);
+        loadChecklistState();
+        showToast('Checkliste zurückgesetzt');
+      }
+    }
+
     async function loadSchedule(force = false) {
       const cached = localStorage.getItem(CACHE_KEY);
       const cachedTime = localStorage.getItem(CACHE_TIMESTAMP_KEY);
@@ -625,6 +1156,7 @@
         try {
           scheduleData = JSON.parse(cached);
           render(scheduleData);
+          updatePersonalBanner();
           setSyncState('cached', cachedTime);
           loader.classList.add('hidden');
         } catch (e) {}
@@ -651,6 +1183,7 @@
             localStorage.setItem(CACHE_TIMESTAMP_KEY, now);
 
             render(scheduleData);
+            updatePersonalBanner();
             setSyncState('synced', now);
             errorBox.classList.add('hidden');
           } else {
@@ -709,6 +1242,7 @@
       data.forEach((item) => {
         const isCurrent = isEntryCurrentWeek(item);
         if (isCurrent) foundCurrentWeekElement = true;
+        const kwNum = item.kwNumber || parseInt(item.kw.replace(/\D/g,''),10);
 
         // Desktop Zeile
         const tr = document.createElement('tr');
@@ -740,9 +1274,14 @@
             ${formatCellContent(item.weekendMain)}
           </td>
           <td class="p-3.5 pr-4 align-top text-center no-print">
-            <button onclick="shareWeekItem(${item.kwNumber || parseInt(item.kw.replace(/\D/g,''),10)})" class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Woche teilen">
-              <i class="fa-solid fa-share-nodes text-xs"></i>
-            </button>
+            <div class="flex items-center justify-center gap-1">
+              <button onclick="shareWeekItem(${kwNum})" class="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Woche teilen">
+                <i class="fa-solid fa-share-nodes text-xs"></i>
+              </button>
+              <button onclick="downloadIcsForWeek(${kwNum})" class="p-2 min-h-[36px] min-w-[36px] flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition" title="In Kalender (.ics)">
+                <i class="fa-solid fa-calendar-plus text-xs"></i>
+              </button>
+            </div>
           </td>
         `;
         tableBody.appendChild(tr);
@@ -766,10 +1305,13 @@
               </span>
               ${isCurrent ? '<span class="text-xs font-semibold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md">Aktuelle Woche</span>' : ''}
             </div>
-            <div class="flex items-center gap-2">
-              <span class="text-xs font-medium text-slate-500">${escapeHtml(item.fromDate)} – ${escapeHtml(item.toDate)}</span>
-              <button onclick="shareWeekItem(${item.kwNumber || parseInt(item.kw.replace(/\D/g,''),10)})" class="p-1 text-slate-400 hover:text-emerald-600 active:text-emerald-700" title="Teilen">
+            <div class="flex items-center gap-1">
+              <span class="text-xs font-medium text-slate-500 mr-1">${escapeHtml(item.fromDate)} – ${escapeHtml(item.toDate)}</span>
+              <button onclick="shareWeekItem(${kwNum})" class="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-400 hover:text-emerald-600 active:text-emerald-700" title="Teilen">
                 <i class="fa-solid fa-share-nodes text-sm"></i>
+              </button>
+              <button onclick="downloadIcsForWeek(${kwNum})" class="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-400 hover:text-indigo-600 active:text-indigo-700" title="Kalender (.ics)">
+                <i class="fa-solid fa-calendar-plus text-sm"></i>
               </button>
             </div>
           </div>
@@ -819,29 +1361,15 @@
     let searchTimeout;
     searchInput.addEventListener('input', (e) => {
       clearTimeout(searchTimeout);
-      const query = e.target.value.trim().toLowerCase();
-      clearSearchBtn.classList.toggle('hidden', query.length === 0);
-
-      searchTimeout = setTimeout(() => {
-        if (!query) {
-          render(scheduleData);
-          return;
-        }
-
-        const filtered = scheduleData.filter(item => {
-          return Object.values(item).some(val => 
-            val !== null && val !== undefined && String(val).toLowerCase().includes(query)
-          );
-        });
-
-        render(filtered);
-      }, 150);
+      clearSearchBtn.classList.toggle('hidden', e.target.value.trim().length === 0);
+      searchTimeout = setTimeout(applyAllFilters, 150);
     });
 
     function resetSearch() {
       searchInput.value = '';
       clearSearchBtn.classList.add('hidden');
-      render(scheduleData);
+      activeFilterChip = 'ALL';
+      setFilterChip('ALL');
       searchInput.focus();
     }
 
@@ -953,7 +1481,7 @@
           <td class="p-1.5"><input type="text" value="${escapeHtml(item.sundayDe)}" class="w-full px-2 py-1 border rounded text-xs ${!canEditDe ? 'bg-slate-100 text-slate-400' : ''}" data-field="sundayDe" data-index="${index}" ${!canEditDe ? 'readonly' : ''}></td>
           <td class="p-1.5"><input type="text" value="${escapeHtml(item.weekendMain)}" class="w-full px-2 py-1 border rounded text-xs font-semibold ${!canEditDe ? 'bg-slate-100 text-slate-400' : ''}" data-field="weekendMain" data-index="${index}" ${!canEditDe ? 'readonly' : ''}></td>
           <td class="p-1.5 text-center">
-            ${isSuper ? `<button onclick="deleteAdminRow(${index})" class="p-1 text-rose-500 hover:text-rose-700" title="Löschen"><i class="fa-solid fa-trash-can"></i></button>` : '—'}
+            ${isSuper ? `<button onclick="deleteAdminRow(${index})" class="p-1 text-rose-500 hover:text-rose-700 min-h-[36px] min-w-[36px] flex items-center justify-center mx-auto" title="Löschen"><i class="fa-solid fa-trash-can"></i></button>` : '—'}
           </td>
         `;
         tbody.appendChild(tr);
@@ -983,7 +1511,7 @@
 
     async function triggerAutoRotation(scope) {
       const scopeLabel = scope === 'RU_UK' ? 'Russisch / Ukrainisch' : (scope === 'DE' ? 'Deutsch & Wochenende' : 'Gesamter Plan');
-      if (!confirm(`Möchtest du die automatische Rotation für den Bereich [${scopeLabel}] ausführen? Bereits eingetragene Kongresse bleiben erhalten.`)) {
+      if (!confirm(`Möchtest du die automatische Rotation für [${scopeLabel}] ausführen? Kongresse bleiben erhalten.`)) {
         return;
       }
 
@@ -1008,7 +1536,8 @@
             scheduleData = result.data;
             localStorage.setItem(CACHE_KEY, JSON.stringify(scheduleData));
             renderAdminTable();
-            render(scheduleData);
+            applyAllFilters();
+            updatePersonalBanner();
             statusEl.textContent = `✅ ${result.message}`;
           } else {
             statusEl.textContent = `❌ Fehler: ${result.message}`;
@@ -1049,7 +1578,8 @@
           if (result.status === 'success') {
             statusEl.textContent = '✅ Erfolgreich gespeichert!';
             localStorage.setItem(CACHE_KEY, JSON.stringify(scheduleData));
-            render(scheduleData);
+            applyAllFilters();
+            updatePersonalBanner();
             setTimeout(() => {
               closeAdminModal();
               statusEl.textContent = '';
@@ -1059,7 +1589,8 @@
           }
         } else {
           localStorage.setItem(CACHE_KEY, JSON.stringify(scheduleData));
-          render(scheduleData);
+          applyAllFilters();
+          updatePersonalBanner();
           statusEl.textContent = '✅ Lokal gespeichert';
           setTimeout(() => {
             closeAdminModal();
@@ -1155,8 +1686,7 @@
     }
 
     window.addEventListener('resize', () => {
-      const query = searchInput.value.trim().toLowerCase();
-      if (!query) render(scheduleData);
+      applyAllFilters();
     });
 
     document.addEventListener('DOMContentLoaded', () => {
