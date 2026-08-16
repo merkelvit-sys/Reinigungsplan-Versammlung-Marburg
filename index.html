@@ -1494,7 +1494,10 @@
     if ('serviceWorker' in navigator) {
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('./sw.js')
-          .then(reg => console.log('SW registriert:', reg.scope))
+          .then(reg => {
+            console.log('SW registriert:', reg.scope);
+            reg.update();
+          })
           .catch(err => console.warn('SW fehlgeschlagen:', err));
       });
     }

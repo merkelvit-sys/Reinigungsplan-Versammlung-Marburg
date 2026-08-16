@@ -1,4 +1,4 @@
-const CACHE_NAME = 'reinigungsplan-marburg-v4';
+const CACHE_NAME = 'reinigungsplan-marburg-v5';
 const STATIC_ASSETS = [
   './',
   './index.html',
@@ -7,19 +7,19 @@ const STATIC_ASSETS = [
   './icon.svg'
 ];
 
-// Install: Pre-cache local core assets
+// Install: Pre-cache local core assets & activate immediately
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => cache.addAll(STATIC_ASSETS))
-      .then(() => self.skipWaiting())
       .catch((err) => {
         console.warn('Fehler beim Pre-Caching:', err);
       })
   );
 });
 
-// Activate: Remove all outdated cache versions
+// Activate: Remove all outdated cache versions immediately
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
@@ -35,9 +35,8 @@ self.addEventListener('activate', (event) => {
   );
 });
 
-// Fetch: Stale-While-Revalidate for local app shell only
+// Fetch Strategy
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
   if (event.request.method !== 'GET') {
     return;
   }
@@ -45,12 +44,29 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(event.request.url);
 
   // Ignore cross-origin requests (CDNs, Google Apps Script API, fonts)
-  // Let the browser handle cross-origin caching natively to prevent opaque CORS errors
   if (url.origin !== self.location.origin) {
     return;
   }
 
-  // Local Static Assets (App Shell)
+  // 1. Navigation / HTML Requests -> Network First, fallback to Cache
+  if (event.request.mode === 'navigate' || event.request.destination === 'document' || url.pathname.endsWith('.html') || url.pathname.endsWith('/')) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const responseClone = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => {
+              cache.put(event.request, responseClone).catch(() => {});
+            });
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match(event.request).then(cached => cached || caches.match('./index.html')))
+    );
+    return;
+  }
+
+  // 2. Static Assets (CSS, SVG, Icons) -> Cache First / Stale-While-Revalidate
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request)
