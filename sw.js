@@ -1,4 +1,11 @@
-const CACHE_NAME = 'reinigungsplan-marburg-v5';
+// Import OneSignal SDK directly into main Service Worker
+try {
+  importScripts('https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js');
+} catch (e) {
+  console.warn('OneSignal SW load fallback:', e);
+}
+
+const CACHE_NAME = 'reinigungsplan-marburg-v6';
 const STATIC_ASSETS = [
   './',
   './index.html',
