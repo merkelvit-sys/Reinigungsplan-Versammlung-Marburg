@@ -29,7 +29,7 @@
     }
     @media print {
       body { background-color: #ffffff !important; color: #000000 !important; }
-      header, #controlsSection, #jumpToCurrentBtn, #statusToast, #pwaInstallBanner, #adminTriggerBtn, #adminModal, #pinModal, #congressModal {
+      header, #controlsSection, #jumpToCurrentBtn, #statusToast, #pwaInstallBanner, #adminTriggerBtn, #adminModal, #pinModal, #congressModal, .no-print {
         display: none !important;
       }
       #tableContainer { display: block !important; box-shadow: none !important; border: 1px solid #cbd5e1 !important; }
@@ -47,6 +47,12 @@
   </style>
 </head>
 <body class="min-h-full flex flex-col font-sans text-slate-800 antialiased selection:bg-indigo-500 selection:text-white">
+
+  <!-- Toast Notification -->
+  <div id="toast" class="hidden fixed bottom-6 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 text-white text-xs px-4 py-2.5 rounded-2xl shadow-xl backdrop-blur-xs flex items-center gap-2 fade-in">
+    <i id="toastIcon" class="fa-solid fa-circle-check text-emerald-400"></i>
+    <span id="toastMessage">In die Zwischenablage kopiert!</span>
+  </div>
 
   <!-- Header -->
   <header class="bg-gradient-to-r from-indigo-700 via-indigo-800 to-slate-900 text-white shadow-md sticky top-0 z-40">
@@ -168,6 +174,15 @@
         </button>
 
         <button 
+          onclick="shareCurrentWeek()" 
+          title="Aktuelle Woche auf WhatsApp / Telegram teilen"
+          class="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-semibold rounded-lg border border-emerald-200/70 transition flex items-center gap-1.5"
+        >
+          <i class="fa-solid fa-share-nodes text-xs"></i>
+          <span>Woche teilen</span>
+        </button>
+
+        <button 
           onclick="refreshData()" 
           title="Manuell aktualisieren"
           class="p-1.5 px-2 text-slate-600 hover:text-indigo-600 hover:bg-slate-100 rounded-lg transition"
@@ -224,7 +239,8 @@
               <th class="p-3.5">Di & So <span class="text-slate-400 font-normal">(Russisch)</span></th>
               <th class="p-3.5">Mi & Do <span class="text-slate-400 font-normal">(Ukrainisch)</span></th>
               <th class="p-3.5">So <span class="text-slate-400 font-normal">(Deutsch)</span></th>
-              <th class="p-3.5 pr-4 bg-slate-100/50">Hauptreinigung <span class="text-slate-400 font-normal">(WE)</span></th>
+              <th class="p-3.5 bg-slate-100/50">Hauptreinigung <span class="text-slate-400 font-normal">(WE)</span></th>
+              <th class="p-3.5 pr-4 w-12 text-center no-print">Teilen</th>
             </tr>
           </thead>
           <tbody id="planTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
@@ -243,7 +259,7 @@
         <i class="fa-solid fa-key text-xl"></i>
       </div>
       <h3 class="font-bold text-slate-800 text-lg">Admin-PIN eingeben</h3>
-      <p class="text-xs text-slate-500 mt-1 mb-4">Zugangsschlüssel für deinen Verantwortungsbereich (Super, RU/UK oder DE).</p>
+      <p class="text-xs text-slate-500 mt-1 mb-4">Zugangsschlüssel für deinen Bereich (Super: 7788, RU/UK: 1122, DE: 3344).</p>
       
       <input 
         type="password" 
@@ -269,7 +285,6 @@
   <div id="adminModal" class="hidden fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4">
     <div class="bg-white rounded-2xl shadow-2xl max-w-5xl w-full max-h-[90vh] flex flex-col fade-in overflow-hidden">
       
-      <!-- Admin Modal Header -->
       <div class="bg-slate-900 text-white px-6 py-4 flex justify-between items-center shrink-0">
         <div class="flex items-center gap-2.5">
           <i class="fa-solid fa-shield-halved text-indigo-400"></i>
@@ -285,15 +300,12 @@
         </button>
       </div>
 
-      <!-- Admin Modal Body: Interactive Editor -->
       <div class="p-4 sm:p-6 overflow-y-auto flex-1 space-y-4">
-        
-        <!-- Action Control Bar -->
         <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div class="flex flex-wrap items-center gap-2">
             <button onclick="openCongressModal()" class="px-3.5 py-2 bg-amber-500 hover:bg-amber-600 active:bg-amber-700 text-white font-bold rounded-xl text-xs transition flex items-center gap-1.5 shadow-xs">
               <i class="fa-solid fa-star"></i>
-              <span>+ Kongress / Event eintragen</span>
+              <span>+ Kongress / Event</span>
             </button>
             <button onclick="addNewAdminRow()" class="px-3.5 py-2 bg-slate-200 hover:bg-slate-300 text-slate-800 font-semibold rounded-xl text-xs transition flex items-center gap-1.5">
               <i class="fa-solid fa-plus"></i>
@@ -301,7 +313,6 @@
             </button>
           </div>
 
-          <!-- Auto-Rotation Buttons -->
           <div class="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             <span class="text-xs text-slate-500 font-medium hidden lg:inline">Auto-Rotation:</span>
             <button id="rotRuUkBtn" onclick="triggerAutoRotation('RU_UK')" class="hidden px-3 py-1.5 bg-indigo-100 hover:bg-indigo-200 text-indigo-800 font-bold rounded-xl text-xs transition flex items-center gap-1">
@@ -316,7 +327,6 @@
           </div>
         </div>
 
-        <!-- Table Editor -->
         <div class="border border-slate-200 rounded-xl overflow-x-auto">
           <table class="w-full text-xs text-left">
             <thead class="bg-slate-100 text-slate-700 font-semibold uppercase">
@@ -336,7 +346,6 @@
         </div>
       </div>
 
-      <!-- Admin Modal Footer -->
       <div class="bg-slate-50 border-t border-slate-200 px-6 py-3.5 flex justify-between items-center shrink-0">
         <span id="adminSaveStatus" class="text-xs text-slate-500 font-medium"></span>
         <div class="flex gap-2">
@@ -352,7 +361,7 @@
     </div>
   </div>
 
-  <!-- Congress / Special Event Modal -->
+  <!-- Congress Modal -->
   <div id="congressModal" class="hidden fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-slate-100 fade-in">
       <div class="flex justify-between items-center mb-4 border-b border-slate-100 pb-3">
@@ -408,7 +417,7 @@
 
   <!-- Footer -->
   <footer class="bg-white border-t border-slate-200/80 py-4 text-center text-xs text-slate-400 mt-auto">
-    <p>Reinigungsplan Versammlung Marburg &bull; Multi-Tenant & Offline unterstützt</p>
+    <p>Reinigungsplan Versammlung Marburg &bull; Multi-Tenant & WhatsApp/Telegram Sharing unterstützt</p>
   </footer>
 
   <!-- Application Logic -->
@@ -509,6 +518,25 @@
     }
 
     /**
+     * Toast Feedback Notification
+     */
+    let toastTimeout;
+    function showToast(msg, icon = 'fa-circle-check', isError = false) {
+      clearTimeout(toastTimeout);
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toastMessage');
+      const toastIcon = document.getElementById('toastIcon');
+
+      toastMessage.textContent = msg;
+      toastIcon.className = `fa-solid ${icon} ${isError ? 'text-rose-400' : 'text-emerald-400'}`;
+      toast.classList.remove('hidden');
+
+      toastTimeout = setTimeout(() => {
+        toast.classList.add('hidden');
+      }, 2500);
+    }
+
+    /**
      * Semantisches Badge-Rendering für Kongresse und Sonderereignisse
      */
     function formatCellContent(val) {
@@ -518,21 +546,18 @@
       const text = String(val).trim();
       const lower = text.toLowerCase();
 
-      // Kongress Highlight (Gold/Amber)
       if (lower.includes('kongress') || lower.includes('regionalkongress') || lower.includes('kreiskongress')) {
         return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 border border-amber-300 font-bold text-xs shadow-xs">
           <i class="fa-solid fa-star text-[10px] text-amber-600"></i> ${escapeHtml(text)}
         </span>`;
       }
 
-      // Kreisaufseherbesuch (Lila)
       if (lower.includes('kreisaufseher')) {
         return `<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-purple-100 text-purple-900 border border-purple-300 font-bold text-xs shadow-xs">
           <i class="fa-solid fa-user-tie text-[10px] text-purple-600"></i> ${escapeHtml(text)}
         </span>`;
       }
 
-      // Keine / Ausfall (Grau)
       if (lower.includes('keine') || lower.includes('ortsbedürfnisse') || lower.includes('ausfall')) {
         return `<span class="inline-flex items-center px-2 py-0.5 rounded-md bg-slate-100 text-slate-600 font-medium text-xs">
           ${escapeHtml(text)}
@@ -540,6 +565,56 @@
       }
 
       return escapeHtml(text);
+    }
+
+    /**
+     * Formatierte WhatsApp/Telegram Textnachricht für eine Kalenderwoche generieren
+     */
+    function buildShareMessage(item) {
+      return `🧹 *Reinigungsplan Versammlung Marburg*\n📅 *${item.kw}* (${item.fromDate} – ${item.toDate})\n\n` +
+             `🇷🇺 *Di & So (Ru):* ${item.tuesdaySundayRu || '—'}\n` +
+             `🇺🇦 *Mi & Do (Uk):* ${item.midweekUk || '—'}\n` +
+             `🇩🇪 *So (De):* ${item.sundayDe || '—'}\n` +
+             `✨ *Hauptreinigung (WE):* ${item.weekendMain || '—'}\n\n` +
+             `🔗 Zum Online-Plan: ${window.location.href}`;
+    }
+
+    /**
+     * Woche über Native Web Share API oder Clipboard teilen
+     */
+    async function shareWeekItem(kwNumber) {
+      const item = scheduleData.find(d => d.kwNumber === kwNumber || d.kw === `KW ${kwNumber}` || String(d.kw).includes(String(kwNumber)));
+      if (!item) return;
+
+      const text = buildShareMessage(item);
+
+      if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
+        try {
+          await navigator.share({
+            title: `Reinigungsplan ${item.kw}`,
+            text: text
+          });
+          return;
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            console.warn('Share fehlgeschlagen, nutze Zwischenablage:', err);
+          } else {
+            return;
+          }
+        }
+      }
+
+      // Fallback in die Zwischenablage
+      try {
+        await navigator.clipboard.writeText(text);
+        showToast(`Text für ${item.kw} in Zwischenablage kopiert!`);
+      } catch (e) {
+        showToast('Kopieren fehlgeschlagen', 'fa-triangle-exclamation', true);
+      }
+    }
+
+    function shareCurrentWeek() {
+      shareWeekItem(currentCalculatedKW);
     }
 
     async function loadSchedule(force = false) {
@@ -592,8 +667,6 @@
           loader.classList.add('hidden');
           refreshIcon.classList.remove('fa-spin');
         }
-      } else {
-        if (!cached) showDemoData();
       }
     }
 
@@ -663,8 +736,13 @@
           <td class="p-3.5 align-top">${formatCellContent(item.tuesdaySundayRu)}</td>
           <td class="p-3.5 align-top">${formatCellContent(item.midweekUk)}</td>
           <td class="p-3.5 align-top">${formatCellContent(item.sundayDe)}</td>
-          <td class="p-3.5 pr-4 align-top font-semibold text-slate-900 bg-slate-50/40">
+          <td class="p-3.5 align-top font-semibold text-slate-900 bg-slate-50/40">
             ${formatCellContent(item.weekendMain)}
+          </td>
+          <td class="p-3.5 pr-4 align-top text-center no-print">
+            <button onclick="shareWeekItem(${item.kwNumber || parseInt(item.kw.replace(/\D/g,''),10)})" class="p-1.5 text-slate-400 hover:text-emerald-600 hover:bg-emerald-50 rounded-lg transition" title="Woche teilen">
+              <i class="fa-solid fa-share-nodes text-xs"></i>
+            </button>
           </td>
         `;
         tableBody.appendChild(tr);
@@ -688,7 +766,12 @@
               </span>
               ${isCurrent ? '<span class="text-xs font-semibold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md">Aktuelle Woche</span>' : ''}
             </div>
-            <span class="text-xs font-medium text-slate-500">${escapeHtml(item.fromDate)} – ${escapeHtml(item.toDate)}</span>
+            <div class="flex items-center gap-2">
+              <span class="text-xs font-medium text-slate-500">${escapeHtml(item.fromDate)} – ${escapeHtml(item.toDate)}</span>
+              <button onclick="shareWeekItem(${item.kwNumber || parseInt(item.kw.replace(/\D/g,''),10)})" class="p-1 text-slate-400 hover:text-emerald-600 active:text-emerald-700" title="Teilen">
+                <i class="fa-solid fa-share-nodes text-sm"></i>
+              </button>
+            </div>
           </div>
 
           <div class="grid grid-cols-1 gap-2 pt-2.5 text-xs">
@@ -795,7 +878,6 @@
         } catch (e) {}
       }
 
-      // Fallback Rollenprüfung
       if (pin === "7788") {
         verifiedAdminPin = pin;
         userRole = 'SUPER_ADMIN';
@@ -899,7 +981,6 @@
       }
     }
 
-    // Auto-Rotation Trigger
     async function triggerAutoRotation(scope) {
       const scopeLabel = scope === 'RU_UK' ? 'Russisch / Ukrainisch' : (scope === 'DE' ? 'Deutsch & Wochenende' : 'Gesamter Plan');
       if (!confirm(`Möchtest du die automatische Rotation für den Bereich [${scopeLabel}] ausführen? Bereits eingetragene Kongresse bleiben erhalten.`)) {
@@ -938,7 +1019,6 @@
       }
     }
 
-    // Save Admin Batch Changes
     async function saveAdminChanges() {
       const inputs = document.querySelectorAll('#adminTableBody input:not([readonly])');
       inputs.forEach(input => {
@@ -993,7 +1073,6 @@
       }
     }
 
-    // Congress Modal Logic
     function openCongressModal() {
       const select = document.getElementById('congressKwSelect');
       select.innerHTML = '';
