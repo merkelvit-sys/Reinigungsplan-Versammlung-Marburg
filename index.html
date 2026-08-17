@@ -2350,6 +2350,17 @@
         .replace(/'/g, '&#039;');
     }
 
+    // Normalize group names so "Marburg 2 und 3 - X" matches "Marburg 2 und 3- X"
+    // (collapses spaces around hyphens / ampersands, trims, lowercases)
+    function normalizeGroupName(str) {
+      if (!str) return '';
+      return String(str).toLowerCase()
+        .replace(/\s*-\s*/g, '-')
+        .replace(/\s*&\s*/g, ' & ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
     let toastTimeout;
     function showToast(msg, icon = 'fa-circle-check', isError = false) {
       clearTimeout(toastTimeout);
@@ -2502,9 +2513,9 @@
 
         if (activeFilterChip === 'MINE') {
           if (!mySavedGroup) return true;
-          const groupQuery = mySavedGroup.toLowerCase();
-          return Object.values(item).some(val => 
-            val !== null && val !== undefined && String(val).toLowerCase().includes(groupQuery)
+          const groupQuery = normalizeGroupName(mySavedGroup);
+          return Object.values(item).some(val =>
+            val !== null && val !== undefined && normalizeGroupName(val).includes(groupQuery)
           );
         } else if (activeFilterChip === 'RU') {
           return item.ru && !item.ru.toLowerCase().includes('kongress');
@@ -2548,12 +2559,12 @@
       if (groupBtnLabel) groupBtnLabel.textContent = mySavedGroup;
       if (userGroupName) userGroupName.textContent = mySavedGroup;
 
-      const groupQuery = mySavedGroup.toLowerCase();
+      const groupQuery = normalizeGroupName(mySavedGroup);
       const nextShift = scheduleData.find(item => {
         const isUpcoming = (item.kwNumber >= currentCalculatedKW);
         if (!isUpcoming) return false;
-        return Object.values(item).some(val => 
-          val !== null && val !== undefined && String(val).toLowerCase().includes(groupQuery)
+        return Object.values(item).some(val =>
+          val !== null && val !== undefined && normalizeGroupName(val).includes(groupQuery)
         );
       });
 
