@@ -493,6 +493,55 @@ table {
 .animate-ping { animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
 @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
 
+/* Kompakter Leucht-Status-LED (ersetzt Text "Online" / "Aktualisiert um") */
+.status-led {
+  position: relative;
+  display: inline-block;
+  width: 0.625rem;
+  height: 0.625rem;
+  border-radius: 9999px;
+  flex-shrink: 0;
+  background-color: #cbd5e1;
+  transition: background-color .3s ease, box-shadow .3s ease, border-color .3s ease;
+}
+.status-led::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  opacity: 0;
+  animation: led-ping 1.8s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.status-led.is-online {
+  background-color: #10b981;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, .22), 0 0 8px 1px rgba(16, 185, 129, .85);
+}
+.status-led.is-online::after { background-color: #10b981; }
+.status-led.is-cached {
+  background-color: #94a3b8;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, .22), 0 0 6px 1px rgba(148, 163, 184, .55);
+}
+.status-led.is-error {
+  background-color: #f43f5e;
+  box-shadow: 0 0 0 3px rgba(244, 63, 94, .22), 0 0 8px 1px rgba(244, 63, 94, .85);
+}
+.status-led.is-error::after { background-color: #f43f5e; }
+
+/* Hintergrund-Sync: gelber Spinner statt gefülltem Punkt */
+.status-led.is-syncing {
+  background-color: transparent;
+  border: 2px solid rgba(245, 158, 11, .3);
+  border-top-color: #f59e0b;
+  box-shadow: 0 0 8px 1px rgba(245, 158, 11, .7);
+  animation: led-spin .8s linear infinite;
+}
+.status-led.is-syncing::after { display: none; }
+@keyframes led-spin { to { transform: rotate(360deg); } }
+@keyframes led-ping {
+  0% { transform: scale(1); opacity: .55; }
+  75%, 100% { transform: scale(2.4); opacity: 0; }
+}
+
 /* Responsive Media Queries */
 @media (min-width: 640px) {
   .sm\:flex { display: flex !important; }

@@ -253,13 +253,15 @@
     <!-- Isolierte Status- und Filterleiste (zwei Ebenen, keine Überlappung) -->
     <section id="filterChipsBar" class="bg-slate-50 border-b border-slate-200/80 px-3 pt-2 pb-2 select-none no-print">
       <div class="max-w-6xl mx-auto flex flex-col gap-1.5">
-        <!-- Obere Ebene: Status + Sync-Zeit -->
-        <div class="flex items-center justify-between text-[11px] text-slate-500 px-0.5">
-          <div class="flex items-center gap-1.5 font-medium">
-            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="syncStatusDotM"></span>
-            <span class="text-slate-600">Online</span>
-          </div>
-          <div id="syncStatusTextM" class="text-[10px] text-slate-400 font-medium">Aktualisiert um --:--</div>
+        <!-- Obere Ebene: Ultrakompakter Leucht-Status-LED (Zeit im nativen Title-Tooltip) -->
+        <div class="flex items-center justify-between px-0.5 py-0.5">
+          <span
+            id="syncStatusLedM"
+            class="status-led is-online"
+            role="status"
+            aria-label="Synchronisationsstatus"
+            title="Online – Aktualisiert um --:--"
+          ></span>
         </div>
 
         <!-- Untere Ebene: horizontale Filterchips -->
@@ -278,14 +280,13 @@
   <!-- Control & Stats Bar (Desktop) -->
   <section id="controlsSection" class="bg-slate-50 border-b border-slate-200/60 hidden sm:block">
     <div class="max-w-6xl mx-auto px-4 py-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-      <div class="flex items-center gap-3">
-        <span id="syncStatus" class="flex items-center gap-1.5 font-medium">
-          <span class="w-2 h-2 rounded-full bg-slate-300 animate-pulse" id="syncStatusDot"></span>
-          <span id="syncStatusText">Synchronisiere...</span>
-        </span>
-        <span class="text-slate-300">|</span>
-        <span id="recordsCount" class="font-medium">0 Wochen geladen</span>
-      </div>
+        <div class="flex items-center gap-3">
+          <span id="syncStatus" class="flex items-center" role="status" aria-label="Synchronisationsstatus" title="Synchronisiere...">
+            <span id="syncStatusLed" class="status-led is-syncing"></span>
+          </span>
+          <span class="text-slate-300">|</span>
+          <span id="recordsCount" class="font-medium">0 Wochen geladen</span>
+        </div>
 
       <div class="flex items-center gap-2">
         <button 
@@ -2214,8 +2215,9 @@
     const noResultsBox = document.getElementById('noResultsBox');
     const searchInput = document.getElementById('searchInput');
     const clearSearchBtn = document.getElementById('clearSearchBtn');
-    const syncStatusText = document.getElementById('syncStatusText');
-    const syncStatusDot = document.getElementById('syncStatusDot');
+    const syncStatusEl = document.getElementById('syncStatus');
+    const syncStatusLed = document.getElementById('syncStatusLed');
+    const syncStatusLedM = document.getElementById('syncStatusLedM');
     const recordsCount = document.getElementById('recordsCount');
     const refreshIcon = document.getElementById('refreshIcon');
     const currentKWBadge = document.getElementById('currentKWBadge');
@@ -2823,22 +2825,31 @@
     }
 
     function setSyncState(state, timeStr = '') {
-      const apply = (dotCls, txt) => {
-        if (syncStatusDot) syncStatusDot.className = 'w-2 h-2 rounded-full ' + dotCls;
-        if (syncStatusText) syncStatusText.textContent = txt;
-        const dotM = document.getElementById('syncStatusDotM');
-        const txtM = document.getElementById('syncStatusTextM');
-        if (dotM) dotM.className = 'w-1.5 h-1.5 rounded-full ' + dotCls;
-        if (txtM) txtM.textContent = txt;
+      const labels = {
+        loading: t('syncStatusLoading'),
+        synced: t('syncStatusSynced', { time: timeStr }),
+        cached: t('syncStatusCached', { time: timeStr || 'offline' }),
+        error: t('syncStatusError'),
       };
-      if (state === 'loading') {
-        apply('bg-amber-400 animate-pulse', t('syncStatusLoading'));
-      } else if (state === 'synced') {
-        apply('bg-emerald-500', t('syncStatusSynced', { time: timeStr }));
-      } else if (state === 'cached') {
-        apply('bg-indigo-400', t('syncStatusCached', { time: timeStr || 'offline' }));
-      } else if (state === 'error') {
-        apply('bg-rose-500', t('syncStatusError'));
+      const ledClass = {
+        loading: 'status-led is-syncing',
+        synced: 'status-led is-online',
+        cached: 'status-led is-cached',
+        error: 'status-led is-error',
+      };
+      const titleByState = {
+        loading: 'Synchronisiere…',
+        synced: 'Online · aktuell',
+        cached: 'Offline · lokaler Cache',
+        error: 'Offline · Verbindungsfehler',
+      };
+      const txt = labels[state] || '';
+      const title = (titleByState[state] || '') + (txt ? ' – ' + txt : '');
+      if (syncStatusEl) syncStatusEl.title = title;
+      if (syncStatusLed) syncStatusLed.className = ledClass[state] || 'status-led';
+      if (syncStatusLedM) {
+        syncStatusLedM.className = ledClass[state] || 'status-led';
+        syncStatusLedM.title = title;
       }
     }
 
@@ -4474,45 +4485,60 @@
         return scheduleRows;
       }
 
-      // Pointer Auto-Discovery: Startpositionen aus der Vorzeile übernehmen
-      let ruIdx = 0, ukIdx = 0, deIdx = 0;
-      if (startIndex > 0 && scheduleRows[startIndex - 1]) {
-        const prev = scheduleRows[startIndex - 1];
-        ruIdx = findNextGroupIndex(prev.ru, FAIR_CLEANING_POOLS.RU);
-        ukIdx = findNextGroupIndex(prev.uk, FAIR_CLEANING_POOLS.UK);
-        deIdx = findNextGroupIndex(prev.de, FAIR_CLEANING_POOLS.DE);
-      }
+      // Pointer Auto-Discovery: wie viele Wochen pro Versammlung bereits
+      // Hauptreinigung hatten + Cursor der Sprachsäulen aus den Vorzeilen.
+      let deDone = 0, ruDone = 0, ukDone = 0;
+      let ruMid = 0, ukMid = 0, deMid = 0;
 
-      let cycleStep = startIndex % HAUPTREINIGUNG_CONGREGATION_SEQUENCE.length;
+      for (let k = 0; k < startIndex; k++) {
+        const r = scheduleRows[k];
+        if (!r) continue;
+        const m = String(r.main || '');
+        if (FAIR_CLEANING_POOLS.DE.some(g => g === m)) deDone++;
+        else if (FAIR_CLEANING_POOLS.RU.some(g => g === m)) ruDone++;
+        else if (FAIR_CLEANING_POOLS.UK.some(g => g === m)) ukDone++;
+        ruMid = findNextGroupIndex(r.ru, FAIR_CLEANING_POOLS.RU);
+        ukMid = findNextGroupIndex(r.uk, FAIR_CLEANING_POOLS.UK);
+        deMid = findNextGroupIndex(r.de, FAIR_CLEANING_POOLS.DE);
+      }
 
       for (let i = startIndex; i < scheduleRows.length; i++) {
         const row = scheduleRows[i];
+        const targetCong = HAUPTREINIGUNG_CONGREGATION_SEQUENCE[i % HAUPTREINIGUNG_CONGREGATION_SEQUENCE.length];
 
-        const currentRu = FAIR_CLEANING_POOLS.RU[ruIdx % FAIR_CLEANING_POOLS.RU.length];
-        const currentUk = FAIR_CLEANING_POOLS.UK[ukIdx % FAIR_CLEANING_POOLS.UK.length];
-        const currentDe = FAIR_CLEANING_POOLS.DE[deIdx % FAIR_CLEANING_POOLS.DE.length];
+        // Exakte 14-Schritt-Verteilung: jede der 14 Hall-Gruppen genau 1x
+        let hauptGroup;
+        if (targetCong === 'DE') { hauptGroup = FAIR_CLEANING_POOLS.DE[deDone % FAIR_CLEANING_POOLS.DE.length]; deDone++; }
+        else if (targetCong === 'RU') { hauptGroup = FAIR_CLEANING_POOLS.RU[ruDone % FAIR_CLEANING_POOLS.RU.length]; ruDone++; }
+        else { hauptGroup = FAIR_CLEANING_POOLS.UK[ukDone % FAIR_CLEANING_POOLS.UK.length]; ukDone++; }
 
-        // Sprachsäulen strikt isoliert belegen
-        row.ru = currentRu;
-        row.uk = currentUk;
-        row.de = currentDe;
+        // Sprachsäulen: jede nur ihre eigenen Gruppen (unabhängiger Zyklus)
+        const currentRu = FAIR_CLEANING_POOLS.RU[ruMid % FAIR_CLEANING_POOLS.RU.length];
+        const currentUk = FAIR_CLEANING_POOLS.UK[ukMid % FAIR_CLEANING_POOLS.UK.length];
+        const currentDe = FAIR_CLEANING_POOLS.DE[deMid % FAIR_CLEANING_POOLS.DE.length];
 
-        // Zuständiges Zusammenkunft für die Hauptreinigung diese Woche
-        const hostCongregation = HAUPTREINIGUNG_CONGREGATION_SEQUENCE[cycleStep % HAUPTREINIGUNG_CONGREGATION_SEQUENCE.length];
-
-        // PAIRING INVARIANT: Wochenende = exakt dieselbe Gruppe wie unter der Woche
-        if (hostCongregation === 'RU') {
-          row.main = currentRu;
-        } else if (hostCongregation === 'UK') {
-          row.main = currentUk;
+        // PAIRING INVARIANT: die Wochen-Gruppe des zuständigen Zusammenkunfts
+        // wird auf die Hauptreinigung gekoppelt (keine "fremden" Gruppen am WE).
+        if (targetCong === 'DE') {
+          row.ru = currentRu;
+          row.uk = currentUk;
+          row.de = hauptGroup;
+          row.main = hauptGroup;
+        } else if (targetCong === 'RU') {
+          row.de = currentDe;
+          row.uk = currentUk;
+          row.ru = hauptGroup;
+          row.main = hauptGroup;
         } else {
-          row.main = currentDe;
+          row.de = currentDe;
+          row.ru = currentRu;
+          row.uk = hauptGroup;
+          row.main = hauptGroup;
         }
 
-        ruIdx++;
-        ukIdx++;
-        deIdx++;
-        cycleStep++;
+        ruMid++;
+        ukMid++;
+        deMid++;
       }
 
       return scheduleRows;
