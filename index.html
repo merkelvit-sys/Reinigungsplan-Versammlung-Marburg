@@ -1248,6 +1248,16 @@
         <div class="flex flex-wrap gap-2">
           <button 
             type="button" 
+            onclick="closeRotationModal(); handleAutoRotateClick();" 
+            class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white rounded-xl font-bold transition text-xs flex items-center gap-1.5 min-h-[42px] shadow-md"
+            title="Gesamte Tabelle fair rotieren – Hauptreinigung (WE) gekoppelt mit der Wochen-Gruppe"
+          >
+            <i class="fa-solid fa-arrows-rotate"></i>
+            <span>Faire Autorotation</span>
+          </button>
+
+          <button 
+            type="button" 
             onclick="applyRotationToTableLocally()" 
             class="px-4 py-2.5 bg-slate-200 hover:bg-slate-300 active:bg-slate-400 text-slate-800 rounded-xl font-bold transition text-xs flex items-center gap-1.5 min-h-[42px]"
             title="Setzt die Rotation in die Bearbeitungstabelle ein zur Überprüfung"
@@ -4433,6 +4443,106 @@
       closeRotationModal();
       
       showToast('Rotation in Tabelle eingesetzt! Zum Speichern auf "In Google Sheets speichern" klicken.');
+    }
+
+    // =========================================================================
+    // FAIRE AUTOROTATION (Budi <-> Wochenende gekoppelt)
+    // Nutzt die SSOT-Pools (FAIR_CLEANING_POOLS) und die 14-Schritt-Matrix
+    // (HAUPTREINIGUNG_CONGREGATION_SEQUENCE) aus dem Rotations-Modul.
+    // =========================================================================
+    function findNextGroupIndex(currentVal, pool) {
+      if (!currentVal) return 0;
+      const clean = String(currentVal).toLowerCase().trim();
+      const foundIdx = pool.findIndex(item =>
+        item.toLowerCase().includes(clean) || clean.includes(item.toLowerCase())
+      );
+      return (foundIdx === -1) ? 0 : (foundIdx + 1) % pool.length;
+    }
+
+    /**
+     * Wendet eine deterministische, faire Rotation auf den übergebenen Plan an.
+     * Jede Spalte zykliert strikt ihre eigene Sprachgruppe; die Hauptreinigung
+     * (WE) wird der Spalte der Woche zugeordnet und mit deren Wochen-Gruppe
+     * gekoppelt (Pairing Invariant).
+     * @param {Array} scheduleRows - Zeilen (z.B. scheduleData der Admin-Tabelle)
+     * @param {number} startIndex - Index ab dem rotiert wird (Standard 0)
+     * @returns {Array} Aktualisierter Datenarray
+     */
+    function applyFairAutoRotation(scheduleRows, startIndex = 0) {
+      if (!scheduleRows || scheduleRows.length === 0) {
+        showToast("Keine Zeilen für die Rotation vorhanden.", "error");
+        return scheduleRows;
+      }
+
+      // Pointer Auto-Discovery: Startpositionen aus der Vorzeile übernehmen
+      let ruIdx = 0, ukIdx = 0, deIdx = 0;
+      if (startIndex > 0 && scheduleRows[startIndex - 1]) {
+        const prev = scheduleRows[startIndex - 1];
+        ruIdx = findNextGroupIndex(prev.ru, FAIR_CLEANING_POOLS.RU);
+        ukIdx = findNextGroupIndex(prev.uk, FAIR_CLEANING_POOLS.UK);
+        deIdx = findNextGroupIndex(prev.de, FAIR_CLEANING_POOLS.DE);
+      }
+
+      let cycleStep = startIndex % HAUPTREINIGUNG_CONGREGATION_SEQUENCE.length;
+
+      for (let i = startIndex; i < scheduleRows.length; i++) {
+        const row = scheduleRows[i];
+
+        const currentRu = FAIR_CLEANING_POOLS.RU[ruIdx % FAIR_CLEANING_POOLS.RU.length];
+        const currentUk = FAIR_CLEANING_POOLS.UK[ukIdx % FAIR_CLEANING_POOLS.UK.length];
+        const currentDe = FAIR_CLEANING_POOLS.DE[deIdx % FAIR_CLEANING_POOLS.DE.length];
+
+        // Sprachsäulen strikt isoliert belegen
+        row.ru = currentRu;
+        row.uk = currentUk;
+        row.de = currentDe;
+
+        // Zuständiges Zusammenkunft für die Hauptreinigung diese Woche
+        const hostCongregation = HAUPTREINIGUNG_CONGREGATION_SEQUENCE[cycleStep % HAUPTREINIGUNG_CONGREGATION_SEQUENCE.length];
+
+        // PAIRING INVARIANT: Wochenende = exakt dieselbe Gruppe wie unter der Woche
+        if (hostCongregation === 'RU') {
+          row.main = currentRu;
+        } else if (hostCongregation === 'UK') {
+          row.main = currentUk;
+        } else {
+          row.main = currentDe;
+        }
+
+        ruIdx++;
+        ukIdx++;
+        deIdx++;
+        cycleStep++;
+      }
+
+      return scheduleRows;
+    }
+
+    /**
+     * Klick-Handler für die "Autorotation"-Schaltfläche: füllt die gesamte
+     * Admin-Tabelle fair und zeigt sie sofort im Planungs-Zentrale an.
+     */
+    function handleAutoRotateClick() {
+      try {
+        if (typeof scheduleData !== 'undefined' && Array.isArray(scheduleData)) {
+          scheduleData = applyFairAutoRotation(scheduleData, 0);
+
+          if (typeof renderAdminTable === 'function') {
+            renderAdminTable();
+          } else if (typeof render === 'function') {
+            render();
+          }
+          applyAllFilters();
+          updatePersonalBanner();
+
+          showToast("Faire Autorotation erfolgreich angewendet!");
+        } else {
+          showToast("Daten nicht geladen.", "error");
+        }
+      } catch (err) {
+        console.error("Fehler bei der Autorotation:", err);
+        showToast("Fehler bei der Rotation: " + err.message, "error");
+      }
     }
 
     async function executeRotationAndSave() {
