@@ -1,13 +1,18 @@
+// ============================================================================
 // Unified Service Worker for Reinigungsplan Marburg (PWA + OneSignal Web Push)
+// OneSignal SDK wird strikt synchron im ersten Auswertungs-Tick importiert,
+// damit dessen Event-Handler (message/push/notificationclick) vor allem
+// anderen Code registriert werden.
+// ============================================================================
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 
-const CACHE_NAME = 'reinigungsplan-marburg-v12';
+const CACHE_NAME = 'reinigungsplan-v2026.1';
 const STATIC_ASSETS = [
-  './',
-  './index.html',
-  './style.css',
-  './manifest.json',
-  './icon.svg'
+  '/',
+  '/index.html',
+  '/style.css',
+  '/manifest.json',
+  '/icon.svg'
 ];
 
 // Install: Pre-cache local core assets & activate immediately
@@ -46,8 +51,14 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(event.request.url);
 
-  // Ignore cross-origin requests (CDNs, Google Apps Script API, fonts) and OneSignal workers
-  if (url.origin !== self.location.origin || url.pathname.includes('OneSignal') || url.pathname.includes('onesignal')) {
+  // Ignore cross-origin requests (CDNs, Google Apps Script API, OneSignal)
+  if (
+    url.origin !== self.location.origin ||
+    url.pathname.includes('OneSignal') ||
+    url.pathname.includes('onesignal') ||
+    url.hostname.includes('script.google.com') ||
+    url.hostname.includes('googleapis.com')
+  ) {
     return;
   }
 
@@ -64,7 +75,7 @@ self.addEventListener('fetch', (event) => {
           }
           return networkResponse;
         })
-        .catch(() => caches.match(event.request).then(cached => cached || caches.match('./index.html')))
+        .catch(() => caches.match(event.request).then(cached => cached || caches.match('/index.html')))
     );
     return;
   }
@@ -87,4 +98,11 @@ self.addEventListener('fetch', (event) => {
       return cachedResponse || fetchPromise;
     })
   );
+});
+
+// Synchronous root-level message handler (no setTimeout/async wrappers)
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.action === 'skipWaiting') {
+    self.skipWaiting();
+  }
 });

@@ -34,7 +34,10 @@
         await OneSignal.init({
           appId: "aedd7054-ee01-4e41-b992-5d5a94a4ab4c",
           allowLocalhostAsSecureOrigin: true,
-          autoResubscribe: false
+          autoResubscribe: false,
+          // Einheitlicher Worker: OneSignal nutzt unseren sw.js (scope "/")
+          serviceWorkerPath: "sw.js",
+          serviceWorkerParam: { scope: "/" }
         });
 
         // Synchronisiere bestehende Gruppe und Sprache
@@ -2179,17 +2182,9 @@
     const groupBtnLabel = document.getElementById('groupBtnLabel');
     const myShiftIcsBtn = document.getElementById('myShiftIcsBtn');
 
-    // Service Worker Registration
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('./sw.js')
-          .then(reg => {
-            console.log('SW registriert:', reg.scope);
-            reg.update();
-          })
-          .catch(err => console.warn('SW fehlgeschlagen:', err));
-      });
-    }
+    // Hinweis: Die Service-Worker-Registrierung erfolgt ausschließlich über das
+    // OneSignal SDK (serviceWorkerPath: "sw.js", scope "/"), um Konflikte durch
+    // eine parallele Registrierung zu vermeiden.
 
     // PWA Install Handlers
     window.addEventListener('beforeinstallprompt', (e) => {
