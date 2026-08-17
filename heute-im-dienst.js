@@ -248,7 +248,7 @@
       const primary = services[0];
       const meta = TYPE_LABEL[primary.col];
       const extra = services.slice(1).map(s => escapeHtml(getCell(week, s.col))).join(' · ');
-      b.className = 'bg-gradient-to-r from-fuchsia-600 via-indigo-600 to-cyan-500 text-white shadow-lg';
+      b.className = 'bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white shadow-lg';
       b.innerHTML = `
         <div class="max-w-6xl mx-auto px-4 py-3 flex items-center gap-3">
           <div class="shrink-0 w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center border border-white/30">
@@ -283,10 +283,10 @@
     } else {
       label = 'Keine weiteren Termine geplant.';
     }
-    b.className = 'bg-slate-800 text-slate-200 border-b border-slate-700';
+    b.className = 'bg-indigo-50 text-slate-800 border-b border-indigo-100';
     b.innerHTML = `
       <div class="max-w-6xl mx-auto px-4 py-2.5 flex items-center gap-3 text-sm">
-        <i class="fa-solid fa-moon text-indigo-300"></i>
+        <i class="fa-solid fa-moon text-indigo-400"></i>
         <span class="flex-1 min-w-0">${escapeHtml(T.noService)} ${label}</span>
       </div>`;
     b.classList.remove('hidden');

@@ -813,10 +813,15 @@ html.dark .bg-gradient-to-br {
   color: #e2e8f0 !important;
 }
 
-/* "Heute im Dienst" widget: stays a readable dark accent bar in dark mode
-   (light text on slate), never dark-on-dark. */
-html.dark #heuteImDienst.bg-slate-800 {
-  background-color: rgba(30, 41, 59, 0.92) !important;
+/* "Heute im Dienst" widget — no-service state adapts to the theme:
+   light = soft indigo card with dark text, dark = slate with light text.
+   The active (gradient) state stays a brand accent in both themes. */
+html.dark #heuteImDienst.bg-indigo-50 {
+  background-color: #1e293b !important;
   color: #f1f5f9 !important;
+  border-color: #334155 !important;
+}
+html.dark #heuteImDienst .fa-moon {
+  color: #a5b4fc !important;
 }
 
