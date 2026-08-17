@@ -105,6 +105,10 @@
         <button onclick="openPinModal()" class="sm:hidden p-2 text-indigo-200 hover:text-white active:bg-white/10 rounded-lg" title="Admin">
           <i class="fa-solid fa-lock text-sm"></i>
         </button>
+        <!-- Mobil: Theme (Hell/Dunkel) -->
+        <button onclick="toggleTheme()" class="sm:hidden theme-toggle-btn p-2 text-indigo-200 hover:text-white active:bg-white/10 rounded-lg" title="Design wechseln">
+          <i class="fa-solid fa-moon text-sm"></i>
+        </button>
         <!-- Mobil: Drucken -->
         <button onclick="window.print()" class="sm:hidden p-2 text-indigo-200 hover:text-white active:bg-white/10 rounded-lg" title="Drucken">
           <i class="fa-solid fa-print text-sm"></i>
@@ -140,6 +144,15 @@
           <button onclick="setLanguage('ru')" id="langBtnRu" class="px-2 py-1 rounded-lg transition text-indigo-200 hover:text-white">🇷🇺 RU</button>
           <button onclick="setLanguage('uk')" id="langBtnUk" class="px-2 py-1 rounded-lg transition text-indigo-200 hover:text-white">🇺🇦 UK</button>
         </div>
+
+        <!-- Desktop: Theme (Hell/Dunkel) -->
+        <button
+          onclick="toggleTheme()"
+          class="theme-toggle-btn hidden sm:flex p-2.5 bg-white/10 hover:bg-white/20 text-indigo-200 hover:text-white rounded-xl text-sm transition shrink-0"
+          title="Design wechseln"
+        >
+          <i class="fa-solid fa-moon text-sm"></i>
+        </button>
 
         <!-- Desktop: Checkliste + Admin -->
         <button 
@@ -417,7 +430,7 @@
       <i class="fa-solid fa-user-tag text-base"></i>
       <span id="navTextGroup" class="text-[10px] font-semibold">Gruppe</span>
     </button>
-    <button onclick="shareCurrentWeek()" class="flex flex-col items-center gap-0.5 text-emerald-600 active:text-emerald-800 min-w-[56px]">
+    <button onclick="shareAppLink()" class="flex flex-col items-center gap-0.5 text-emerald-600 active:text-emerald-800 min-w-[56px]">
       <i class="fa-solid fa-share-nodes text-base"></i>
       <span id="navTextShare" class="text-[10px] font-semibold">Teilen</span>
     </button>
@@ -1725,6 +1738,13 @@
         navChecklist: "Checkliste",
         navRefresh: "Aktualisieren",
 
+        // Theme & Share
+        themeToggle: "Design wechseln",
+        linkCopied: "Link kopiert!",
+        weekCopied: "Woche {kw} in Zwischenablage kopiert!",
+        appShareTitle: "Reinigungsplan Versammlung Marburg",
+        appShareText: "Aktueller Reinigungsplan der Versammlung Marburg",
+
         // Checklist
         checklistTitle: "Reinigung-Checkliste",
         checklistSubtitle: "Aufgabenplan für den Saal",
@@ -1829,6 +1849,13 @@
         navChecklist: "Чек-лист",
         navRefresh: "Обновить",
 
+        // Theme & Share
+        themeToggle: "Сменить тему",
+        linkCopied: "Ссылка скопирована!",
+        weekCopied: "Неделя {kw} скопирована в буфер обмена!",
+        appShareTitle: "График уборки — Собрание Марбург",
+        appShareText: "Актуальный график уборки Собрания Марбург",
+
         // Checklist
         checklistTitle: "Чек-лист уборки",
         checklistSubtitle: "Список задач по уборке Зала Царства",
@@ -1932,6 +1959,13 @@
         navShare: "Поділитися",
         navChecklist: "Чек-лист",
         navRefresh: "Оновити",
+
+        // Theme & Share
+        themeToggle: "Змінити тему",
+        linkCopied: "Посилання скопійовано!",
+        weekCopied: "Тиждень {kw} скопійовано в буфер обміну!",
+        appShareTitle: "Графік прибирання — Збір Марбург",
+        appShareText: "Актуальний графік прибирання Збору Марбург",
 
         // Checklist
         checklistTitle: "Чек-лист прибирання",
@@ -2203,6 +2237,9 @@
       // Re-render views
       applyAllFilters();
       updatePersonalBanner();
+
+      // Keep theme-toggle tooltip in sync with the active language
+      if (document.documentElement.classList.contains('dark')) applyTheme(true);
     }
 
     let scheduleData = [];
@@ -2447,35 +2484,96 @@
       }
     }
 
+    // ----- Robust Web Share Pipeline -----
+    // Native system share dialog; graceful clipboard fallback when the Web
+    // Share API is unsupported or the user dismisses the dialog. Returns true
+    // when content was shared/copied, false when the user cancelled.
+    async function webShare(payload, fallbackToast) {
+      const data = {};
+      if (payload.title) data.title = payload.title;
+      if (payload.text) data.text = payload.text;
+      if (payload.url) data.url = payload.url;
+
+      if (navigator.share) {
+        try {
+          await navigator.share(data);
+          return true;
+        } catch (err) {
+          if (err && err.name === 'AbortError') return false;
+        }
+      }
+
+      const toCopy = payload.copyText || payload.url || payload.text || '';
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(toCopy);
+          showToast(fallbackToast || t('linkCopied'));
+          return true;
+        }
+      } catch (e) { /* fall through */ }
+
+      showToast(toCopy); // last resort: surface the link/text
+      return false;
+    }
+
+    // Contextual sharing: a single week's structured duty text.
     async function shareWeekItem(kwNumber) {
       const item = scheduleData.find(d => d.kwNumber === kwNumber || d.kw === `KW ${kwNumber}` || String(d.kw).includes(String(kwNumber)));
       if (!item) return;
 
       const text = buildShareMessage(item);
+      await webShare(
+        {
+          title: `Reinigungsplan ${item.kw}`,
+          text: text,
+          url: window.location.href,
+          copyText: text
+        },
+        t('weekCopied', { kw: item.kw })
+      );
+    }
 
-      if (navigator.share && /mobile|android|iphone|ipad/i.test(navigator.userAgent)) {
-        try {
-          await navigator.share({
-            title: `Reinigungsplan ${item.kw}`,
-            text: text
-          });
-          return;
-        } catch (err) {
-          if (err.name !== 'AbortError') console.warn(err);
-          else return;
-        }
-      }
-
-      try {
-        await navigator.clipboard.writeText(text);
-        showToast(`Text für ${item.kw} in Zwischenablage kopiert!`);
-      } catch (e) {
-        showToast('Kopieren fehlgeschlagen', 'fa-triangle-exclamation', true);
-      }
+    // Global sharing: the whole PWA app link (bottom navbar "Teilen").
+    async function shareAppLink() {
+      await webShare(
+        {
+          title: t('appShareTitle'),
+          text: t('appShareText'),
+          url: location.origin + location.pathname
+        },
+        t('linkCopied')
+      );
     }
 
     function shareCurrentWeek() {
       shareWeekItem(currentCalculatedKW);
+    }
+
+    // ----- Theme (Light / Dark) -----
+    const THEME_KEY = 'reinigungsplan_theme_v1';
+    function applyTheme(isDark) {
+      const root = document.documentElement;
+      root.classList.toggle('dark', isDark);
+      root.style.colorScheme = isDark ? 'dark' : 'light';
+      const meta = document.querySelector('meta[name="theme-color"]');
+      if (meta) meta.setAttribute('content', isDark ? '#0f172a' : '#4338ca');
+      const label = t('themeToggle');
+      document.querySelectorAll('.theme-toggle-btn').forEach(btn => {
+        const icon = btn.querySelector('i');
+        if (icon) icon.className = isDark ? 'fa-solid fa-sun text-sm' : 'fa-solid fa-moon text-sm';
+        btn.setAttribute('title', label);
+        btn.setAttribute('aria-label', label);
+      });
+      try { localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light'); } catch (e) {}
+    }
+    function toggleTheme() {
+      applyTheme(!document.documentElement.classList.contains('dark'));
+    }
+    function initTheme() {
+      let saved = null;
+      try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
+      const prefersDark = !!(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      applyTheme(saved ? saved === 'dark' : prefersDark);
     }
 
     function downloadIcsForWeek(kwNumber) {
@@ -4813,6 +4911,7 @@
 
     document.addEventListener('DOMContentLoaded', () => {
       applyLanguage(currentLang);
+      initTheme();
       loadSchedule();
       if (FOCUS_HEUTE) {
         applyHeuteFocus();

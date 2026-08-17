@@ -687,3 +687,114 @@ table {
   }
 }
 
+/* ============================================================
+   Dark Mode (toggled via .dark on <html>)
+   Partial theme: recolors the main app surfaces. The indigo
+   header / slate-900 footer bars stay dark by design.
+   ============================================================ */
+html.dark {
+  color-scheme: dark;
+}
+html.dark body {
+  background-color: #0f172a !important;
+  color: #e2e8f0 !important;
+}
+html.dark .bg-white {
+  background-color: #1e293b !important;
+  color: #e2e8f0 !important;
+}
+html.dark .bg-slate-50 {
+  background-color: #0f172a !important;
+}
+html.dark .bg-slate-100 {
+  background-color: #1e293b !important;
+}
+html.dark .bg-slate-200 {
+  background-color: #334155 !important;
+}
+html.dark .border-slate-100,
+html.dark .border-slate-200,
+html.dark .border-slate-300 {
+  border-color: #334155 !important;
+}
+html.dark .text-slate-900,
+html.dark .text-slate-800,
+html.dark .text-slate-700,
+html.dark .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+html.dark .text-slate-500,
+html.dark .text-slate-400 {
+  color: #94a3b8 !important;
+}
+html.dark .text-slate-300 {
+  color: #cbd5e1 !important;
+}
+html.dark .bg-indigo-50 {
+  background-color: #312e81 !important;
+  color: #c7d2fe !important;
+}
+html.dark .bg-emerald-50 {
+  background-color: #064e3b !important;
+  color: #a7f3d0 !important;
+}
+html.dark .bg-amber-50 {
+  background-color: #78350f !important;
+  color: #fcd34d !important;
+}
+html.dark .text-indigo-700,
+html.dark .text-indigo-600 {
+  color: #a5b4fc !important;
+}
+html.dark .text-emerald-700,
+html.dark .text-emerald-600,
+html.dark .text-emerald-800 {
+  color: #6ee7b7 !important;
+}
+html.dark .text-amber-900 {
+  color: #fcd34d !important;
+}
+html.dark .text-amber-500 {
+  color: #fbbf24 !important;
+}
+html.dark .bg-indigo-600 {
+  background-color: #4f46e5 !important;
+}
+html.dark .bg-emerald-500,
+html.dark .bg-emerald-600 {
+  background-color: #059669 !important;
+}
+html.dark .chip-btn {
+  background-color: #1e293b !important;
+  color: #cbd5e1 !important;
+  border-color: #334155 !important;
+}
+html.dark #mobileBottomBar {
+  background-color: rgba(15, 23, 42, 0.95) !important;
+  border-top-color: #334155 !important;
+}
+html.dark #mobileBottomBar .text-indigo-700 {
+  color: #a5b4fc !important;
+}
+html.dark #mobileBottomBar .text-slate-600,
+html.dark #mobileBottomBar .text-slate-500 {
+  color: #94a3b8 !important;
+}
+html.dark .shadow-lg,
+html.dark .shadow-xl,
+html.dark .shadow-2xl {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5) !important;
+}
+html.dark table,
+html.dark td,
+html.dark th {
+  border-color: #334155 !important;
+}
+html.dark tr:nth-child(even) {
+  background-color: #1e293b !important;
+}
+html.dark .bg-white\/95,
+html.dark .bg-white\/90 {
+  background-color: #1e293b !important;
+}
+

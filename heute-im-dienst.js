@@ -266,11 +266,6 @@
             class="shrink-0 px-3 py-2 min-h-[44px] bg-white/15 hover:bg-white/30 active:bg-white/40 rounded-xl text-xs font-bold border border-white/30 transition flex items-center gap-1.5">
             <i class="fa-solid fa-bell"></i><span class="hidden sm:inline">${escapeHtml(T.remind)}</span>
           </button>
-          <button onclick="HeuteImDienst.shareFocus()"
-            class="shrink-0 px-3 py-2 min-h-[44px] bg-white/15 hover:bg-white/30 active:bg-white/40 rounded-xl text-xs font-bold border border-white/30 transition flex items-center gap-1.5"
-            title="${escapeHtml(T.pin)}">
-            <i class="fa-solid fa-link"></i><span class="hidden sm:inline">${escapeHtml(T.pin)}</span>
-          </button>
         </div>`;
       b.classList.remove('hidden');
       return;
@@ -293,11 +288,6 @@
       <div class="max-w-6xl mx-auto px-4 py-2.5 flex items-center gap-3 text-sm">
         <i class="fa-solid fa-moon text-indigo-300"></i>
         <span class="flex-1 min-w-0">${escapeHtml(T.noService)} ${label}</span>
-        <button onclick="HeuteImDienst.shareFocus()"
-          class="shrink-0 px-2.5 py-1.5 min-h-[36px] bg-white/10 hover:bg-white/20 rounded-lg text-xs font-semibold border border-white/20 transition flex items-center gap-1.5"
-          title="${escapeHtml(T.pin)}">
-          <i class="fa-solid fa-link"></i><span class="hidden sm:inline">${escapeHtml(T.pin)}</span>
-        </button>
       </div>`;
     b.classList.remove('hidden');
   }
@@ -337,24 +327,6 @@
     } catch (e) { showToast('Erinnerung: ' + msg); }
   }
 
-  // iOS (Safari) fallback: manifest shortcuts are Android-only, so let the
-  // user share/bookmark the deep link that opens the app in focus mode.
-  function shareFocus() {
-    const url = location.origin + location.pathname + '?view=heute';
-    const title = 'Reinigungsplan Marburg – Heute im Dienst';
-    try {
-      if (navigator.share) {
-        navigator.share({ title: title, url: url }).catch(() => {});
-      } else if (navigator.clipboard && navigator.clipboard.writeText) {
-        navigator.clipboard.writeText(url)
-          .then(() => showToast('Link «Heute» in Zwischenablage kopiert!'))
-          .catch(() => showToast(url));
-      } else {
-        showToast(url);
-      }
-    } catch (e) { showToast(url); }
-  }
-
   document.addEventListener('reinigungsplan:rendered', update);
   document.addEventListener('DOMContentLoaded', () => { ensureBanner(); update(); });
 
@@ -370,5 +342,5 @@
   // Keep "today" fresh across midnight
   setInterval(update, 60 * 1000);
 
-  window.HeuteImDienst = { update, remind, shareFocus, renderToday, getCell };
+  window.HeuteImDienst = { update, remind, renderToday, getCell };
 })();
