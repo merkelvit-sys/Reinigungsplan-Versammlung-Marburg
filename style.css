@@ -798,3 +798,25 @@ html.dark .bg-white\/90 {
   background-color: #1e293b !important;
 }
 
+/* Contrast safety net: any dark surface always keeps light text, so a
+   dark container can never end up with dark (invisible) text in either
+   theme. This is the semantic "dark:-token" guarantee for the compiled
+   Tailwind build (no JIT dark: variants are shipped). */
+html.dark .bg-slate-700,
+html.dark .bg-slate-800,
+html.dark .bg-slate-900,
+html.dark .bg-indigo-700,
+html.dark .bg-indigo-800,
+html.dark .bg-indigo-900,
+html.dark .bg-gradient-to-r,
+html.dark .bg-gradient-to-br {
+  color: #e2e8f0 !important;
+}
+
+/* "Heute im Dienst" widget: stays a readable dark accent bar in dark mode
+   (light text on slate), never dark-on-dark. */
+html.dark #heuteImDienst.bg-slate-800 {
+  background-color: rgba(30, 41, 59, 0.92) !important;
+  color: #f1f5f9 !important;
+}
+

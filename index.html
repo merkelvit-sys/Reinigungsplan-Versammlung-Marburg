@@ -2567,8 +2567,14 @@
       try { localStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light'); } catch (e) {}
     }
     function toggleTheme() {
-      applyTheme(!document.documentElement.classList.contains('dark'));
+      const next = !document.documentElement.classList.contains('dark');
+      applyTheme(next);
+      // Seamless re-render of the dynamic widget DOM without page reload
+      if (typeof applyAllFilters === 'function') applyAllFilters();
+      if (typeof updatePersonalBanner === 'function') updatePersonalBanner();
+      if (window.HeuteImDienst) window.HeuteImDienst.update();
     }
+    window.toggleDarkMode = toggleTheme;
     function initTheme() {
       let saved = null;
       try { saved = localStorage.getItem(THEME_KEY); } catch (e) {}
