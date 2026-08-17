@@ -1453,6 +1453,60 @@
     const CHECKLIST_KEY = 'reinigungsplan_checklist_state_v2';
     const GROUP_POOLS_KEY = 'reinigungsplan_custom_group_pools_v3';
     const MEETING_DAYS_KEY = 'reinigungsplan_meeting_days_v2';
+    const CACHE_META_KEY = 'reinigungsplan_cache_meta_v1';
+
+    // =========================================================================
+    // CACHE-SYNC MODUL (7-TAGE TTL & ZERO-PAYLOAD CHECK)
+    // Stale-While-Revalidate: sofortiger Render aus dem lokalen Cache,
+    // Hintergrund-Sync nur wenn der 7-Tage-TTL abgelaufen ist. Ein
+    // bedingter If-None-Match-Request verhindert das erneute Herunterladen
+    // des gesamten Datensatzes, sofern der Server einen ETag liefert.
+    // =========================================================================
+    const CacheSyncConfig = {
+      CACHE_KEY: CACHE_KEY,
+      META_KEY: CACHE_META_KEY,
+      CHECK_INTERVAL_MS: 7 * 24 * 60 * 60 * 1000 // 7 Tage
+    };
+
+    const CacheSyncManager = {
+      getMeta() {
+        try {
+          const raw = localStorage.getItem(CacheSyncConfig.META_KEY);
+          return raw ? JSON.parse(raw) : null;
+        } catch (e) {
+          return null;
+        }
+      },
+      setMeta(meta) {
+        try { localStorage.setItem(CacheSyncConfig.META_KEY, JSON.stringify(meta)); } catch (e) {}
+      },
+      // Aktualisiert nur den Prüfzeitstempel (kein Payload-Download nötig)
+      touchMeta() {
+        const meta = this.getMeta() || { lastChecked: 0 };
+        meta.lastChecked = Date.now();
+        this.setMeta(meta);
+      },
+      // Speichert frische Daten + Metadaten (ETag zur Revalidierung)
+      save(result, etag) {
+        try {
+          localStorage.setItem(CacheSyncConfig.CACHE_KEY, JSON.stringify(result.data));
+          const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          localStorage.setItem(CACHE_TIMESTAMP_KEY, now);
+          this.setMeta({
+            lastChecked: Date.now(),
+            etag: etag || null,
+            updatedAt: new Date().toISOString()
+          });
+        } catch (e) {
+          console.error('Cache-Speicherfehler:', e);
+        }
+      },
+      isTtlValid() {
+        const meta = this.getMeta();
+        if (!meta || !meta.lastChecked) return false;
+        return (Date.now() - meta.lastChecked) < CacheSyncConfig.CHECK_INTERVAL_MS;
+      }
+    };
 
     const DEFAULT_MEETING_DAYS = {
       ru: { midweek: "Di", weekend: "So" },
@@ -2649,6 +2703,7 @@
     }
 
     async function loadSchedule(force = false) {
+      // 1. Sofortiger Render aus dem lokalen Cache (0 ms, offline-fähig)
       const cached = localStorage.getItem(CACHE_KEY);
       const cachedTime = localStorage.getItem(CACHE_TIMESTAMP_KEY);
 
@@ -2662,50 +2717,98 @@
         } catch (e) {}
       }
 
-      if (SCRIPT_URL && SCRIPT_URL !== 'DEINE_APPS_SCRIPT_WEB_APP_URL') {
+      if (!SCRIPT_URL || SCRIPT_URL === 'DEINE_APPS_SCRIPT_WEB_APP_URL') return;
+
+      // 2. TTL-Gate: innerhalb von 7 Tagen kein Netzwerk-Request nötig
+      if (!force && CacheSyncManager.isTtlValid()) {
+        const meta = CacheSyncManager.getMeta();
+        const daysLeft = Math.ceil(
+          (CacheSyncConfig.CHECK_INTERVAL_MS - (Date.now() - (meta.lastChecked || 0))) / 86400000
+        );
+        console.log(`⚡ Cache aktuell (TTL). Nächste Prüfung in ~${daysLeft} Tagen.`);
+        return;
+      }
+
+      // 3. Stale-While-Revalidate: bei Ablauf Hintergrund-Sync (nicht blockierend),
+      //    bei manuellem Refresh (force) blockierend warten.
+      if (force) {
+        await syncFromRemote(true);
+      } else {
+        syncFromRemote(false);
+      }
+    }
+
+    /**
+     * Holt Daten vom Backend. Bei unverändertem ETag (304) wird kein Payload
+     * geladen; der lokale Cache bleibt erhalten und nur der TTL verlängert.
+     * @param {boolean} showLoading - Lade-UI anzeigen (manueller Refresh)
+     */
+    async function syncFromRemote(showLoading) {
+      if (showLoading) {
         setSyncState('loading');
         refreshIcon.classList.add('fa-spin');
+      }
 
-        try {
-          const response = await fetch(SCRIPT_URL, {
-            method: 'GET',
-            mode: 'cors',
-            cache: force ? 'no-cache' : 'default'
-          });
+      try {
+        const meta = CacheSyncManager.getMeta();
+        const init = {
+          method: 'GET',
+          mode: 'cors',
+          cache: showLoading ? 'no-cache' : 'default'
+        };
+        // Zero-Payload Check: bekannten ETag mitschicken, falls vorhanden
+        if (meta && meta.etag) {
+          init.headers = { 'If-None-Match': meta.etag };
+        }
 
-          if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const response = await fetch(SCRIPT_URL, init);
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+
+        let schedule;
+        let changed = false;
+
+        if (response.status === 304) {
+          // Unverändert -> nur Prüfzeitstempel verlängern, Cache behalten
+          CacheSyncManager.touchMeta();
+          schedule = JSON.parse(localStorage.getItem(CACHE_KEY));
+        } else {
           const result = await response.json();
-
-          if (result.status === 'success' && Array.isArray(result.data)) {
-            scheduleData = result.data;
-            const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            localStorage.setItem(CACHE_KEY, JSON.stringify(scheduleData));
-            localStorage.setItem(CACHE_TIMESTAMP_KEY, now);
-
-            // Wochentage aus Google Sheets für alle Nutzer synchronisieren
-            if (result.settings && result.settings.meetingDays) {
-              localStorage.setItem(MEETING_DAYS_KEY, JSON.stringify(result.settings.meetingDays));
-              applyLanguage(currentLang);
-            }
-
-            render(scheduleData);
-            updatePersonalBanner();
-            setSyncState('synced', now);
-            errorBox.classList.add('hidden');
-          } else {
+          if (result.status !== 'success' || !Array.isArray(result.data)) {
             throw new Error(result.message || 'Ungültige Datenstruktur');
           }
-        } catch (err) {
-          console.error("Ladefehler:", err);
-          if (!cached) {
-            errorMessage.textContent = err.message;
-            errorBox.classList.remove('hidden');
+          schedule = result.data;
+          const etag = response.headers.get('ETag') || null;
+          CacheSyncManager.save(result, etag);
+          changed = true;
+
+          // Wochentage aus dem Backend für alle Nutzer synchronisieren
+          if (result.settings && result.settings.meetingDays) {
+            localStorage.setItem(MEETING_DAYS_KEY, JSON.stringify(result.settings.meetingDays));
+            applyLanguage(currentLang);
           }
-          setSyncState('error');
-        } finally {
-          loader.classList.add('hidden');
-          refreshIcon.classList.remove('fa-spin');
         }
+
+        scheduleData = schedule;
+        render(scheduleData);
+        updatePersonalBanner();
+        const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        setSyncState(changed ? 'synced' : 'cached', changed ? now : (localStorage.getItem(CACHE_TIMESTAMP_KEY) || cachedTime));
+        errorBox.classList.add('hidden');
+
+        // Bei Hintergrund-Update den Nutzer informieren
+        if (changed && !showLoading) {
+          showToast('Plan automatisch auf die aktuelle Version aktualisiert!');
+        }
+      } catch (err) {
+        console.error("Ladefehler:", err);
+        if (!localStorage.getItem(CACHE_KEY)) {
+          errorMessage.textContent = err.message;
+          errorBox.classList.remove('hidden');
+        }
+        setSyncState('error');
+      } finally {
+        loader.classList.add('hidden');
+        refreshIcon.classList.remove('fa-spin');
       }
     }
 
