@@ -1520,11 +1520,9 @@
       ru: [
         "Marburg 1 - Andrej Tarantasow",
         "Marburg 2 und 3 - Schewchuk & Ashurov",
-        "Ukrainisch 1 - Petro Hyliuk",
-        "Ukrainisch 2 - Valerij Melnik",
         "Bad Laasphe - Andrej Bauer",
         "Elnhausen - Artur Akopjan",
-        "Daniel Engelbrecht - Andrej Bauer"
+        "Gladenbach - Daniel Engelbrecht"
       ],
       uk: [
         "Ukrainisch 1 - Petro Hyliuk",
@@ -3731,23 +3729,9 @@
       }
 
       if (autoRotate) {
-        const fullList = [...scheduleData, ...newItems];
-        const config = {
-          scope: 'ALL',
-          startKw: scheduleData.length > 0 ? (scheduleData[0].kwNumber || 1) : 1,
-          totalWeeks: fullList.length,
-          startDate: fullList[0].fromDate ? parseGermanDate(fullList[0].fromDate) : new Date().toISOString().slice(0, 10),
-          firstWeekJoint: true,
-          fairQueue: true,
-          customPools: {
-            ru: activeGroupPools.ru || DEFAULT_GROUP_POOLS.ru,
-            uk: activeGroupPools.uk || DEFAULT_GROUP_POOLS.uk,
-            de: activeGroupPools.de || DEFAULT_GROUP_POOLS.de,
-            main: activeGroupPools.main || DEFAULT_GROUP_POOLS.main
-          }
-        };
-        const { schedule } = generateRotationScheduleLocally(config);
-        scheduleData = schedule;
+        // Deterministische, faire Erweiterung (sprachisolierte Säulen +
+        // Hauptreinigungs-Pairing), siehe generateFairScheduleExtension.
+        scheduleData = generateFairScheduleExtension(scheduleData, weeksCount);
       } else {
         scheduleData = [...scheduleData, ...newItems];
       }
@@ -4021,6 +4005,143 @@
       if (!name) return false;
       const n = String(name).trim();
       return /^[1-7]\s|Eucker|Krause|Salzbauer|Faupel|Scherwitzl|Beck/i.test(n);
+    }
+
+    // ==========================================================================
+    // FAIR WEIGHTED ROUND-ROBIN ROTATION ENGINE (SSOT POOLS)
+    // Jede Sprache zykliert ausschließlich ihre eigenen Gruppen; die
+    // Hauptreinigung (WE) wird proportional (7 DE / 5 RU / 2 UK) über 14
+    // Wochen verteilt und mit der jeweiligen Wochen-Gruppe gekoppelt.
+    // ==========================================================================
+    const FAIR_CLEANING_POOLS = {
+      // 5 Gruppen des russischen Zusammenkunfts
+      RU: [
+        "Marburg 1 - Andrej Tarantasow",
+        "Marburg 2 und 3 - Schewchuk & Ashurov",
+        "Bad Laasphe - Andrej Bauer",
+        "Elnhausen - Artur Akopjan",
+        "Gladenbach - Daniel Engelbrecht"
+      ],
+      // 2 Gruppen des ukrainischen Zusammenkunfts
+      UK: [
+        "Ukrainisch 1 - Petro Hyliuk",
+        "Ukrainisch 2 - Valerij Melnik"
+      ],
+      // 7 Gruppen des deutschen Zusammenkunfts
+      DE: [
+        "1 Eucker, Reinhold",
+        "2 Krause Florian",
+        "3 Salzbauer Patrick",
+        "4 Faupel, Lothar",
+        "5 Scherwitzl Oliver",
+        "6 Beck Roland",
+        "7 Krause Benjamin"
+      ]
+    };
+
+    // Faire 14-Wochen-Matrix der Hauptreinigung (proportional zur
+    // Versammlungsgröße: 7 DE, 5 RU, 2 UK).
+    const HAUPTREINIGUNG_CONGREGATION_SEQUENCE = [
+      'DE', 'RU', 'DE', 'UK',
+      'DE', 'RU', 'DE', 'RU',
+      'DE', 'UK', 'DE', 'RU',
+      'DE', 'RU'
+    ];
+
+    function getNextPoolIndex(lastAssignedName, pool) {
+      if (!lastAssignedName) return 0;
+      const cleaned = String(lastAssignedName).toLowerCase();
+      const idx = pool.findIndex(item =>
+        cleaned.includes(item.toLowerCase()) || item.toLowerCase().includes(cleaned)
+      );
+      return idx === -1 ? 0 : (idx + 1) % pool.length;
+    }
+
+    function parseDateSafely(dateStr) {
+      if (!dateStr) return new Date();
+      const parts = dateStr.split('.').map(p => parseInt(p.trim(), 10));
+      if (parts.length >= 2) {
+        const day = parts[0];
+        const month = parts[1] - 1;
+        const year = parts[2] || new Date().getFullYear();
+        return new Date(year, month, day);
+      }
+      return new Date();
+    }
+
+    /**
+     * Erweitert den Plan deterministisch und fair. Jede Spalte erhält nur ihre
+     * eigene Sprachgruppe; die Hauptreinigung wird dem Zusammenkunft der Woche
+     * zugeordnet und mit dessen Wochen-Gruppe gekoppelt (Pairing Invariant).
+     * @param {Array} currentSchedule - Aktueller Tabellendaten
+     * @param {number} weeksToAdd - Anzahl hinzuzufügender Wochen (Standard 14)
+     * @returns {Array} Neuer Datenarray inkl. der neuen Wochen
+     */
+    function generateFairScheduleExtension(currentSchedule, weeksToAdd = 14) {
+      if (!currentSchedule || currentSchedule.length === 0) return [];
+
+      const result = [...currentSchedule];
+      const lastEntry = result[result.length - 1];
+
+      // 1. Fortschrittszeiger aus dem letzten Eintrag übernehmen
+      let ruIndex = getNextPoolIndex(lastEntry.ru, FAIR_CLEANING_POOLS.RU);
+      let ukIndex = getNextPoolIndex(lastEntry.uk, FAIR_CLEANING_POOLS.UK);
+      let deIndex = getNextPoolIndex(lastEntry.de, FAIR_CLEANING_POOLS.DE);
+
+      // Globaler Schritt in der Hauptreinigungs-Matrix
+      let seqStep = result.length % HAUPTREINIGUNG_CONGREGATION_SEQUENCE.length;
+
+      // 2. Basis-Datum (letzter Sonntag) parsen
+      let baseSunday = parseDateSafely(lastEntry.toDate);
+      let currentKw = lastEntry.kwNumber || getISOWeekNumber(new Date());
+
+      // 3. Wochenweise generieren
+      for (let i = 0; i < weeksToAdd; i++) {
+        const nextMonday = new Date(baseSunday);
+        nextMonday.setDate(baseSunday.getDate() + 1);
+
+        const nextSunday = new Date(nextMonday);
+        nextSunday.setDate(nextMonday.getDate() + 6);
+        baseSunday = nextSunday;
+
+        // KW mit Jahresübergang korrekt berechnen
+        currentKw = (currentKw >= 52 && nextMonday.getMonth() === 0) ? 1 : currentKw + 1;
+
+        // Sprachsäulen strikt isoliert belegen
+        const assignedRu = FAIR_CLEANING_POOLS.RU[ruIndex % FAIR_CLEANING_POOLS.RU.length];
+        const assignedUk = FAIR_CLEANING_POOLS.UK[ukIndex % FAIR_CLEANING_POOLS.UK.length];
+        const assignedDe = FAIR_CLEANING_POOLS.DE[deIndex % FAIR_CLEANING_POOLS.DE.length];
+
+        // Zuständiges Zusammenkunft für die Hauptreinigung diese Woche
+        const targetCongregation = HAUPTREINIGUNG_CONGREGATION_SEQUENCE[seqStep % HAUPTREINIGUNG_CONGREGATION_SEQUENCE.length];
+
+        // PAIRING INVARIANT: Wer unter der Woche dient, reinigt auch am WE
+        let assignedMain = assignedDe;
+        if (targetCongregation === 'RU') {
+          assignedMain = assignedRu;
+        } else if (targetCongregation === 'UK') {
+          assignedMain = assignedUk;
+        }
+
+        result.push({
+          id: result.length + 1,
+          kw: `KW ${currentKw}`,
+          kwNumber: currentKw,
+          fromDate: formatShortDate(nextMonday, true),
+          toDate: formatShortDate(nextSunday, true),
+          ru: assignedRu,    // Spalte RU (nur russische Gruppen)
+          uk: assignedUk,    // Spalte UK (nur ukrainische Gruppen)
+          de: assignedDe,    // Spalte DE (nur deutsche Gruppen)
+          main: assignedMain // Spalte Hauptreinigung (gekoppelt mit Zusammenkunft)
+        });
+
+        ruIndex++;
+        ukIndex++;
+        deIndex++;
+        seqStep++;
+      }
+
+      return result;
     }
 
     function generateRotationScheduleLocally(config) {
