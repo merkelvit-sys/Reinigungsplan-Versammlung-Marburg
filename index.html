@@ -247,36 +247,40 @@
     </div>
   </section>
 
-    <!-- Filter Chips Bar (kompakt, horizontal scrollbar) -->
-    <section id="filterChipsBar" class="bg-white border-b border-slate-200/80 shadow-xs">
-      <div class="max-w-6xl mx-auto px-3 sm:px-4 py-1.5 flex items-center gap-2 overflow-x-auto no-scrollbar whitespace-nowrap text-[11px]">
+    <!-- Zwei-Ebenen-Status- und Filterleiste (keine Überlappung) -->
+    <section id="filterChipsBar" class="bg-slate-50 border-b border-slate-200/80 no-print">
+      <!-- Ebene 1: Systemstatus (links) + Sync-Zeit (rechts) -->
+      <div class="max-w-6xl mx-auto px-3 sm:px-4 pt-2 flex items-center justify-between text-[11px]">
+        <div class="flex items-center gap-1.5">
+          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="syncStatusDotM"></span>
+          <span id="syncStatusLabel" class="font-medium text-slate-600">Online</span>
+        </div>
+        <div id="syncStatusTextM" class="text-[10px] text-slate-400 font-medium">Aktualisiert um --:--</div>
+      </div>
+
+      <!-- Ebene 2: Horizontale Filterchips (eigenständige Scroll-Zeile) -->
+      <div class="max-w-6xl mx-auto px-3 sm:px-4 pb-2 pt-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar whitespace-nowrap text-xs">
         <div class="flex items-center gap-1.5 flex-shrink-0" id="filterChips">
-          <button onclick="setFilterChip('ALL')" id="chip-ALL" class="chip-btn px-2.5 py-0.5 rounded-md font-bold bg-indigo-600 text-white shadow-xs shrink-0 transition flex items-center justify-center">
+          <button onclick="setFilterChip('ALL')" id="chip-ALL" class="chip-btn px-3 py-1 rounded-xl font-bold bg-indigo-600 text-white shadow-sm shrink-0 transition flex items-center justify-center">
             <span id="chipAllText">Alle</span>
           </button>
-          <button onclick="setFilterChip('MINE')" id="chip-MINE" class="chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1">
+          <button onclick="setFilterChip('MINE')" id="chip-MINE" class="chip-btn px-3 py-1 rounded-xl font-semibold bg-white text-slate-700 border border-slate-200 shrink-0 transition flex items-center justify-center gap-1">
             <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
             <span id="chipMineText">Meine</span>
           </button>
-          <button onclick="setFilterChip('RU')" id="chip-RU" class="chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
+          <button onclick="setFilterChip('RU')" id="chip-RU" class="chip-btn px-3 py-1 rounded-xl font-semibold bg-white text-slate-700 border border-slate-200 shrink-0 transition flex items-center justify-center">
             <span id="chipRuText">🇷🇺 RU</span>
           </button>
-          <button onclick="setFilterChip('UK')" id="chip-UK" class="chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
+          <button onclick="setFilterChip('UK')" id="chip-UK" class="chip-btn px-3 py-1 rounded-xl font-semibold bg-white text-slate-700 border border-slate-200 shrink-0 transition flex items-center justify-center">
             <span id="chipUkText">🇺🇦 UK</span>
           </button>
-          <button onclick="setFilterChip('DE')" id="chip-DE" class="chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center">
+          <button onclick="setFilterChip('DE')" id="chip-DE" class="chip-btn px-3 py-1 rounded-xl font-semibold bg-white text-slate-700 border border-slate-200 shrink-0 transition flex items-center justify-center">
             <span id="chipDeText">🇩🇪 DE</span>
           </button>
-          <button onclick="setFilterChip('KONGRESS')" id="chip-KONGRESS" class="chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1">
+          <button onclick="setFilterChip('KONGRESS')" id="chip-KONGRESS" class="chip-btn px-3 py-1 rounded-xl font-semibold bg-amber-50 text-amber-900 border border-amber-200 shrink-0 transition flex items-center justify-center gap-1">
             <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
             <span id="chipKongressText">Kongresse</span>
           </button>
-        </div>
-
-        <!-- Sync-Indikator -->
-        <div class="flex items-center gap-1.5 flex-shrink-0 text-slate-500 ml-auto">
-          <span class="w-1.5 h-1.5 rounded-full bg-slate-300 animate-pulse" id="syncStatusDotM"></span>
-          <span id="syncStatusTextM" class="text-[10px]">Synchronisiere...</span>
         </div>
       </div>
     </section>
@@ -342,7 +346,7 @@
   </section>
 
   <!-- Main Content Area -->
-  <main class="max-w-6xl mx-auto p-3.5 sm:p-6 flex-1 w-full flex flex-col min-h-0">
+  <main class="max-w-6xl mx-auto p-3.5 sm:p-6 flex-1 w-full flex flex-col min-h-0 sm:pb-6 [padding-bottom:calc(7rem+env(safe-area-inset-bottom))]">
 
     <!-- Loading Spinner -->
     <div id="loader" class="text-center py-20 flex flex-col items-center justify-center">
@@ -2415,12 +2419,12 @@
     function setFilterChip(chip) {
       activeFilterChip = chip;
       document.querySelectorAll('.chip-btn').forEach(btn => {
-        btn.className = 'chip-btn px-2.5 py-0.5 rounded-md font-semibold bg-slate-100 hover:bg-slate-200 active:bg-slate-300 text-slate-700 shrink-0 transition flex items-center justify-center gap-1';
+        btn.className = 'chip-btn px-3 py-1 rounded-xl font-semibold bg-white text-slate-700 border border-slate-200 shrink-0 transition flex items-center justify-center gap-1';
       });
 
       const activeBtn = document.getElementById(`chip-${chip}`);
       if (activeBtn) {
-        activeBtn.className = 'chip-btn px-2.5 py-0.5 rounded-md font-bold bg-indigo-600 text-white shadow-xs shrink-0 transition flex items-center justify-center gap-1';
+        activeBtn.className = 'chip-btn px-3 py-1 rounded-xl font-bold bg-indigo-600 text-white shadow-sm shrink-0 transition flex items-center justify-center gap-1';
       }
 
       applyAllFilters();
