@@ -2208,6 +2208,68 @@
       return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
     }
 
+    // ==========================================================================
+    // ROBUST DATE PIPELINE
+    // Formatiert jeden Eingabetyp (Date, ISO-String, "DD.MM.YYYY",
+    // "Montag, 22. Juni") fehlerfrei zu "DD.MM.YYYY" bzw. "DD.MM.".
+    // Verhindert TypeError/ReferenceError bei der Plan-Erweiterung.
+    // ==========================================================================
+    const DE_MONTHS = {
+      januar: 0, februar: 1, maerz: 2, märz: 2, april: 3, mai: 4,
+      juni: 5, juli: 6, august: 7, september: 8, oktober: 9,
+      november: 10, dezember: 11
+    };
+
+    function formatShortDate(input, includeYear = true) {
+      if (input === null || input === undefined || input === '') return '';
+
+      let dateObj;
+
+      if (input instanceof Date) {
+        dateObj = input;
+      } else if (typeof input === 'string') {
+        const trimmed = input.trim();
+
+        // Bereits im Format DD.MM.YYYY oder DD.MM.
+        if (/^\d{1,2}\.\d{1,2}(?:\.\d{4})?$/.test(trimmed)) {
+          const parts = trimmed.split('.');
+          const day = String(parseInt(parts[0], 10)).padStart(2, '0');
+          const month = String(parseInt(parts[1], 10)).padStart(2, '0');
+          if (parts[2]) {
+            return includeYear ? `${day}.${month}.${parts[2]}` : `${day}.${month}.`;
+          }
+          return includeYear ? `${day}.${month}.${new Date().getFullYear()}` : `${day}.${month}.`;
+        }
+
+        // Deutsches lokalisiertes Format: "Montag, 22. Juni" / "22. Juni 2026"
+        const deMatch = trimmed.match(/(\d{1,2})\.\s*([A-Za-zäöüÄÖÜ]+)(?:\.?\s*(\d{4}))?/);
+        if (deMatch) {
+          const d = parseInt(deMatch[1], 10);
+          const m = DE_MONTHS[deMatch[2].toLowerCase().replace(/\./g, '')];
+          const y = deMatch[3] ? parseInt(deMatch[3], 10) : new Date().getFullYear();
+          if (m !== undefined) {
+            dateObj = new Date(y, m, d);
+          }
+        }
+
+        if (!dateObj || isNaN(dateObj.getTime())) {
+          dateObj = new Date(trimmed);
+        }
+      } else {
+        dateObj = new Date(input);
+      }
+
+      if (!dateObj || isNaN(dateObj.getTime())) {
+        return String(input).trim();
+      }
+
+      const day = String(dateObj.getDate()).padStart(2, '0');
+      const month = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const year = dateObj.getFullYear();
+
+      return includeYear ? `${day}.${month}.${year}` : `${day}.${month}.`;
+    }
+
     function isEntryCurrentWeek(item) {
       if (!item) return false;
       const num = item.kwNumber || parseInt(String(item.kw || '').replace(/\D/g, ''), 10);
@@ -3617,7 +3679,8 @@
     }
 
     function executeScheduleExtension() {
-      syncAdminInputsToScheduleData();
+      try {
+        syncAdminInputsToScheduleData();
       const weeksChoiceInput = document.querySelector('input[name="extendWeeksChoice"]:checked');
       const weeksCount = weeksChoiceInput ? parseInt(weeksChoiceInput.value, 10) : 13;
       const autoRotate = document.getElementById('extendAutoRotateCheckbox').checked;
@@ -3693,6 +3756,10 @@
       calculateAndRenderWorkload();
       closeExtendModal();
       showToast(`+${weeksCount} Wochen zum Plan hinzugefügt!`);
+      } catch (error) {
+        console.error("Fehler beim Erweitern des Plans:", error);
+        showToast("Fehler beim Hinzufügen der Woche", "fa-circle-exclamation", true);
+      }
     }
 
     function parseGermanDate(str) {
