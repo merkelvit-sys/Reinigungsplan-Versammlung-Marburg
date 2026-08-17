@@ -2979,6 +2979,9 @@
 
       jumpToCurrentBtn.classList.toggle('hidden', !foundCurrentWeekElement);
 
+      // Notify "Heute im Dienst" widget that data was (re)rendered
+      document.dispatchEvent(new Event('reinigungsplan:rendered'));
+
       if (foundCurrentWeekElement && !hasAutoScrolledOnStart) {
         autoScrollToCurrentWeekOnStart();
       }
@@ -4776,5 +4779,8 @@
       setTimeout(() => { scrollToCurrentWeek(); }, 400);
     });
   </script>
+
+  <!-- Heute im Dienst – Real-time "Who is cleaning today" widget -->
+  <script src="heute-im-dienst.js" defer></script>
 </body>
 </html>
