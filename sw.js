@@ -6,13 +6,16 @@
 // ============================================================================
 importScripts("https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.sw.js");
 
-const CACHE_NAME = 'reinigungsplan-v2026.1';
+const CACHE_NAME = 'reinigungsplan-v2026.2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
   '/style.css',
   '/manifest.json',
-  '/icon.svg'
+  '/icon.svg',
+  '/icon-192.png',
+  '/icon-512.png',
+  '/icon-maskable-512.png'
 ];
 
 // Install: Pre-cache local core assets & activate immediately

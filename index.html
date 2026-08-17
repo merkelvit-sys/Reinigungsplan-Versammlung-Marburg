@@ -214,6 +214,9 @@
     </div>
   </div>
 
+  <!-- Hero Widget "Heute im Dienst" (First Screen, instantly rendered from cache) -->
+  <section id="heuteImDienst" class="hidden" style="min-height:56px"></section>
+
   <!-- Smart Personal Banner ("Meine Gruppe" Countdown) -->
   <section id="personalBanner" class="hidden bg-gradient-to-r from-indigo-600 via-indigo-700 to-indigo-800 text-white shadow-inner border-b border-indigo-500/50">
     <div class="max-w-6xl mx-auto px-4 py-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 text-xs">
@@ -1545,6 +1548,9 @@
       return { ...DEFAULT_MEETING_DAYS };
     }
 
+    // Single source of truth for the "Heute im Dienst" widget (separate script file)
+    window.ReinigungsplanConfig = { getMeetingDays, DAY_NAMES, DEFAULT_MEETING_DAYS };
+
     function getColumnTitle(type, lang = (typeof currentLang !== 'undefined' ? currentLang : 'de')) {
       const days = getMeetingDays();
       const getShort = (code) => (DAY_NAMES[code] && DAY_NAMES[code].short[lang]) || code;
@@ -2013,6 +2019,7 @@
         });
       }
       applyLanguage(lang);
+      if (window.HeuteImDienst) window.HeuteImDienst.update();
     }
 
     function getFormattedTodayDate(lang) {
@@ -2036,6 +2043,7 @@
 
     function applyLanguage(lang) {
       currentLang = lang;
+      window.currentLang = lang;
       localStorage.setItem('reinigungsplan_lang', lang);
       document.documentElement.lang = lang;
 
@@ -4784,10 +4792,35 @@
       applyAllFilters();
     });
 
+    // Deep-Link Fokus-Modus: ?view=heute (PWA App Shortcut "Heute")
+    const FOCUS_HEUTE = new URLSearchParams(location.search).get('view') === 'heute';
+
+    function applyHeuteFocus() {
+      if (!FOCUS_HEUTE) return;
+      window.scrollTo({ top: 0, behavior: 'auto' });
+      const b = document.getElementById('heuteImDienst');
+      if (b && window.HeuteImDienst) {
+        window.HeuteImDienst.update();
+        b.classList.remove('hidden');
+        b.classList.add('heute-hero-focus');
+        setTimeout(() => b.classList.remove('heute-hero-focus'), 2400);
+      }
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
       applyLanguage(currentLang);
       loadSchedule();
-      setTimeout(() => { scrollToCurrentWeek(); }, 400);
+      if (FOCUS_HEUTE) {
+        applyHeuteFocus();
+        // Re-apply once the (cached or network) data has (re)rendered the widget
+        setTimeout(applyHeuteFocus, 450);
+      } else {
+        setTimeout(() => { scrollToCurrentWeek(); }, 400);
+      }
+      // Keep focus valid even after the background network re-render
+      document.addEventListener('reinigungsplan:rendered', () => {
+        if (FOCUS_HEUTE) setTimeout(applyHeuteFocus, 50);
+      });
     });
   </script>
 

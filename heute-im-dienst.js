@@ -7,21 +7,22 @@
    Robustness:
    - Tolerant to BOTH key naming schemes: ru/uk/de/deSo/main
      AND tuesdaySundayRu/midweekUk/sundayDe/weekendMain.
+   - Day->Column map is BUILT from the single source of truth
+     (window.ReinigungsplanConfig.getMeetingDays()), so it stays
+     correct even when an admin changes the meeting days. Falls back
+     to a static hash if the config is unavailable.
    - Always visible: on a no-cleaning day (Mo/Fr) or when the current
-     week is not in the data yet, it shows the NEXT upcoming service.
-   - Current week resolved by kwNumber, by date range, then fallback.
+     week is not in the data yet, it shows the NEXT upcoming service
+     with its real weekday name + a relative countdown.
    ============================================================ */
 (function () {
   'use strict';
 
   // JS getDay(): 0=So, 1=Mo, 2=Di, 3=Mi, 4=Do, 5=Fr, 6=Sa
-  // Column mapping (index.html:383-389 / Code.gs:9-12):
-  //   Di -> ru (Di & So, Russisch)
-  //   Mi -> uk (Mi & So, Ukrainisch)
-  //   Do -> de (Deutsch)
-  //   So -> ru, uk, deSo (all share Sunday) + main (Hauptreinigung WE)
-  //   Sa -> main (Hauptreinigung WE)
-  const DAY_MAP = {
+  // Static fallback (mirrors DEFAULT_MEETING_DAYS: Di/RU, Mi/UK, Do/DE,
+  // So+Sa/Hauptreinigung, So also carries deSo). Used only if the live
+  // config cannot be read.
+  const FALLBACK_DAY_MAP = {
     0: ['ru', 'uk', 'deSo', 'main'], // Sonntag
     2: ['ru'],                        // Dienstag
     3: ['uk'],                        // Mittwoch
@@ -48,8 +49,10 @@
 
   const WEEKDAY_DE = ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'];
   const SKIP = /kongress|keine|aufseher/i;
+  const DAY_CODE_TO_GETDAY = { Mo: 1, Di: 2, Mi: 3, Do: 4, Fr: 5, Sa: 6, So: 0 };
 
   function el(id) { return document.getElementById(id); }
+
   function showToast(msg) {
     const t = el('toast'), m = el('toastMessage');
     if (!t || !m) return;
@@ -60,6 +63,51 @@
   function escapeHtml(s) {
     return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
       ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  }
+
+  function getLang() {
+    return (window.currentLang) ||
+      (typeof localStorage !== 'undefined' && localStorage.getItem('reinigungsplan_lang')) ||
+      'de';
+  }
+
+  // i18n for the Hero widget copy
+  const I18N = {
+    de: {
+      badge: 'Heute im Dienst',
+      noService: 'Heute keine Reinigung.',
+      nextService: 'Nächster Dienst',
+      tomorrow: 'morgen',
+      inDays: (n) => `in ${n} Tagen`,
+      remind: 'Erinnern',
+      pin: 'Anheften'
+    },
+    ru: {
+      badge: 'Сегодня дежурство',
+      noService: 'Сегодня уборки нет.',
+      nextService: 'Следующая уборка',
+      tomorrow: 'завтра',
+      inDays: (n) => `через ${n} дн.`,
+      remind: 'Напомнить',
+      pin: 'Закрепить'
+    },
+    uk: {
+      badge: "Сьогодні прибирання",
+      noService: "Сьогодні прибирання немає.",
+      nextService: "Наступне прибирання",
+      tomorrow: "завтра",
+      inDays: (n) => `через ${n} дн.`,
+      remind: "Нагадати",
+      pin: "Закріпити"
+    }
+  };
+  function i18n() { return I18N[getLang()] || I18N.de; }
+
+  const LOC = { de: 'de-DE', ru: 'ru-RU', uk: 'uk-UA' };
+  function weekdayLong(date, lang) {
+    const loc = LOC[lang] || 'de-DE';
+    let w = date.toLocaleDateString(loc, { weekday: 'long' });
+    return w.charAt(0).toUpperCase() + w.slice(1);
   }
 
   // Read a column value, tolerant to both key naming schemes
@@ -97,6 +145,38 @@
     return (typeof scheduleData !== 'undefined' && Array.isArray(scheduleData)) ? scheduleData : [];
   }
 
+  // Build the reverse day->column map from the live meetingDays config.
+  function buildDayMap() {
+    const cfg = (window.ReinigungsplanConfig && typeof window.ReinigungsplanConfig.getMeetingDays === 'function')
+      ? window.ReinigungsplanConfig.getMeetingDays()
+      : null;
+    if (!cfg) return cloneMap(FALLBACK_DAY_MAP);
+
+    const map = {};
+    const add = (code, col) => {
+      if (!code || code === '-') return;
+      const d = DAY_CODE_TO_GETDAY[code];
+      if (d === undefined) return;
+      (map[d] = map[d] || []).push(col);
+    };
+
+    add(cfg.ru.midweek, 'ru'); add(cfg.ru.weekend, 'ru');
+    add(cfg.uk.midweek, 'uk'); add(cfg.uk.weekend, 'uk');
+    add(cfg.de.midweek, 'de');
+    if (cfg.de.weekend && cfg.de.weekend !== '-') {
+      add(cfg.de.weekend, 'de');
+      add(cfg.de.weekend, 'deSo'); // Deutsche So-Zwischenreinigung
+    }
+    // Hauptreinigung am Wochenende (Samstag & Sonntag)
+    add('Sa', 'main'); add('So', 'main');
+    return map;
+  }
+  function cloneMap(m) {
+    const out = {};
+    Object.keys(m).forEach(k => { out[k] = m[k].slice(); });
+    return out;
+  }
+
   // Resolve the row for "this week": exact kwNumber, else by date range, else null
   function findCurrentWeek() {
     const kw = (typeof currentCalculatedKW !== 'undefined' && currentCalculatedKW)
@@ -115,20 +195,38 @@
     return null;
   }
 
-  // Next upcoming service strictly AFTER fromKw (integer)
-  function findNextService(fromKw) {
+  // The very next cleaning occurrence strictly AFTER `now` across the
+  // current and upcoming weeks, derived from the day->column map.
+  function nextCleaningAfter(now) {
     const data = getData();
-    const cols = ['main', 'ru', 'uk', 'de', 'deSo'];
-    const list = data
-      .filter(d => (d.kwNumber || 0) > fromKw)
+    const dayMap = buildDayMap();
+    const startKw = (typeof currentCalculatedKW !== 'undefined' && currentCalculatedKW)
+      ? currentCalculatedKW - 1 : currentWeekNumber(now) - 1;
+
+    const weeks = data
+      .filter(d => (d.kwNumber || 0) >= startKw)
       .sort((a, b) => (a.kwNumber || 0) - (b.kwNumber || 0));
-    for (const item of list) {
-      for (const c of cols) {
-        const name = getCell(item, c);
-        if (name && !SKIP.test(name)) return { item, col: c };
+
+    const candidates = [];
+    for (const item of weeks) {
+      const monday = parseDEDate(item.fromDate);
+      if (!monday) continue;
+      for (let w = 0; w < 7; w++) {
+        const cols = dayMap[w] || [];
+        for (const c of cols) {
+          const name = getCell(item, c);
+          if (!name || SKIP.test(name)) continue;
+          const offset = (w - 1 + 7) % 7; // Mo=0 .. So=6
+          const d = new Date(monday);
+          d.setDate(d.getDate() + offset);
+          d.setHours(12, 0, 0, 0);
+          if (d > now) candidates.push({ date: d, col: c, name: name, item: item });
+        }
       }
     }
-    return null;
+    if (!candidates.length) return null;
+    candidates.sort((a, b) => a.date - b.date);
+    return candidates[0];
   }
 
   function renderToday() {
@@ -136,11 +234,14 @@
     const now = new Date();
     const dow = now.getDay();
     const week = findCurrentWeek();
-    const cols = DAY_MAP[dow] || [];
+    const dayMap = buildDayMap();
+    const cols = dayMap[dow] || [];
     const services = week
       ? cols.map(c => ({ col: c, name: getCell(week, c) }))
             .filter(s => s.name && !SKIP.test(s.name))
       : [];
+
+    const T = i18n();
 
     // Active cleaning day -> neon gradient badge
     if (week && services.length) {
@@ -155,7 +256,7 @@
           </div>
           <div class="min-w-0 flex-1">
             <div class="text-[10px] uppercase tracking-widest font-bold text-white/80 flex items-center gap-2">
-              <span>${WEEKDAY_DE[dow]} • Heute im Dienst</span>
+              <span>${WEEKDAY_DE[dow]} • ${escapeHtml(T.badge)}</span>
               <span class="bg-white/20 px-1.5 py-0.5 rounded">${escapeHtml(meta.short)}</span>
             </div>
             <div class="text-base sm:text-lg font-black truncate leading-tight">${escapeHtml(primary.name)}</div>
@@ -163,29 +264,46 @@
           </div>
           <button onclick="HeuteImDienst.remind()"
             class="shrink-0 px-3 py-2 min-h-[44px] bg-white/15 hover:bg-white/30 active:bg-white/40 rounded-xl text-xs font-bold border border-white/30 transition flex items-center gap-1.5">
-            <i class="fa-solid fa-bell"></i><span class="hidden sm:inline">Erinnern</span>
+            <i class="fa-solid fa-bell"></i><span class="hidden sm:inline">${escapeHtml(T.remind)}</span>
+          </button>
+          <button onclick="HeuteImDienst.shareFocus()"
+            class="shrink-0 px-3 py-2 min-h-[44px] bg-white/15 hover:bg-white/30 active:bg-white/40 rounded-xl text-xs font-bold border border-white/30 transition flex items-center gap-1.5"
+            title="${escapeHtml(T.pin)}">
+            <i class="fa-solid fa-link"></i><span class="hidden sm:inline">${escapeHtml(T.pin)}</span>
           </button>
         </div>`;
       b.classList.remove('hidden');
       return;
     }
 
-    // No cleaning today (Mo/Fr, or current week not yet in data) -> always show next service
-    const baseKw = (week && week.kwNumber) || (typeof currentCalculatedKW !== 'undefined' && currentCalculatedKW) || currentWeekNumber(now);
-    const next = findNextService(baseKw);
-    const label = next
-      ? `Nächster Dienst: <b>${escapeHtml(TYPE_LABEL[next.col].lang)}</b> – ${escapeHtml(next.item[KEY_ALIASES[next.col][0]] || getCell(next.item, next.col))} <span class="opacity-70">(${escapeHtml(next.item.kw)})</span>`
-      : 'Keine weiteren Termine geplant.';
+    // No cleaning today -> always show the NEXT upcoming service with its
+    // real weekday name + relative countdown (Zero-Service State).
+    const next = nextCleaningAfter(now);
+    let label;
+    if (next) {
+      const days = Math.ceil((next.date - new Date(now.getFullYear(), now.getMonth(), now.getDate())) / 864e5);
+      const rel = days <= 1 ? T.tomorrow : T.inDays(days);
+      const wd = weekdayLong(next.date, getLang());
+      label = `${T.nextService}: <b>${escapeHtml(wd)} (${escapeHtml(next.name)})</b> · ${escapeHtml(rel)} <span class="opacity-70">(${escapeHtml(next.item.kw)})</span>`;
+    } else {
+      label = 'Keine weiteren Termine geplant.';
+    }
     b.className = 'bg-slate-800 text-slate-200 border-b border-slate-700';
     b.innerHTML = `
       <div class="max-w-6xl mx-auto px-4 py-2.5 flex items-center gap-3 text-sm">
         <i class="fa-solid fa-moon text-indigo-300"></i>
-        <span>Heute keine Reinigung. ${label}</span>
+        <span class="flex-1 min-w-0">${escapeHtml(T.noService)} ${label}</span>
+        <button onclick="HeuteImDienst.shareFocus()"
+          class="shrink-0 px-2.5 py-1.5 min-h-[36px] bg-white/10 hover:bg-white/20 rounded-lg text-xs font-semibold border border-white/20 transition flex items-center gap-1.5"
+          title="${escapeHtml(T.pin)}">
+          <i class="fa-solid fa-link"></i><span class="hidden sm:inline">${escapeHtml(T.pin)}</span>
+        </button>
       </div>`;
     b.classList.remove('hidden');
   }
 
-  // Build banner ONCE with reserved height -> no layout shift later
+  // Build banner ONCE with reserved height -> no layout shift later.
+  // Prefers the static placeholder in index.html (first-screen, no JS race).
   function ensureBanner() {
     let b = el('heuteImDienst');
     if (b) return b;
@@ -200,7 +318,7 @@
 
   function update() { renderToday(); }
 
-  // Public quick-reminder: Notification API + in-app toast fallback
+  // Quick reminder: Notification API + in-app toast fallback
   function remind() {
     const week = findCurrentWeek();
     const name = week ? (getCell(week, 'ru') || getCell(week, 'uk') || getCell(week, 'de') || getCell(week, 'main')) : '';
@@ -219,6 +337,24 @@
     } catch (e) { showToast('Erinnerung: ' + msg); }
   }
 
+  // iOS (Safari) fallback: manifest shortcuts are Android-only, so let the
+  // user share/bookmark the deep link that opens the app in focus mode.
+  function shareFocus() {
+    const url = location.origin + location.pathname + '?view=heute';
+    const title = 'Reinigungsplan Marburg – Heute im Dienst';
+    try {
+      if (navigator.share) {
+        navigator.share({ title: title, url: url }).catch(() => {});
+      } else if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(url)
+          .then(() => showToast('Link «Heute» in Zwischenablage kopiert!'))
+          .catch(() => showToast(url));
+      } else {
+        showToast(url);
+      }
+    } catch (e) { showToast(url); }
+  }
+
   document.addEventListener('reinigungsplan:rendered', update);
   document.addEventListener('DOMContentLoaded', () => { ensureBanner(); update(); });
 
@@ -234,5 +370,5 @@
   // Keep "today" fresh across midnight
   setInterval(update, 60 * 1000);
 
-  window.HeuteImDienst = { update, remind, renderToday, getCell };
+  window.HeuteImDienst = { update, remind, shareFocus, renderToday, getCell };
 })();
