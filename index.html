@@ -250,40 +250,26 @@
     </div>
   </section>
 
-    <!-- Zwei-Ebenen-Status- und Filterleiste (keine Überlappung) -->
-    <section id="filterChipsBar" class="bg-slate-50 border-b border-slate-200/80 no-print">
-      <!-- Ebene 1: Systemstatus (links) + Sync-Zeit (rechts) -->
-      <div class="max-w-6xl mx-auto px-3 sm:px-4 pt-2 flex items-center justify-between text-[11px]">
-        <div class="flex items-center gap-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="syncStatusDotM"></span>
-          <span id="syncStatusLabel" class="font-medium text-slate-600">Online</span>
+    <!-- Isolierte Status- und Filterleiste (zwei Ebenen, keine Überlappung) -->
+    <section id="filterChipsBar" class="bg-slate-50 border-b border-slate-200/80 px-3 pt-2 pb-2 select-none no-print">
+      <div class="max-w-6xl mx-auto flex flex-col gap-1.5">
+        <!-- Obere Ebene: Status + Sync-Zeit -->
+        <div class="flex items-center justify-between text-[11px] text-slate-500 px-0.5">
+          <div class="flex items-center gap-1.5 font-medium">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" id="syncStatusDotM"></span>
+            <span class="text-slate-600">Online</span>
+          </div>
+          <div id="syncStatusTextM" class="text-[10px] text-slate-400 font-medium">Aktualisiert um --:--</div>
         </div>
-        <div id="syncStatusTextM" class="text-[10px] text-slate-400 font-medium">Aktualisiert um --:--</div>
-      </div>
 
-      <!-- Ebene 2: Horizontale Filterchips (eigenständige Scroll-Zeile) -->
-      <div class="max-w-6xl mx-auto px-3 sm:px-4 pb-2 pt-1 flex items-center gap-1.5 overflow-x-auto no-scrollbar whitespace-nowrap text-xs">
-        <div class="flex items-center gap-1.5 flex-shrink-0" id="filterChips">
-          <button onclick="setFilterChip('ALL')" id="chip-ALL" class="chip-btn px-3 py-1 rounded-xl font-bold bg-indigo-600 text-white shadow-sm shrink-0 transition flex items-center justify-center">
-            <span id="chipAllText">Alle</span>
-          </button>
-          <button onclick="setFilterChip('MINE')" id="chip-MINE" class="chip-btn px-3 py-1 rounded-xl font-semibold bg-white text-slate-700 border border-slate-200 shrink-0 transition flex items-center justify-center gap-1">
-            <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
-            <span id="chipMineText">Meine</span>
-          </button>
-          <button onclick="setFilterChip('RU')" id="chip-RU" class="chip-btn px-3 py-1 rounded-xl font-semibold bg-white text-slate-700 border border-slate-200 shrink-0 transition flex items-center justify-center">
-            <span id="chipRuText">🇷🇺 RU</span>
-          </button>
-          <button onclick="setFilterChip('UK')" id="chip-UK" class="chip-btn px-3 py-1 rounded-xl font-semibold bg-white text-slate-700 border border-slate-200 shrink-0 transition flex items-center justify-center">
-            <span id="chipUkText">🇺🇦 UK</span>
-          </button>
-          <button onclick="setFilterChip('DE')" id="chip-DE" class="chip-btn px-3 py-1 rounded-xl font-semibold bg-white text-slate-700 border border-slate-200 shrink-0 transition flex items-center justify-center">
-            <span id="chipDeText">🇩🇪 DE</span>
-          </button>
-          <button onclick="setFilterChip('KONGRESS')" id="chip-KONGRESS" class="chip-btn px-3 py-1 rounded-xl font-semibold bg-amber-50 text-amber-900 border border-amber-200 shrink-0 transition flex items-center justify-center gap-1">
-            <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
-            <span id="chipKongressText">Kongresse</span>
-          </button>
+        <!-- Untere Ebene: horizontale Filterchips -->
+        <div class="flex items-center gap-2 overflow-x-auto no-scrollbar py-0.5 whitespace-nowrap">
+          <button onclick="setFilterChip('ALL')" id="chip-ALL" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm transition shrink-0">Alle</button>
+          <button onclick="setFilterChip('MINE')" id="chip-MINE" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 shadow-sm hover:bg-slate-100 transition shrink-0 flex items-center gap-1"><i class="fa-solid fa-star text-amber-500 text-[10px]"></i> Meine</button>
+          <button onclick="setFilterChip('RU')" id="chip-RU" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 shadow-sm hover:bg-slate-100 transition shrink-0">🇷🇺 Russisch</button>
+          <button onclick="setFilterChip('UK')" id="chip-UK" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 shadow-sm hover:bg-slate-100 transition shrink-0">🇺🇦 Ukrainisch</button>
+          <button onclick="setFilterChip('DE')" id="chip-DE" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 shadow-sm hover:bg-slate-100 transition shrink-0">🇩🇪 Deutsch</button>
+          <button onclick="setFilterChip('KONGRESS')" id="chip-KONGRESS" class="chip-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100 transition shrink-0 flex items-center gap-1.5"><i class="fas fa-star text-amber-500 text-[10px]"></i> Nur Kongresse</button>
         </div>
       </div>
     </section>
@@ -2414,12 +2400,12 @@
     function setFilterChip(chip) {
       activeFilterChip = chip;
       document.querySelectorAll('.chip-btn').forEach(btn => {
-        btn.className = 'chip-btn px-3 py-1 rounded-xl font-semibold bg-white text-slate-700 border border-slate-200 shrink-0 transition flex items-center justify-center gap-1';
+        btn.className = 'chip-btn px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-200 shadow-sm hover:bg-slate-100 shrink-0 transition flex items-center justify-center gap-1';
       });
 
       const activeBtn = document.getElementById(`chip-${chip}`);
       if (activeBtn) {
-        activeBtn.className = 'chip-btn px-3 py-1 rounded-xl font-bold bg-indigo-600 text-white shadow-sm shrink-0 transition flex items-center justify-center gap-1';
+        activeBtn.className = 'chip-btn px-3 py-1.5 rounded-xl text-xs font-bold bg-indigo-600 text-white shadow-sm shrink-0 transition flex items-center justify-center gap-1';
       }
 
       applyAllFilters();
@@ -2760,25 +2746,25 @@
         if (isCurrent) card.id = 'currentWeekMobileCard';
 
         card.innerHTML = `
-          <div class="flex justify-between items-center border-b border-slate-100 pb-2.5">
-            <div class="flex items-center gap-2">
-              <span class="px-2.5 py-0.5 rounded-lg text-xs font-bold ${
-                isCurrent ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-800'
-              }">
-                ${escapeHtml(item.kw)}
-              </span>
-              ${isCurrent ? `<span class="text-xs font-semibold text-indigo-700 bg-indigo-100 px-2 py-0.5 rounded-md">${t('currentWeekBadge')}</span>` : ''}
+            <div class="flex items-center justify-between gap-2 border-b border-slate-100 pb-2 mb-2">
+              <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
+                <span class="px-2 py-0.5 rounded-lg text-xs font-bold ${
+                  isCurrent ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-800'
+                }">
+                  ${escapeHtml(item.kw)}
+                </span>
+                ${isCurrent ? `<span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded text-[10px] font-bold shrink-0">${t('currentWeekBadge')}</span>` : ''}
+              </div>
+              <div class="flex items-center gap-1.5 shrink-0 text-slate-500">
+                <span class="text-[11px] font-medium whitespace-nowrap">${escapeHtml(item.fromDate)} – ${escapeHtml(item.toDate)}</span>
+                <button onclick="shareWeekItem(${kwNum})" class="p-1.5 min-h-[34px] min-w-[34px] flex items-center justify-center text-slate-400 hover:text-emerald-600 active:text-emerald-700" title="${t('shareTitle')}">
+                  <i class="fa-solid fa-share-nodes text-sm"></i>
+                </button>
+                <button onclick="downloadIcsForWeek(${kwNum})" class="p-1.5 min-h-[34px] min-w-[34px] flex items-center justify-center text-slate-400 hover:text-indigo-600 active:text-indigo-700" title="${t('calendarTitle')}">
+                  <i class="fa-solid fa-calendar-plus text-sm"></i>
+                </button>
+              </div>
             </div>
-            <div class="flex items-center gap-1">
-              <span class="text-xs font-medium text-slate-500 mr-1">${escapeHtml(item.fromDate)} – ${escapeHtml(item.toDate)}</span>
-              <button onclick="shareWeekItem(${kwNum})" class="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-400 hover:text-emerald-600 active:text-emerald-700" title="${t('shareTitle')}">
-                <i class="fa-solid fa-share-nodes text-sm"></i>
-              </button>
-              <button onclick="downloadIcsForWeek(${kwNum})" class="p-2 min-h-[38px] min-w-[38px] flex items-center justify-center text-slate-400 hover:text-indigo-600 active:text-indigo-700" title="${t('calendarTitle')}">
-                <i class="fa-solid fa-calendar-plus text-sm"></i>
-              </button>
-            </div>
-          </div>
 
           <div class="grid grid-cols-1 gap-2 pt-2.5 text-xs">
             <div class="flex justify-between items-baseline py-0.5">
