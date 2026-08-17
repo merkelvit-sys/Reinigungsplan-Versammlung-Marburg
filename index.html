@@ -2246,11 +2246,13 @@
 
     // PWA Install Handlers
     window.addEventListener('beforeinstallprompt', (e) => {
+      // Session-Verzicht: nicht abfangen -> verhindert den Chrome-Warning
+      // "Banner not shown: beforeinstallpromptevent.preventDefault() called"
+      // und lässt ggf. den nativen Mini-Infobar zu.
+      if (sessionStorage.getItem('pwa_banner_dismissed')) return;
       e.preventDefault();
       deferredPrompt = e;
-      if (!sessionStorage.getItem('pwa_banner_dismissed')) {
-        pwaInstallBanner.classList.remove('hidden');
-      }
+      pwaInstallBanner.classList.remove('hidden');
       if (pwaTopInstallBtn) pwaTopInstallBtn.classList.remove('hidden');
     });
 
@@ -2262,6 +2264,8 @@
         pwaInstallBanner.classList.add('hidden');
         if (pwaTopInstallBtn) pwaTopInstallBtn.classList.add('hidden');
       }
+      // Prompt ist einmalig verbraucht -> Referenz freigeben, damit kein
+      // verwaister Deferred-Prompt zum Warning führt.
       deferredPrompt = null;
     }
 
